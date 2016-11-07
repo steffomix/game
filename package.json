@@ -1,0 +1,45 @@
+{
+  "name": "game",
+  "version": "1.0.0",
+  "description": "first attempt",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/steffomix/game.git"
+  },
+  "license": "GPL-3.0",
+  "keywords": [
+    "util",
+    "functional",
+    "server",
+    "client",
+    "browser"
+  ],
+  "author": "stefan",
+  "contributors": [],
+  "dependencies": {
+    "jquery": "latest",
+    "requirejs": "latest",
+    "underscore": "latest",
+    "hapi": "latest",
+    "pixi.js": "latest",
+    "pixi-tiledmap": "latest",
+    "socket.io": "latest",
+    "mysql": "latest"
+  },
+  "bugs": {
+    "url": "https://github.com/steffomix/game/issues"
+  },
+  "homepage": "https://github.com/steffomix/game#readme",
+  "main": "Gruntfile.js",
+  "directories": {
+    "test": "test"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-typescript": "^3.1.2",
+    "typescript": "^2.0.7"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
