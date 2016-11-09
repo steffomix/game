@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2016 Stefan Brinkmann <steffomix@gmail.com>
+ * Copyright (C) 09.11.16 Stefan Brinkmann <steffomix@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,4 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+var config = require('../config');
+var io = require('socket.io');
 
