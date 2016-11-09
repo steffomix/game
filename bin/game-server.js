@@ -1,23 +1,31 @@
 #!/usr/bin/env node
 
-var config = require('./config');
 
-
-var express = require('express');
-var https = require('https');
-var http = require('http');
-var fs = require('fs');
-
-// This line is from the Node.js HTTPS documentation.
-var options = {
-    key: config.ssl.key,
-    cert: config.ssl.cert
-};
-
-// Create a service (the app object is just a callback).
+// Required modules
+var express = require("express");
 var app = express();
+var http = require("http").Server(app);
+var config = require("../config");
+var game = require("../game/game");
+var socket = require("../game/socket");
 
-// Create an HTTP service.
-http.createServer(app).listen(81);
-// Create an HTTPS service identical to the HTTP service.
-https.createServer(options, app).listen(443);
+
+
+// Start listening with socket io
+socket.listen(http);
+
+// Initialize game and attach callbacks
+game.start();
+
+game.onUpdate = function (snapshot) {
+    socket.sendUpdate(snapshot);
+};
+socket.onAddClient = function () {
+    game.addPlayer();
+};
+socket.onRemoveClient = function () {
+    game.removePlayer();
+};
+socket.onEnemyHit = function (enemyId) {
+    game.hitsEnemy(enemyId);
+};

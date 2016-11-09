@@ -14,12 +14,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 var express = require('express');
-var https = require('https');
-var http = require('http');
-var fs = require('fs');
+var router = express.Router();
 
-var config = require('config');
+/* game container */
+router.get('/', function(req, res, next) {
+    res.render('game', { title: 'Express' });
+});
 
-
-
+module.exports = router;

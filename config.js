@@ -17,38 +17,43 @@
 
 var fs = require('fs');
 
-exports = {
-    server: {
-        ssl: {
-            key: fs.readFileSync('ssl/ssl-cert-snakeoil.pem'),
-            cert: fs.readFileSync('ssl/ssl-cert-snakeoil.cert')
-        },
-        game: {
-            debug: true,
-            development: true,
-            server: {
-                port: 4224
-            }
-        },
-        www: {
-            debug: true,
-            development: true,
-            server: {
-                port: 80,
-                portSSL: 443,
+exports.path = {
 
-            }
-        }
+}
+
+
+/**
+ * Server config
+ */
+exports.server = {
+    ssl: {
+        key: fs.readFileSync('ssl/ssl-cert-snakeoil.pem'),
+        cert: fs.readFileSync('ssl/ssl-cert-snakeoil.key')
     },
-    client: {
-        game: {
-
-        },
-        www: {
-
-        }
+    game: {
+        env: process.env.NODE_ENV || "development",
+        port: 4224
     },
-    combined: {
-
+    www: {
+        env: process.env.NODE_ENV || "development",
+        port: 3000
     }
-};
+}
+
+/*
+    client side configs
+ */
+exports.client = {
+        game: {
+
+        },
+        www: {
+
+        }
+    }
+
+/*
+  misc config
+ */
+exports.shared = {};
+
