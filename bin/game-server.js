@@ -1,31 +1,38 @@
 #!/usr/bin/env node
 
+var config = require('../conf/game.conf'),
+    http = require('http').createServer(),
+    server = require('socket.io').listen(http),
+    Socket = require('../game/socket').Socket,
+    game = require('../game/game'),
+    debug = require('debug')('game-server.js:io');
 
-// Required modules
-var express = require("express");
-var app = express();
-var http = require("http").Server(app);
-var config = require("../config");
-var game = require("../game/game");
-var socket = require("../game/socket");
+http.listen(config.server.port);
 
-
-
-// Start listening with socket io
-socket.listen(http);
-
-// Initialize game and attach callbacks
-game.start();
-
-game.onUpdate = function (snapshot) {
-    socket.sendUpdate(snapshot);
+// login pass from database for only one try
+var login = {
+    name: '123',
+    pass: '123'
 };
-socket.onAddClient = function () {
-    game.addPlayer();
-};
-socket.onRemoveClient = function () {
-    game.removePlayer();
-};
-socket.onEnemyHit = function (enemyId) {
-    game.hitsEnemy(enemyId);
-};
+
+server.sockets.on('connection', function (connection) {
+    console.log('connect');
+    connection.on('login', function (data) {
+        var name = data.name || 'guest';
+        var pass = data.pass || '';
+        if(name === login.name && pass === login.pass){
+            connection.removeAllListeners();
+            connection.emit('login', {
+                success: true
+            });
+            new Socket(connection, server, game);
+        }else{
+            connection.emit('login', {
+                success: false
+            });
+            connection.disconnect();
+        }
+        // always delete login pass
+        login = {};
+    })
+});

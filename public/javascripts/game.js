@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 09.11.16 Stefan Brinkmann <steffomix@gmail.com>
+ * Copyright (C) 10.11.16 Stefan Brinkmann <steffomix@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,12 +14,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-var express = require('express');
-var https = require('https');
-var http = require('http');
-var fs = require('fs');
 
-var config = require('config');
+define(
+    ['io', '_', 'pixi', 'gl'],
+    function start(io, _, pixi, gl) {
 
+        function start(){
+            console.log('Start Game');
+        }
 
-
+        return {
+            start: start
+        }
+    });

@@ -16,6 +16,15 @@
  */
 
 
-var config = require('../config');
-var io = require('socket.io');
+
+var Socket = function(socket, io, game){
+
+
+    socket.on('pong', function(data){
+        var pong = data.pong || 0;
+    })
+
+}
+
+exports.Socket = Socket;
 

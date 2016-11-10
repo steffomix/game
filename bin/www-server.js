@@ -3,7 +3,7 @@
 /**
  * Module dependencies.
  */
-var config = require('../config');
+var config = require('../conf/www.conf');
 var app = require('../app');
 var debug = require('debug')('game-server.js:server');
 var http = require('http');
@@ -12,7 +12,7 @@ var http = require('http');
  * Get port from environment and store in Express.
  * Port shoud be 80
  */
-var port = normalizePort(process.env.PORT || config.server.www.port);
+var port = normalizePort(process.env.PORT || config.server.port);
 app.set('port', port);
 
 /**

@@ -4,13 +4,13 @@
 
 var gulp = require('gulp');
 
+var express = require('express');
 
 
 
 
-gulp.task('build', function (cb) {
-    gulp.src('src/js/main.js')
-        .pipe(browserify({insertGlobals: true}))
-        //.pipe(ugly())
+
+gulp.task('copy', function () {
+    gulp.src(express)
         .pipe(gulp.dest('dest/js'));
 });
