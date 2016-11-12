@@ -14,3 +14,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+
+var PF = require('pathfinding');
+
+
+function start(server, db){
+
+}
+
+function onPlayerConnect(socket){
+
+}
+
+
+
+exports.onPlayerConnect = onPlayerConnect;
+exports.start = start;

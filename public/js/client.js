@@ -17,13 +17,12 @@
 
 requirejs.config({
     paths: {
-        '_': '/javascripts/underscore-min',
-        'io': '/javascripts/socket.io-client',
-        'pixi': '/javascripts/pixi.min',
-        'gl': '/javascripts/pixi-gl-core.min',
-        'game': '/javascripts/game',
+        '_':    '/js/lib/underscore-min',
+        'io':   '/js/lib/socket.io-client',
+        'pixi': '/js/lib/pixi.min',
+        'gl':   '/js/lib/pixi-gl-core.min',
 
-        
+        'game': '/js/game'
     }
 });
 
