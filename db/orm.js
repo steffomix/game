@@ -1,17 +1,15 @@
 var orm = require('orm'),
     tbl = {
-        users: 'users', // user data
-        locations: 'user_locations', // users recent spawn locations
-        worlds: 'worlds', // users worlds, names and configs
-        tileGroups: 'tile_groups',
-        tiles: 'tiles', // tiles itself with image name, default behave etc...
-        tileTypes: 'tile_types', // types of tiles itself
-        ships: 'ships', // ship names and data
-        areas: {
-            home: 'homes_tiles', // tiles from users homes
-            universe: 'universe_tiles', // tiles from mmo universe
-            ship: 'ship_tiles' // tiles from ships in mmo universe
-        }
+        users:          'users',            // user data
+        userlocations:  'userlocations',   // users recent spawn locations
+        worlds:         'worlds',           // users worlds, names and configs
+        tiles:          'tiles',            // tiles itself with image name, default behave etc...
+        tilegroups:     'tilegroups',       // types of tiles itself
+        ships:          'ships',            // ship names and data
+        hometiles:      'hometiles',      // tiles from users homes
+        universetiles:  'universetiles',   // tiles from mmo universe
+        shiptiles:      'shiptiles'        // tiles from ships in mmo universe
+
     };
 
 orm.settings.set('connection.reconnect', false);
@@ -25,11 +23,12 @@ function onSync(err){
 exports.connect = function (uri, callback) {
     var db = orm.connect(uri);
 
-    var HomeTiles = exports.HomeTiles = db.define(tbl.areas.home,
+    var HomeTiles = exports.HomeTiles = db.define(tbl.hometiles,
         {
+            id: {type: 'serial', key: true},
             user_id: {type: 'integer'},
             world_id: {type: 'integer'},
-            group_id: {type: 'integer'},
+            tilegroups_id: {type: 'integer'},
             x: {type: 'integer'},
             y: {type: 'integer'},
             z: {type: 'integer'},
@@ -37,12 +36,13 @@ exports.connect = function (uri, callback) {
         }
     );
 
-    var ShipTiles = exports.ShipTiles = db.define(tbl.areas.ship,
+    var ShipTiles = exports.ShipTiles = db.define(tbl.shiptiles,
         {
+            id: {type: 'serial', key: true},
             user_id: {type: 'integer'},
             world_id: {type: 'integer'},
             ship_id: {type: 'integer'},
-            group_id: {type: 'integer'},
+            tilegroups_id: {type: 'integer'},
             x: {type: 'integer'},
             y: {type: 'integer'},
             z: {type: 'integer'},
@@ -50,11 +50,12 @@ exports.connect = function (uri, callback) {
         }
     );
 
-    var UniverseTiles = exports.UniverseTiles = db.define(tbl.areas.universe,
+    var UniverseTiles = exports.UniverseTiles = db.define(tbl.universetiles,
         {
+            id: {type: 'serial', key: true},
             user_id: {type: 'integer'},
             world_id: {type: 'integer'},
-            group_id: {type: 'integer'},
+            tilegroups_id: {type: 'integer'},
             x: {type: 'integer'},
             y: {type: 'integer'},
             z: {type: 'integer'},
@@ -78,8 +79,9 @@ exports.connect = function (uri, callback) {
             data: {type: 'text'}
         });
 
-    var UserLocations = exports.UserLocations = db.define(tbl.locations,
+    var UserLocations = exports.UserLocations = db.define(tbl.userlocations,
         {
+            id: {type: 'serial', key: true},
             user_id: {type: 'integer'},
             world_id: {type: 'integer'},
             area_id: {type: 'integer'},
@@ -95,7 +97,7 @@ exports.connect = function (uri, callback) {
             pass: {type: 'text'}
         });
 
-    var TileTypes =  exports.TileTypes = db.define(tbl.tileTypes,
+    var TileGroups =  exports.TileGroups = db.define(tbl.tilegroups,
         {
             id: {type: 'serial', key: true},
             name: {type: 'text'},
@@ -104,33 +106,45 @@ exports.connect = function (uri, callback) {
 
 
 
-    Users.hasMany('worlds', Worlds);
-    Worlds.hasOne('user', Users);
-
-    Users.hasMany('locations', UserLocations);
-    UserLocations.hasOne('user', Users);
-
-    Users.hasMany('universeTiles', UniverseTiles);
-    UniverseTiles.hasOne('user', Users);
-
-    Users.hasMany('homeTiles', HomeTiles);
-    HomeTiles.hasOne('user', Users);
-
-    Users.hasMany('shipTiles', ShipTiles);
-    ShipTiles.hasOne('user', Users);
-
-    TileTypes.hasMany('universeTiles', UniverseTiles);
-
-
-    TileTypes.hasMany('homeTiles', HomeTiles);
-    TileTypes.hasMany('shipTiles', ShipTiles);
-
+    Worlds.hasOne('user', Users, {reverse: tbl.worlds});
+    UserLocations.hasOne('user', Users, {reverse: tbl.userlocations});
+    UniverseTiles.hasOne('user', Users, {reverse: tbl.universetiles});
+    UniverseTiles.hasOne('tilegroups', TileGroups, {reverse: tbl.universetiles});
+    HomeTiles.hasOne('user', Users, {reverse: tbl.hometiles});
+    HomeTiles.hasOne('tilegroups', TileGroups, {reverse: tbl.hometiles});
+    ShipTiles.hasOne('user', Users, {reverse: tbl.shiptiles});
+    ShipTiles.hasOne('tilegroups', TileGroups, {reverse: tbl.shiptiles});
 
 
     db.sync(function(err){
-        err && console.log(err);
+        err && console.log('sync...' + err);
+        Users.get(1, function(err, user){
+            err && console.log('create user... ' + err);
+            if(!user){
+                Users.create({
+                    name: 'user',
+                    pass: 'user'
+                },
+                    function(err, user){
+
+                    }
+                )
+            }
+        });
+
+        [tbl.hometiles, tbl.shiptiles, tbl.universetiles].forEach(function(tbl){
+            try{
+                db.driver.execQuery('CREATE UNIQUE INDEX IF NOT EXISTS "position" on ' + tbl + ' (user_id ASC, world_id ASC, x ASC, y ASC, z ASC)',
+                    function(){});
+            }catch(e){
+                console.log(e);
+            }
+        })
+
+        callback(db);
     });
 
-    callback(db);
+
+
 
 };

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+
 var config = require('../conf/game.conf'),
     http = require('http').createServer(),
     server = require('socket.io').listen(http),
@@ -9,27 +10,60 @@ var config = require('../conf/game.conf'),
 
 http.listen(config.server.port);
 
-orm.connect(config.server.db, function(db){
+// create Database if not exists and start server
+// @todo hash password, remove login bypass
+orm.connect(config.server.db, function (db) {
+    // accept connections
     server.sockets.on('connection', function (connection) {
-        console.log('connect');
+
+        console.log('New Connection ID ' + connection.id);
         connection.on('login', function (data) {
-            var name = data.name || 'guest';
-            var pass = data.pass || '';
-            if (name === login.name && pass === login.pass) {
-                connection.removeAllListeners();
-                game.onPlayerConnect(connection, data.name);
-            } else {
-                connection.emit('login', {
-                    success: false,
-                    message: 'login failed'
-                });
-                connection.disconnect();
-            }
+
+            return bypassLogin(connection, data.name);
+
+            orm.Users.find({name: data.name}, function (err, user) {
+                var p1 = data.pass,
+                    p2 = user[0].pass;
+                if (user.length && user[0].pass == data.pass) {
+                    connection.removeAllListeners();
+                    game.onPlayerConnect(connection, user[0]);
+                } else {
+                    connection.emit('login', {
+                        success: false,
+                        message: 'login failed'
+                    });
+                    connection.disconnect();
+                }
+            });
         })
     });
     game.start(server, db);
 });
 
+
+function bypassLogin(connection, name) {
+
+    function login(user) {
+        game.onPlayerConnect(connection, user);
+        connection.emit('login', {
+            success: true
+        });
+    }
+
+    orm.Users.find({name: name}, function (err, rows) {
+        if (!rows.length) {
+            orm.Users.create({
+                    name: name,
+                    pass: name
+                },
+                function (err, newUser) {
+                    login(newUser);
+                })
+        } else {
+            login(rows[0]);
+        }
+    })
+}
 
 
 

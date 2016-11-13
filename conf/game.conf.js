@@ -21,7 +21,9 @@
  * Server config
  */
 exports.server = {
+    name: 'Rotting Planet',
     env: process.env.NODE_ENV || "development",
     port: 4343,
-    db: 'sqlite:///home/stefan/WebstormProjects/game/db/db.sqlite3'
+    db: 'sqlite:///home/stefan/WebstormProjects/game/db/db.sqlite3',
+    loginKeyMaxLifetime: 60 // login key must not be older than given seconds
 }

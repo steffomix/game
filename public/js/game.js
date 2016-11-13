@@ -15,12 +15,79 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(
-    ['io', '_', 'pixi', 'gl'],
-    function start(io, _, pixi, gl) {
 
-        function start(){
+
+
+function createMatrix(x, y){
+    var matrix = [];
+    for(var iy = 0; iy < y; iy ++){
+        matrix[iy] = [];
+        for(var ix = 0; ix < x; ix ++){
+            matrix[iy][ix] = parseInt(Math.random()*1.2);
+        }
+    }
+    return matrix;
+}
+
+
+define(
+    ['io', 'underscore', 'pixi', 'gl', 'jquery'],
+    function start(io, _, pixi, gl, jquery) {
+
+
+        function start(connection){
             console.log('Start Game');
+
+            if(Worker){
+                var worker = new Worker('/js/worker/pathfinder.js');
+                var x = 100, y = 100, matrix = createMatrix(x, y);
+                var msg =
+                    {
+                        cmd: 'find',
+                        data: {
+                            startX: 0,
+                            startY: 0,
+                            endX: x - 1,
+                            endY: y - 1,
+                            matrix: _.clone(matrix)
+                        }
+                    }
+                ;
+                worker.matrix = matrix;
+                worker.addEventListener('message', function(e) {
+                    console.log('Worker said: ', e.data);
+
+                    var grid = this.matrix, path = e.data.path,
+                        row, t = '', p;
+
+                    for(var i = 0; i < path.length; i++){
+                        p = path[i];
+                        grid[p[1]][p[0]] = '*';
+                    }
+
+                    //create html
+                    var colors = {
+                        '0': 'fff',
+                        '1': 'ccc',
+                        '*': 'faa'
+                    };
+                    for(var i = 0; i < grid.length; i++){
+                        row = grid[i];
+                        t += '<tr>';
+                        for(var ii = 0; ii < row.length; ii++){
+                            t += '<td style="background-color: #' + colors[row[ii]] + '">' + row[ii] + '</td>';
+
+                        }
+                        t += '</tr>\n';
+                    }
+                    jquery('#body').append('<table>' + t + '</table>');
+
+
+                }, false);
+
+                worker.postMessage(msg); // Send data to our worker.
+            }
+
         }
 
         return {

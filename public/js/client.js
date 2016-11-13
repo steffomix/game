@@ -17,7 +17,8 @@
 
 requirejs.config({
     paths: {
-        '_':    '/js/lib/underscore-min',
+        'jquery':    '/js/lib/jquery.min',
+        'underscore':    '/js/lib/underscore-min',
         'io':   '/js/lib/socket.io-client',
         'pixi': '/js/lib/pixi.min',
         'gl':   '/js/lib/pixi-gl-core.min',
@@ -27,9 +28,7 @@ requirejs.config({
 });
 
 
-
-
-login('123', '123');
+login('stefan', 'user');
 
 function loginFailed(){
     alert('Login failed');
@@ -40,26 +39,24 @@ function loginFailed(){
 function login(name, pass) {
     require(
         [
+            'underscore',
             'io',
-            '_',
-            'pixi',
-            'gl',
             'game'
         ],
-        function (socket, _, pixi, gl, game) {
+        function (_, io, game) {
             console.log('Modules loaded.');
-            var io = socket.connect('game.com:4343');
-            io.on('login', function(data){
+            var connection = io.connect('game.com:4343');
+            connection.on('login', function(data){
                 if(data.success === true){
-                    io.off('login');
-                    game.start(socket, _, pixi, gl);
+                    connection.off('login');
+                    game.start(connection);
                 }else{
                     loginFailed();
                 }
             })
 
 
-            io.emit('login', {name: '123', pass: '123'});
+            connection.emit('login', {name: name, pass: pass});
 
 
 
