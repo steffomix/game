@@ -22,7 +22,7 @@ requirejs.config({
         'io':   '/js/lib/socket.io-client',
         'pixi': '/js/lib/pixi.min',
         'gl':   '/js/lib/pixi-gl-core.min',
-
+        'worker': '/js/worker',
         'game': '/js/game'
     }
 });

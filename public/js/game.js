@@ -16,14 +16,12 @@
  */
 
 
-
-
-function createMatrix(x, y){
+function createMatrix(x, y) {
     var matrix = [];
-    for(var iy = 0; iy < y; iy ++){
+    for (var iy = 0; iy < y; iy++) {
         matrix[iy] = [];
-        for(var ix = 0; ix < x; ix ++){
-            matrix[iy][ix] = parseInt(Math.random()*1.2);
+        for (var ix = 0; ix < x; ix++) {
+            matrix[iy][ix] = parseInt(Math.random() * 1.3);
         }
     }
     return matrix;
@@ -31,63 +29,84 @@ function createMatrix(x, y){
 
 
 define(
-    ['io', 'underscore', 'pixi', 'gl', 'jquery'],
-    function start(io, _, pixi, gl, jquery) {
+    ['io', 'underscore', 'pixi', 'gl', 'jquery', 'worker'],
+    function start(io, _, pixi, gl, jquery, worker) {
 
 
-        function start(connection){
+        function start(connection) {
             console.log('Start Game');
 
-            if(Worker){
-                var worker = new Worker('/js/worker/pathfinder.js');
+
+            if (Worker) {
                 var x = 100, y = 100, matrix = createMatrix(x, y);
-                var msg =
+                worker.run(
+                    'find',
                     {
-                        cmd: 'find',
-                        data: {
-                            startX: 0,
-                            startY: 0,
-                            endX: x - 1,
-                            endY: y - 1,
-                            matrix: _.clone(matrix)
+                        startX: 0,
+                        startY: 0,
+                        endX: x - 1,
+                        endY: y - 1,
+                        matrix: _.clone(matrix)
+                    },
+                    function (job) {
+                        var grid = job.request.matrix,
+                            path = job.response.path,
+                            t = '', row;
+
+                        for (var i = 0; i < path.length; i++) {
+                            p = path[i];
+                            var x = p[0], y = p[1];
+                            // yes, y first
+                            grid[y][x] = '*';
                         }
-                    }
-                ;
-                worker.matrix = matrix;
-                worker.addEventListener('message', function(e) {
-                    console.log('Worker said: ', e.data);
 
-                    var grid = this.matrix, path = e.data.path,
-                        row, t = '', p;
+                        //create html
+                        var colors = {
+                            '0': 'fff',
+                            '1': 'ccc',
+                            '*': 'faa'
+                        };
+                        for (var i = 0; i < grid.length; i++) {
+                            row = grid[i];
+                            t += '<tr>';
+                            for (var ii = 0; ii < row.length; ii++) {
+                                t += '<td style="background-color: #' + colors[row[ii]] + '">' + row[ii] + '</td>';
 
-                    for(var i = 0; i < path.length; i++){
-                        p = path[i];
-                        grid[p[1]][p[0]] = '*';
-                    }
-
-                    //create html
-                    var colors = {
-                        '0': 'fff',
-                        '1': 'ccc',
-                        '*': 'faa'
-                    };
-                    for(var i = 0; i < grid.length; i++){
-                        row = grid[i];
-                        t += '<tr>';
-                        for(var ii = 0; ii < row.length; ii++){
-                            t += '<td style="background-color: #' + colors[row[ii]] + '">' + row[ii] + '</td>';
-
+                            }
+                            t += '</tr>\n';
                         }
-                        t += '</tr>\n';
+                        //jquery('#body').append('<table>' + t + '</table>');
                     }
-                    jquery('#body').append('<table>' + t + '</table>');
+                );
 
 
-                }, false);
-
-                worker.postMessage(msg); // Send data to our worker.
             }
 
+
+        }
+
+        //setInterval(find, 1000);
+
+        for(var i = 1; i < 50; i++){
+            find();
+        }
+        function find(){
+            var x = 200, y = 200, matrix = createMatrix(x, y);
+            var t = new Date().getTime();
+            worker.run(
+                'find',
+                {
+                    startX: 0,
+                    startY: 0,
+                    endX: x - 1,
+                    endY: y - 1,
+                    matrix: matrix
+                },
+                function (job) {
+                    var t2 = new Date().getTime() - t;
+                    jquery('#body').prepend('<div>' + t2 + ' ' + job.response.path.length + '</div>');
+                }
+            );
         }
 
         return {
