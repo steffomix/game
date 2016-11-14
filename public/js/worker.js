@@ -39,85 +39,105 @@
 
 
 define([], (
+
     function () {
 
-        var jobId = 0;
-        var worker = new Worker('/js/thread.js');
-        worker.jobs = {};
-
-
-        function getId() {
-            return (jobId++);
-        }
-
         /**
-         * Copy and return into an array
-         * queue().length return count of open or running jobs
-         * @returns {Array}
+         *
+         *  '/js/thread.js'
+         * @param string path must be full path
+         * @returns Object {{run: run, queue: queue}}
          */
-        function queue() {
-            var q = [];
-            for (var j in worker.jobs) {
-                if (worker.jobs.hasOwnProperty(j)) {
-                    q.push(worker.jobs[j]);
+        function create (path) {
+
+            var jobId = 0;
+            var worker = new Worker(path);
+
+            worker.jobs = {};
+
+
+            function getId() {
+                return (jobId++);
+            }
+
+            /**
+             * Copy and return into an array
+             * queue().length return count of open or running jobs
+             * @returns {Array}
+             */
+            function queue() {
+                var q = [];
+                for (var j in worker.jobs) {
+                    if (worker.jobs.hasOwnProperty(j)) {
+                        q.push(worker.jobs[j]);
+                    }
                 }
+                return q;
             }
-            return q;
-        }
 
 
+            /**
+             *
+             * @param cmd string Command for the Worker
+             * @param data object|array data for the command (will be serialized to JSON)
+             *
+             * @param cb function callback
+             * @param scope object optional scope
+             * @returns Job
+             */
+            function run(cmd, data, cb, scope) {
+                var id = getId();
+                worker.jobs[id] = {
+                    job: new Job(id, cmd, data),
+                    cb: cb,
+                    scope: scope
+                };
+                worker.postMessage({
+                    id: id,
+                    cmd: cmd,
+                    stay: false,
+                    data: data
+                });
+                return id;
+            }
 
-        /**
-         *
-         * @param cmd string Command for the Worker
-         * @param data object|array data for the command (will be serialized to JSON)
-         *
-         * @param cb function callback
-         * @param scope object optional scope
-         * @returns Job
-         */
-        function run(cmd, data, cb, scope) {
-            var id = getId();
-            worker.jobs[id] = {
-                job: new Job(id, cmd, data),
-                cb: cb,
-                scope: scope
+            var Job = function (id, cmd, data) {
+                this.id = id;
+                this.cmd = cmd;
+                this.request = data;
+                this.response = null;
             };
-            worker.postMessage({
-                id: id,
-                cmd: cmd,
-                data: data
+
+            var onMessage = function (e) {
+                var id = e.data.id;
+                if(this.jobs[id]){
+                    job =   this.jobs[id].job,
+                    cb =    this.jobs[id].cb,
+                    scope = this.jobs[id].scope;
+                    if(!e.data.stay){
+                        delete this.jobs[id];
+                    }
+                    job.response = e.data.data;
+                    scope ? cb.apply(scope, job) : cb(job);
+                }
+            };
+
+            worker.addEventListener('message', onMessage);
+
+            run('--start--', path, function(job){
+                console.log('worker ' + job.response + ' started');
             });
-            return id;
-        }
 
-        var Job = function (id, cmd, data) {
-            this.id = id;
-            this.cmd = cmd;
-            this.request = data;
-            this.response = null;
-        };
-
-        var onMessage = function (e) {
-            var id = e.data.id,
-                job = this.jobs[id].job,
-                cb = this.jobs[id].cb,
-                scope = this.jobs[id].scope;
-            delete this.jobs[id];
-            if (!job) {
-                console.error('Worker Job #' + id + ' is ' + job);
-                return;
+            return {
+                run: run,
+                queue: queue
             }
-            job.response = e.data.data;
-            scope ? cb.apply(scope, job) : cb(job);
-        };
 
-        worker.addEventListener('message', onMessage);
+        }
 
         return {
-            run: run,
-            queue: queue
+            create: create
         }
-
-    })()
+    }
+    )()
 );

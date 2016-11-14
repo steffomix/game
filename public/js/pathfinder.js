@@ -58,42 +58,55 @@
  *
  */
 
-self.addEventListener('message', function(e) {
 
-    var id = e.data.id,
-        cmd = e.data.cmd,
-        data = e.data.data;
 
-    console.log('Run Job #' + id + ' "' + cmd + '"');
+(function () {
 
-    switch(cmd){
 
-        case 'find':
-            try{
-                PF.Grid;
-            }catch(e){
-                console.log('Worker: Load Pathfinding.');
-                self.importScripts('/js/lib/pathfinding.js');
-            }
-
-            var finder = new PF.AStarFinder({
-                    allowDiagonal: true
-                }),
-                grid = new PF.Grid(data.matrix),
-                path = finder.findPath(data.startX, data.startY, data.endX, data.endY, grid);
-                self.postMessage(
-                    {
-                        id: id,
-                        cmd: cmd,
-                        data: {path: path}
-                    });
-
-            break;
-
-        default:
-            console.log('Worker Pathfinder: Command ' + cmd + ' not supported.');
-
+    function JobContext(event){
+        this.id = event.data.id;
+        this.cmd = event.data.cmd;
+        this.data = event.data.data;
     }
 
-}, false);
+    JobContext.prototype.response = function(data){
+        self.postMessage({
+            id: this.id,
+            cmd: this.cmd,
+            data: data
+        });
+    }
+
+
+    self.addEventListener('message', function (e) {
+
+        var job = new JobContext(e);
+
+        console.log('Starting job #' + job.id + ' ' + job.cmd + ' with data: \n', job.data);
+
+        switch (job.cmd) {
+
+            case '--start--':
+                self.importScripts('/js/lib/pathfinding.js');
+                job.response(job.data);
+
+                break;
+            case 'find':
+
+                var finder = new PF.AStarFinder({
+                        allowDiagonal: true
+                    }),
+                    grid = new PF.Grid(data.matrix),
+                    path = finder.findPath(data.startX, data.startY, data.endX, data.endY, grid);
+                post({path: path});
+
+                break;
+
+            default:
+                console.log('Worker Pathfinder: Command ' + cmd + ' not supported.');
+
+        }
+
+    }, false);
+})();
 
