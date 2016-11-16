@@ -91,6 +91,12 @@
                 job.response(job.data);
 
                 break;
+
+            case '--terminate--':
+                console.log('Terminate Worker');
+                close();
+                break;
+
             case 'find':
 
                 var finder = new PF.AStarFinder({

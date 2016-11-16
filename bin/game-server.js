@@ -19,20 +19,52 @@ orm.connect(config.server.db, function (db) {
         console.log('New Connection ID ' + connection.id);
         connection.on('login', function (data) {
 
-            return bypassLogin(connection, data.name);
-
             orm.Users.find({name: data.name}, function (err, user) {
-                var p1 = data.pass,
-                    p2 = user[0].pass;
-                if (user.length && user[0].pass == data.pass) {
-                    connection.removeAllListeners();
-                    game.onPlayerConnect(connection, user[0]);
-                } else {
-                    connection.emit('login', {
-                        success: false,
-                        message: 'login failed'
-                    });
-                    connection.disconnect();
+                try {
+                    // check password
+                    var p1 = data.pass,
+                        p2 = user[0].pass;
+                    if (user.length && user[0].pass == data.pass) {
+                        connection.removeAllListeners();
+                        // collect userData
+                        var userData = {};
+                        [name].forEach(function (k) {
+                            userData[k] = user[0][k];
+                        });
+
+                        // try to add user to game
+                        var rejectMessage = game.onPlayerConnect(connection, userData);
+
+                        // todo on login check for ban etc...
+                        if (!rejectMessage) {
+                            // send message
+                            connection.emit('login', {
+                                success: true,
+                                user: userData
+                            });
+                        } else {
+                            connection.emit('login', {
+                                success: false,
+                                message: rejectMessage
+                            });
+                        }
+
+                        // send success message with collected UserData
+                        connection.emit('login', {
+                            success: true,
+                            user: userData
+                        });
+                    } else {
+
+                        connection.emit('login', {
+                            success: false,
+                            message: 'login failed'
+                        });
+                        connection.disconnect();
+                    }
+                }catch(e){
+                    // todo Logger
+                    console.warn('Login User failed: ', e, new Error().stack)
                 }
             });
         })

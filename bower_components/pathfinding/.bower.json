@@ -34,6 +34,5 @@
   },
   "_source": "https://github.com/imor/pathfinding-bower.git",
   "_target": "^0.4.18",
-  "_originalSource": "pathfinding",
-  "_direct": true
+  "_originalSource": "pathfinding"
 }
