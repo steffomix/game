@@ -15,85 +15,73 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-(function () {
+var srcScripts = {
 
-    // All scripts used, even from workers
-    // Worker-slaves will add '.js' to file names
-    var srcScripts = {
-        // third party libs
-        'stacktrace': '/js/lib/stacktrace.min',
-        'logger': '/js/lib/logger',
-        'underscore': '/js/lib/underscore.min',
-        'jquery': '/js/lib/jquery.min',
-        'io': '/js/lib/socket.io-client',
-        'pixi': '/js/lib/pixi.min',
-        'pathfinding': '/js/lib/pathfinding',
+    // third party libs
+    'stacktrace': '/js/lib/stacktrace.min',
+    'logger': '/js/lib/logger',
+    'underscore': '/js/lib/underscore.min',
+    'jquery': '/js/lib/jquery.min',
+    'io': '/js/lib/socket.io-client',
+    'pixi': '/js/lib/pixi.min',
+    'pathfinding': '/js/lib/pathfinding',
 
-        // common shared
-        'worker': '/js/worker-master',
-        'pathfinder': '/js/pathfinder',
+    // common shared
+    'worker': '/js/worker-master',
+    'pathfinder': '/js/pathfinder',
 
-        // worker
-        'gameSocket': '/js/gamesocket'
+    // worker
+    'gameData': '/js/gamesocket',
+        'socketRequest': '/js/socketrequest',
+        'socketResponse': '/js/socketresponse',
 
-    };
+    // game
+    'game': '/js/game'
 
-    requirejs.config({
-        paths: srcScripts
-    });
+};
 
-    // worker-slave will add .js to each filename
-    var workerScripts = {
-        gameSocket: [
-            srcScripts.stacktrace,
-            srcScripts.logger,
-            srcScripts.io,
-            srcScripts.underscore,
-            srcScripts.gameSocket
-        ],
-        pathfinder: [
-            srcScripts.stacktrace,
-            srcScripts.logger,
-            srcScripts.pathfinding,
-            srcScripts.pathfinder
-        ]
-    };
+requirejs.config({paths: srcScripts});
 
+define('config', [], function () {
 
-    require(['stacktrace', 'logger', 'underscore', 'jquery', 'pixi', 'worker'],
-        function (Stacktrace, Logger, _, $, Pixi, worker) {
-            Logger.setLevel(Logger.DEBUG);
-            Logger.setHandler(Logger.createDefaultHandler({
-                defaultLevel: Logger.DEBUG
-            }));
-
-            var pathfinder = worker.create(workerScripts.pathfinder, 'Pathfinder Main');
-            var io = worker.create(workerScripts.gameSocket, 'GameSocket');
-
-            $('#btn-login').click(function (e) {
-                var name = $('#inp-login-name').value || 'guest',
-                    pass = $('#inp-login-pass').value || 'guest';
-
-                io.run('login', {name: name, pass: pass}, function (job) {
-                    var res = job.response,
-                        success = res.success,
-                        name = res.name;
-
-                    if (success) {
-                        startGame(name);
-                    }
-
-                })
-            })
-        });
-
-    function Game(io, Pathfinder) {
+    return {
+        paths: srcScripts,
+        worker: {
+            gameSocket: srcScripts.gameData,
+            pathfinder: srcScripts.pathfinder
+        }
 
     }
 
+});
 
-})();
+require(['config', 'logger', 'jquery', 'worker', 'game'], function (config, Logger, jquery, worker, game) {
 
+    Logger.setLevel(Logger.DEBUG);
+    Logger.setHandler(Logger.createDefaultHandler({
+        defaultLevel: Logger.DEBUG
+    }));
+
+
+
+    var io = worker.create(config.worker.gameSocket, 'GameSocket');
+
+    $('#btn-login').click(function (e) {
+        var name = $('#inp-login-name').value || 'guest',
+            pass = $('#inp-login-pass').value || 'guest';
+
+        io.run('login', {name: name, pass: pass}, function (job) {
+            var res = job.response;
+
+            if (res.success) {
+                game.start(io, res.user);
+            }
+
+        })
+    });
+
+
+});
 
 
 

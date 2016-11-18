@@ -24,11 +24,13 @@ orm.connect(config.server.db, function (db) {
                     // check password
                     var p1 = data.pass,
                         p2 = user[0].pass;
+
                     if (user.length && user[0].pass == data.pass) {
                         connection.removeAllListeners();
+
                         // collect userData
                         var userData = {};
-                        [name].forEach(function (k) {
+                        ['id', 'name'].forEach(function (k) {
                             userData[k] = user[0][k];
                         });
 

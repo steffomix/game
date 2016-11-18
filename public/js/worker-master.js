@@ -37,18 +37,24 @@
  */
 
 
-define([], (function () {
+define(['config', 'logger'], function (config, Logger) {
 
+        Logger.setLevel(Logger.DEBUG);
+        Logger.setHandler(Logger.createDefaultHandler({
+            defaultLevel: Logger.DEBUG
+        }));
         var workerId = 0;
 
         /**
          *
-         * @param scripts {Array} List of scripts to load into the Worker.
+         * @param script {Array} List of scripts to load into the Worker.
          *          Full paths are required (like HTML head script paths).
          * @param name {string} optional Human readable Name
-         * @returns {{run: run, infinite: infinite, queue: queue}}
+         * @param socketCallback {function} Callback for initial infinite Job
+         * @param socketScope {object} optional apply object for callback
+         * @returns {object}
          */
-        function create(scripts, name) {
+        function create(script, name, socketCallback, socketScope) {
 
             var jobId = 0;
 
@@ -164,6 +170,16 @@ define([], (function () {
             }
 
             /**
+             *
+             */
+            function shutdown(){
+                run('***worker shutdown***');
+                run = infinite = function(){
+                    console.error('Worker "' + name + '" with scripts ' + scripts + ' is down.', new Error().stack);
+                }
+            }
+
+            /**
              * The Job will be the argument of the callback function
              *
              * @param id {int}
@@ -171,7 +187,7 @@ define([], (function () {
              * @param data {any}
              * @constructor
              */
-            var Job = function (id, cmd, data) {
+            function Job(id, cmd, data) {
                 this.getId = function(){
                     return id;
                 }
@@ -179,12 +195,14 @@ define([], (function () {
                 this.request = data;
                 this.response = null;
                 this.event = null;
-            };
+            }
 
             /**
              *
              */
             worker.addEventListener('message', function (e) {
+                if(e.data.cmd == '***worker ready***') return setupWorker();
+
                 var id = e.data.id;
                 var item = this.jobs[id],
                     job, cb, scope;
@@ -212,29 +230,30 @@ define([], (function () {
             /**
              * workers first run, will load scripts
              */
-            _run(
-                false,
-                '***start***',
-                {
-                    id: workerId,
-                    name: name || '',
-                    scripts: scripts
-                },
-                function (job) {
-                    console.log('worker ' + job.request + ' started');
-                });
-
+            function setupWorker() {
+                _run(
+                    true,
+                    '***worker start***',
+                    {
+                        id: workerId,
+                        name: name || '',
+                        script: script,
+                        config: config
+                    },
+                    socketCallback,
+                socketScope);
+            }
 
             return {
                 run: run,
                 infinite: infinite,
                 queue: queue
-            }
-
+            };
         }
+
 
         return {
             create: create
         }
-    })()
-);
+    })
+;

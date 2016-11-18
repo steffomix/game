@@ -15,20 +15,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+self.importScripts('/js/lib/require.js');
 
-function __manageRequest__(job) {
-    console.error('Worker ' + name + ': Function manageRequest(job) must be overwritten from loaded Scripts.');
-}
+var __slaveModuleID__ = Math.random().toString(36).substring(2) + new Date().getTime();
 
-(function () {
-
+// create slave with unique module name
+define(__slaveModuleID__,
+    [],
+    (function () {
 
     function JobContext(e) {
         this.cmd = e.data.cmd;
         this.request = e.data.data;
         // private id
         var id = e.data.id;
-        this.getId = function(){
+        this.getId = function () {
             return id;
         }
     }
@@ -52,7 +53,7 @@ function __manageRequest__(job) {
      * @param cmd
      * @param data
      */
-    JobContext.prototype.run = function(cmd, data){
+    JobContext.prototype.run = function (cmd, data) {
         self.postMessage({
             id: this.getId(),
             cmd: cmd,
@@ -60,30 +61,50 @@ function __manageRequest__(job) {
         });
     };
 
+    var slave = {
+        socket: null,
+        onMessage: function(job){
+            console.warn('Overwrite worker-slave -> slave -> onMessage');
+        },
+        send: function(cmd, data){
+            this.socket.run(cmd, data);
+        }
+    };
+
     var slaveId,
         slaveName,
-        slaveScripts;
+        slaveConfig,
+        slaveScript;
 
-    self.addEventListener('message', function (e) {
-        var job = new JobContext(e);
-        if (job.cmd == '***start***') {
+        self.addEventListener('message', function (e) {
+            var job = new JobContext(e);
+            if (job.cmd == '***worker start***') {
 
-            slaveId = job.request.id;
-            slaveName = job.request.name;
-            slaveScripts = job.request.scripts;
-            console.log('Start Worker #' + slaveId + ' "' + slaveName + '" with Scripts: ', slaveScripts);
+                console.log('Start Worker #' + slaveId + ' ' + slaveName);
 
-            for (var i = 0; i < slaveScripts.length; i++) {
-                self.importScripts(slaveScripts[i] + '.js');
+                slaveId = job.request.id;
+                slaveName = job.request.name;
+                slaveScript = job.request.script;
+                slaveConfig = job.request.config.paths;
+
+                requirejs.config({paths: slaveConfig});
+
+                self.importScripts(slaveScript + '.js');
+
+                job.cmd = '';
+                slave.socket = job;
+
+            } else if (job.cmd == '***worker shutdown***') {
+                console.log('Shutdown Worker' + slaveId + ' "' + slaveName + '" with Scripts: ', slaveScripts);
+                close();
+            } else {
+                slave.onMessage(job);
             }
+        });
 
-        } else if (job.cmd == '***terminate***') {
-            console.log('Terminate Worker' + slaveId + ' "' + slaveName + '" with Scripts: ', slaveScripts);
-            close();
-        } else {
-            __manageRequest__(job);
-        }
-    });
+    self.postMessage({cmd: '***worker ready***'})
 
-})();
+    return slave;
+
+})());
 

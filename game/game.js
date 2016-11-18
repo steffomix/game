@@ -15,19 +15,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
-var PF = require('pathfinding');
-
-
-function start(server, db){
-
-}
-
-function onPlayerConnect(socket){
-
-}
+(function () {
+    var PF = require('pathfinding'),
+        orm = require('../db/orm');
 
 
+    function start(server, db) {
+        server.on('updateTile', function (tile, a, b, c) {
 
-exports.onPlayerConnect = onPlayerConnect;
-exports.start = start;
+        });
+    }
+
+    function onPlayerConnect(socket) {
+
+    }
+
+
+    exports.onPlayerConnect = onPlayerConnect;
+    exports.start = start;
+
+})();

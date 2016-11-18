@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 10.11.16 Stefan Brinkmann <steffomix@gmail.com>
+/*
+ * Copyright (C) 17.11.16 Stefan Brinkmann <steffomix@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,24 +16,9 @@
  */
 
 
-define('game', ['config', 'logger'], function (logger) {
+define('socketResponse', ['underscore'], function(_){
 
 
-
-    function start(io, user) {
-
-        storage.run('getUserLocation', {user: user});
-
-    }
-
-
-    return {
-        start: start
-    }
 
 
 })
-;
-
-
-
