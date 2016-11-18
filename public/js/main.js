@@ -30,10 +30,11 @@ var srcScripts = {
     'worker': '/js/worker-master',
     'pathfinder': '/js/pathfinder',
 
-    // worker
-    'gameData': '/js/gamesocket',
-        'socketRequest': '/js/socketrequest',
-        'socketResponse': '/js/socketresponse',
+    // worker: Server - Client Middleware
+        'socketManager': '/js/socket-manager',
+        'gameData': '/js/game-data',
+        'socketFrontend': '/js/socket-frontend',
+        'socketBackend': '/js/socket-backend',
 
     // game
     'game': '/js/game'
@@ -45,9 +46,13 @@ requirejs.config({paths: srcScripts});
 define('config', [], function () {
 
     return {
+        server: {
+            domain: 'game.com',
+            port: '4343'
+        },
         paths: srcScripts,
         worker: {
-            gameSocket: srcScripts.gameData,
+            gameSocket: srcScripts.socketManager,
             pathfinder: srcScripts.pathfinder
         }
 
@@ -64,17 +69,18 @@ require(['config', 'logger', 'jquery', 'worker', 'game'], function (config, Logg
 
 
 
-    var io = worker.create(config.worker.gameSocket, 'GameSocket');
+    var socketManager = worker.create(config.worker.gameSocket, 'GameSocket');
+    socketManager.run('connect', config.server);
 
     $('#btn-login').click(function (e) {
         var name = $('#inp-login-name').value || 'guest',
             pass = $('#inp-login-pass').value || 'guest';
 
-        io.run('login', {name: name, pass: pass}, function (job) {
+        socketManager.run('login', {name: name, pass: pass}, function (job) {
             var res = job.response;
 
             if (res.success) {
-                game.start(io, res.user);
+                game.start(socketManager, res.user);
             }
 
         })

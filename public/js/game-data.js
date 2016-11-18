@@ -1,5 +1,5 @@
-/*
- * Copyright (C) 17.11.16 Stefan Brinkmann <steffomix@gmail.com>
+/* 
+ * Copyright (C) 18.11.16 Stefan Brinkmann <steffomix@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,10 +15,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+define('gameData', ['underscore'], function(_){
 
-define('socketResponse', ['underscore'], function(_){
+    var slave,
+        frontend,
+        backend;
+
+    // called from socked manager on connect
+    function onConnect(_slave, _frontend, _backend){
+        slave = _slave;
+        frontend = _frontend;
+        backend = _backend;
+    }
 
 
 
 
-})
+
+
+
+});

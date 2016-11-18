@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 17.11.16 Stefan Brinkmann <steffomix@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,8 +16,18 @@
  */
 
 
-define('socketRequest', [], function(_){
+define('socketBackend', ['underscore'], function(_){
 
+    var slave,
+        socket,
+        gameData;
+
+    // called from socket manager on connect
+    function onConnect(_slave, _socket, _gameData){
+        slave = _slave;
+        socket = _socket;
+        gameData = _gameData
+    }
 
 
 
