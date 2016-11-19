@@ -18,30 +18,30 @@
 var srcScripts = {
 
     // third party libs
-    'stacktrace': '/js/lib/stacktrace.min',
-    'logger': '/js/lib/logger',
-    'underscore': '/js/lib/underscore.min',
-    'jquery': '/js/lib/jquery.min',
-    'io': '/js/lib/socket.io-client',
-    'pixi': '/js/lib/pixi.min',
-    'pathfinding': '/js/lib/pathfinding',
+    'stacktrace': 'lib/stacktrace.min',
+    'logger': 'lib/logger',
+    'underscore': 'lib/underscore.min',
+    'jquery': 'lib/jquery.min',
+    'io': 'lib/socket.io-client',
+    'pixi': 'lib/pixi.min',
+    'pathfinding': 'lib/pathfinding',
 
     // common shared
-    'worker': '/js/worker-master',
-    'pathfinder': '/js/pathfinder',
+    'worker': 'worker-master',
+    'pathfinder': 'pathfinder',
 
     // worker: Server - Client Middleware
-        'socketManager': '/js/socket-manager',
-        'gameData': '/js/game-data',
-        'socketFrontend': '/js/socket-frontend',
-        'socketBackend': '/js/socket-backend',
+        'socketManager': 'socket-manager',
+        'gameCache': 'game-cache',
+        'socketFrontend': 'socket-frontend',
+        'socketBackend': 'socket-backend',
 
     // game
     'game': '/js/game'
 
 };
 
-requirejs.config({paths: srcScripts});
+requirejs.config({paths: srcScripts, baseUrl: '/js/'});
 
 define('config', [], function () {
 
@@ -68,15 +68,21 @@ require(['config', 'logger', 'jquery', 'worker', 'game'], function (config, Logg
     }));
 
 
+    var com;
 
-    var socketManager = worker.create(config.worker.gameSocket, 'GameSocket');
-    socketManager.run('connect', config.server);
+    var socketManager = new worker(config.worker.gameSocket, 'GameSocket1', socketManagerReady);
+    //socketManager.run('connect', config.server);
+
+    function socketManagerReady(job){
+        com = job;
+    }
+
 
     $('#btn-login').click(function (e) {
         var name = $('#inp-login-name').value || 'guest',
             pass = $('#inp-login-pass').value || 'guest';
 
-        socketManager.run('login', {name: name, pass: pass}, function (job) {
+        com.run('login', [name, pass], function (job) {
             var res = job.response;
 
             if (res.success) {

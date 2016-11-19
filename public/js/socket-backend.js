@@ -16,19 +16,37 @@
  */
 
 
-define('socketBackend', ['underscore'], function(_){
+var instance;
+define('socketBackend', ['logger', 'underscore'], function (Logger, _) {
 
-    var slave,
-        socket,
-        gameData;
+    Logger.setHandler(Logger.createDefaultHandler({defaultLevel: Logger.DEBUG}));
+    Logger.setLevel(Logger.DEBUG);
+    var logger = Logger.get('Socket Backend');
 
-    // called from socket manager on connect
-    function onConnect(_slave, _socket, _gameData){
-        slave = _slave;
-        socket = _socket;
-        gameData = _gameData
+
+    return getInstance();
+
+    function getInstance () {
+        if ( !instance ) {
+            instance = new Instance();
+        }
+        return instance;
+    }
+
+    function Instance () {
+
+        if ( instance ) {
+            logger.error('Instance already created');
+        }
+
+        var manager;
+        this.init = init;
+
+        function init (mng) {
+            manager = mng;
+        }
+
     }
 
 
-
-})
+});

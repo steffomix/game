@@ -17,6 +17,7 @@
 
 self.importScripts('/js/lib/require.js');
 
+
 var __slaveModuleID__ = Math.random().toString(36).substring(2) + new Date().getTime();
 
 // create slave with unique module name
@@ -24,87 +25,107 @@ define(__slaveModuleID__,
     [],
     (function () {
 
-    function JobContext(e) {
-        this.cmd = e.data.cmd;
-        this.request = e.data.data;
-        // private id
-        var id = e.data.id;
-        this.getId = function () {
-            return id;
+        function JobContext(e) {
+            this.cmd = e.data.cmd;
+            this.request = e.data.data;
+            // private id
+            var id = e.data.id;
+            this.getId = function () {
+                return id;
+            }
         }
-    }
 
-    /**
-     * response with cmd from request
-     * @param data any
-     */
-    JobContext.prototype.response = function (data) {
-        self.postMessage({
-            id: this.getId(),
-            cmd: this.cmd,
-            data: data,
-            callStack: (this.callStack || '') + (slaveName || '') + new Error('Worker finished').stack.split('\n')
-        });
-    };
+        /**
+         * response with cmd from request
+         * @param data any
+         */
+        JobContext.prototype.response = function (data) {
+            self.postMessage({
+                id: this.getId(),
+                cmd: this.cmd,
+                data: data,
+                callStack: (this.callStack || '') + (slaveName || '') + new Error('Worker finished').stack.split('\n')
+            });
+        };
 
-    /**
-     * response with other cmd
-     * most likely for infinite Jobs
-     * @param cmd
-     * @param data
-     */
-    JobContext.prototype.run = function (cmd, data) {
-        self.postMessage({
-            id: this.getId(),
-            cmd: cmd,
-            data: data
-        });
-    };
+        /**
+         * response with other cmd
+         * most likely for infinite Jobs
+         * @param cmd
+         * @param data
+         */
+        JobContext.prototype.send = function (cmd, data) {
+            self.postMessage({
+                id: this.getId(),
+                cmd: cmd,
+                data: data
+            });
+        };
 
-    var slave = {
-        socket: null,
-        onMessage: function(job){
-            console.warn('Overwrite worker-slave -> slave -> onMessage');
-        },
-        send: function(cmd, data){
-            this.socket.run(cmd, data);
-        }
-    };
+        var slave = {
+            socket: null,
+            onMessage: function (job) {
+                console.error('Overwrite worker-slave -> slave -> onMessage');
+            },
+            send: function (cmd, data) {
+                this.socket.send(cmd, data);
+            }
+        };
 
-    var slaveId,
-        slaveName,
-        slaveConfig,
-        slaveScript;
+        var logger,
+            slaveId,
+            slaveName,
+            slaveConfig,
+            slaveScript;
 
-        self.addEventListener('message', function (e) {
+        function onStart(e) {
             var job = new JobContext(e);
-            if (job.cmd == '***worker start***') {
 
-                console.log('Start Worker #' + slaveId + ' ' + slaveName);
 
-                slaveId = job.request.id;
-                slaveName = job.request.name;
-                slaveScript = job.request.script;
-                slaveConfig = job.request.config.paths;
+            slaveId = job.request.id;
+            slaveName = job.request.name;
+            slaveScript = job.request.script;
+            slaveConfig = job.request.config.paths;
 
-                requirejs.config({paths: slaveConfig});
+            // config requirejs with data from worker-master
+            requirejs.config({paths: slaveConfig});
 
-                self.importScripts(slaveScript + '.js');
+            // load slave main script (entry point)
+            self.importScripts(slaveScript + '.js');
 
-                job.cmd = '';
-                slave.socket = job;
+            // delete command
+            job.cmd = '';
 
-            } else if (job.cmd == '***worker shutdown***') {
+            // register infinite job as main socket
+            slave.socket = job;
+
+            // remove starting listener
+            self.removeEventListener('message', onStart);
+            // add runtime listener
+            self.addEventListener('message', onMessage);
+
+            // send ready to go message
+            job.send('***worker started***');
+            console.log('Worker Slave #' + slaveId + ' ' + slaveName + ' with script: "' + slaveScript + '\n Send cmd "***worker started***"');
+
+        }
+
+        function onMessage(e) {
+            var job = new JobContext(e);
+            if (job.cmd == '***worker shutdown***') {
                 console.log('Shutdown Worker' + slaveId + ' "' + slaveName + '" with Scripts: ', slaveScripts);
                 close();
             } else {
                 slave.onMessage(job);
             }
-        });
+        }
 
-    self.postMessage({cmd: '***worker ready***'})
+        self.addEventListener('message', onStart);
 
-    return slave;
+        console.log('Worker Slave waking up. Send cmd "***worker ready***"')
+        self.postMessage({cmd: '***worker ready***'})
 
-})());
+        return slave;
+
+    })());
 

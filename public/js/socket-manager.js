@@ -21,214 +21,166 @@
  * Web Worker entry point
  */
 self.require(
-    [__slaveModuleID__, 'logger', 'io', 'socketFrontend', 'socketBackend', 'gameData'],
-    function (slave, Logger, io, frontend, backend, gameData) {
+    [__slaveModuleID__, 'logger', 'io', 'underscore', 'socketFrontend', 'socketBackend', 'gameCache'],
+    function (slave, Logger, io, _, front, back, cache) {
 
         Logger.setHandler(Logger.createDefaultHandler({defaultLevel: Logger.DEBUG}));
         Logger.setLevel(Logger.DEBUG);
-        var ioLogger = Logger.get('GameSocket');
+        var instance,
+            logger = Logger.get('Socket-Manager');
 
-        var socket;
+        return getInstance();
 
-        // Wire up socket handler, game data, slave
-        function onConnect(socket){
-            frontend.onConnect(slave, socket, gameData);
-            backend.onConnect(slave, socket, gameData);
-            gameData.onConnect(slave, frontend, backend);
+        function getInstance () {
+            if ( instance === undefined ) {
+                instance = new Manager();
+                slave.onMessage = instance.manageSlave;
+            }
+            return instance;
         }
 
-        slave.onMessage = function (job) {
-            var cmd = job.cmd;
 
-            switch (cmd) {
-                case 'connect':
-                    try {
-                        socket && socket.close();
-                        socket = null;
-                    } catch (e) {
-                        // igniore
-                    }
-                    try {
-                        ioLogger.debug('connect to game.com:4343');
-                        socket = io.connect('game.com:4343');
-                        onConnect(socket);
-                    }catch(e){
-                        ioLogger.error('Failed to connect to server', e);
-                    }
-                case 'login':
-                    login(job);
-                    break;
+        function Manager () {
 
-                case 'logout':
-                    socket.close();
-                    socket = null;
-                    break;
+            if ( instance ) {
+                var e = 'Socket Manager Instance already created';
+                logger.error(e, new Error().stack);
+                throw(e);
+            }
 
-                case 'getUserLocation':
-                    requestHandler[cmd](job);
-                    break;
+            var commands = {'back.connect': 1};
 
-                default:
-                    job.error('cmd ' + cmd + ' not supported');
+            this.manage = manage;
+            this.manageSlave = manageSlave;
+
+            front.init(this, slave);
+            cache.init(this);
+            back.init(this);
+
+            // map workers for apply in method Manager::manage
+            var socketWorkers = {front: front, cache: cache, back: back};
+
+
+            function connect (domain, port, callback) {
+                domain = domain || config.server.domain;
+                port = port || config.server.port;
+
+                logger.debug('connect to game.com:4343');
+                var sock = io.connect(domain + ':' + port);
+                if ( sock.connected ) {
+                    socket = sock;
+                    context ? callback.apply(context) : callback();
+                }
+            }
+
+            function disconnect () {
 
             }
-        };
+
+            function login (name, pass) {
+                var req = job.request,
+                    name = req.name,
+                    pass = req.pass;
+
+                // todo game config io socket, domain and port
 
 
-        function login(job) {
-            var req = job.request,
-                name = req.name,
-                pass = req.pass;
+                con.on('login', function (data) {
+                    if ( data.success === true ) {
+                        ioLogger.debug('Response Login success: ', data.user);
 
-            // todo game config io socket, domain and port
-            ioLogger.debug('connect to game.com:4343');
-            var con = io.connect('game.com:4343');
+                        socket = new Socket(con);
+                        con.off('login');
 
-            con.on('login', function (data) {
-                if (data.success === true) {
-                    ioLogger.debug('Response Login success: ', data.user);
+                        job.response({
+                                success: true,
+                                user: data
+                            }
+                        );
+                    } else {
+                        loginFailed();
+                    }
+                });
 
-                    socket = new Socket(con);
-                    con.off('login');
+                ioLogger.debug('Request User Login:', name);
+                con.emit('login', {name: name, pass: pass});
+            }
 
-                    job.response({
-                            success: true,
-                            user: data
-                        }
-                    );
+            function logout () {
+
+            }
+
+            /**
+             * Receive JobContext from slave, convert to manageable and forward to manage.
+             * If Job.data is an array, all its items will be used as arguments.
+             * In all other cases Job.data is used as one (first) function.argument
+             * @param job
+             */
+            function manageSlave (job) {
+                var cmd = job.cmd,
+                    data = job.data,
+                    args;
+
+                if ( Array.isArray(data) ) {
+                    data.unshift(cmd);
+                    args = data;
                 } else {
-                    loginFailed();
+                    args = [cmd, data];
                 }
-            });
+                manage.apply(this, args);
+            }
 
-            ioLogger.debug('Request User Login:', name);
-            con.emit('login', {name: name, pass: pass});
 
+            /**
+             * Manage commands to socket-frontend, socket-backend and game-cache
+             * Commands loaded from Server:
+             *      manage('front.<cmd>', arg1, arg2, ...)
+             *      manage('back.<cmd>', arg1, arg2, ...)
+             *      manage('cache.<cmd>', arg1, arg2, ...)
+             *
+             * Static Manager Commands:
+             *      manage('connect')
+             *      manage('disconnect')
+             *      manage('login', name, pass)
+             *      manage('logout')
+             *
+             * @returns {any} null on error or disabled commands, all other depends on command
+             */
+            function manage () {
+                var args = _.toArray(arguments),
+                    cmd = (args.shift() || '').split('.'),
+                    scope = cmd[0], fn = cmd[1],
+                    cmdReadable = scope + '.' + fn;
+
+                if ( !scope || !socketWorkers[scope]) {
+                    logger.error('Scope "' + scope + '" not set or invalid', new Error().stack);
+                    return null;
+                }
+
+                if ( !fn || !scope[fn]){
+                    logger.error('Function "' + fn + '" not set ot invalid', new Error().stack);
+                    return null;
+                }
+
+                if ( commands[scope][cmd] === true ) {
+                    // execute command
+                    try {
+                        logger.debug('Execute command ' + cmdReadable, args);
+                        return socketWorkers[scope][cmd].apply(socketWorkers[scope][cmd], args);
+                    } catch (e) {
+                        logger.error('Command ' + cmdReadable + ' throw error: ' + e, args, new Error().stack);
+                        return null;
+                    }
+                } else if ( commands[scope][cmd] === false ) {
+                    // block command
+                    logger.warn('Command ' + cmdReadable + ' disabled by Server.', args);
+                    return null;
+                } else {
+                    logger.error('Execute (manage) command: ' + cmdReadable + ' impossible', args);
+                    return null;
+                }
+            }
         }
-
-        function GameData() {
-
-        }
-
-
     });
-
-/*
- (function () {
-
- Logger.setHandler(Logger.createDefaultHandler({
- defaultLevel: Logger.DEBUG
- }));
- Logger.setLevel(Logger.DEBUG);
- var ioLogger = Logger.get('GameSocket');
-
- function Socket(so){
- this.send = function(cmd, data){
- if(!so.disconnected){
- so.send(cmd, data);
- }else{
- ioLogger.error('Socket is disconnected.', new Error().stack);
- }
- };
- }
-
- var socket; // socket
-
- __manageRequest__ = function(job) {
-
- var cmd = job.cmd;
- var req = job.request;
-
- switch (cmd) {
-
- case 'logout':
- socket.close();
- break;
-
- case 'login':
- case 'getUserLocation':
- requestHandler[cmd](job);
- break;
-
- default:
- job.error('cmd ' + cmd + ' not supported');
-
- }
- };
-
- var gameData = (function(){
-
- })();
-
- var requestHandler = (function(){
-
-
- function login(job) {
- var req = job.request,
- name = req.name,
- pass = req.pass;
-
- // todo game config io socket, domain and port
- ioLogger.debug('connect to game.com:4343');
- var con = io.connect('game.com:4343');
-
- con.on('login', function (data) {
- if (data.success === true) {
- ioLogger.debug('Response Login success: ', data.user);
-
- socket = new Socket(con);
- con.off('login');
-
- job.response({
- success: true,
- user: data
- }
- );
- } else {
- loginFailed();
- }
- });
-
- ioLogger.debug('Request User Login:', name);
- con.emit('login', {name: name, pass: pass});
-
- }
-
- function getUserLocation(job){
- socket.send
- }
-
- function generateWorld(x, y){
- var matrix = [];
- for (var iy = 0; iy < y; iy++) {
- matrix[iy] = [];
- for (var ix = 0; ix < x; ix++) {
- socket.send('update tile', {
- player: 1,
- world: 1,
- type: parseInt(Math.random() * 5),
- z: 1,
- x: ix,
- y: iy,
- data: {
- notes: parseInt(Math.random() * 10000)
- }
- });
- matrix[iy][ix] = parseInt(Math.random() * 1.3);
- }
- }
- return matrix;
- }
-
- })();
-
- var responseHandler = (function(){
-
- })();
-
- })();
- */
-
-
 
 

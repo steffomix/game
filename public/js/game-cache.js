@@ -15,23 +15,37 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define('gameData', ['underscore'], function(_){
+define('gameCache', ['logger', 'underscore'], function (Logger, _) {
 
-    var slave,
-        frontend,
-        backend;
+    Logger.setHandler(Logger.createDefaultHandler({defaultLevel: Logger.DEBUG}));
+    Logger.setLevel(Logger.DEBUG);
+    var logger = Logger.get('GameData Cache');
 
-    // called from socked manager on connect
-    function onConnect(_slave, _frontend, _backend){
-        slave = _slave;
-        frontend = _frontend;
-        backend = _backend;
+    var instance,
+        manager;
+
+    function getInstance(){
+        if(!instance){
+            instance = new Instance();
+        }
+        return instance;
     }
 
+    return getInstance();
 
 
+    function Instance(){
 
+        if(instance){
+            logger.error('Instance already created');
+        }
 
+        var manager;
+        this.init = init;
 
+        function init (mng) {
+            manager = mng;
+        }
+    }
 
 });
