@@ -10,11 +10,29 @@ var config = require('../conf/game.conf'),
 
 http.listen(config.server.port);
 
+
+
+
 // create Database if not exists and start server
 // @todo hash password, remove login bypass
 orm.connect(config.server.db, function (db) {
     // accept connections
     server.sockets.on('connection', function (connection) {
+
+        connection.emit('newConnection', {
+            front: {
+                'login': true
+            },
+            back: {
+                'connect': true,
+                'disconnect': true,
+                'login': true,
+                'logout': true
+            },
+            cache: {
+
+            }
+        });
 
         console.log('New Connection ID ' + connection.id);
         connection.on('login', function (data) {

@@ -39,10 +39,8 @@
 
 define(['config', 'logger'], function (config, Logger) {
 
-    Logger.setLevel(Logger.DEBUG);
-    Logger.setHandler(Logger.createDefaultHandler({
-        defaultLevel: Logger.DEBUG
-    }));
+    // Logger.setLevel(Logger.DEBUG);
+    // Logger.setHandler(Logger.createDefaultHandler({defaultLevel: Logger.DEBUG}));
 
 
     var allWorkerId = 0;
@@ -57,14 +55,15 @@ define(['config', 'logger'], function (config, Logger) {
      * @param createWorkerScope {object} optional apply object for callback
      * @returns {object}
      */
-    function WorkMaster(script, name, createWorkerCallback, createWorkerScope) {
+    function WorkMaster(script, name, createWorkerCallback, infiniteCallback, createWorkerScope) {
+
 
         var workerId = allWorkerId++;
         var logger = Logger.get('Worker Master #' + workerId + ' "' + name + '"');
 
         var setupLogger = Logger.get('Worker Master Setup #' + workerId + ' "' + name + '"');
         var jobId = 0;
-        var worker = new Worker('/js/worker-slave.js');
+        var worker = new Worker(config.paths.workerSlave);
 
         setupLogger.debug('Create Worker-master #' + workerId);
         /**
@@ -218,10 +217,12 @@ define(['config', 'logger'], function (config, Logger) {
                 cb = item.cb;
                 scope = item.scope;
 
-                logger.debug(name + 'receive message with cmd "' + job.cmd + '"', e.data.data);
+                logger.debug('Receive message with cmd "' + job.cmd + '"', e.data.data);
 
                 if (!item.infinite) {
                     delete this.jobs[id];
+                }else{
+                    job.cmd = e.data.cmd;
                 }
                 job.response = e.data.data;
                 if (cb) {
@@ -248,7 +249,7 @@ define(['config', 'logger'], function (config, Logger) {
                         script: script,
                         config: config
                     },
-                    createWorkerCallback,
+                    infiniteCallback,
                     createWorkerScope);
             } else if (e.data.cmd == '***worker started***') {
                 setupLogger.debug('Slave "' + name + '" ready to go. Perform callback...');
@@ -274,6 +275,7 @@ define(['config', 'logger'], function (config, Logger) {
         /**
          * workers first run, will load scripts
          */
+        /*
         function setupWorker() {
             _run(
                 true,
@@ -287,6 +289,7 @@ define(['config', 'logger'], function (config, Logger) {
                 createWorkerCallback,
                 createWorkerScope);
         }
+        */
 
         this.run = run;
         this.infinite = infinite;
@@ -294,7 +297,9 @@ define(['config', 'logger'], function (config, Logger) {
     }
 
 
-    return WorkMaster;
+    return {
+        WorkMaster: WorkMaster
+    };
 
 })
 ;

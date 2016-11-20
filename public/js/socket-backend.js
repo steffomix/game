@@ -16,34 +16,89 @@
  */
 
 
-var instance;
-define('socketBackend', ['logger', 'underscore'], function (Logger, _) {
+define('socketBackend', ['logger', 'underscore', 'io'], function (Logger, _, io) {
 
-    Logger.setHandler(Logger.createDefaultHandler({defaultLevel: Logger.DEBUG}));
-    Logger.setLevel(Logger.DEBUG);
-    var logger = Logger.get('Socket Backend');
-
+    // Logger.setHandler(Logger.createDefaultHandler({defaultLevel: Logger.DEBUG}));
+    // Logger.setLevel(Logger.DEBUG);
+    var instance,
+        logger = Logger.get('Socket Backend');
 
     return getInstance();
 
     function getInstance () {
         if ( !instance ) {
-            instance = new Instance();
+            instance = new SocketBackend();
         }
         return instance;
     }
 
-    function Instance () {
+    function SocketBackend () {
 
         if ( instance ) {
             logger.error('Instance already created');
         }
 
-        var manager;
+        var manager,
+            config,
+            socket;
+
         this.init = init;
 
-        function init (mng) {
+        function init (mng, conf) {
             manager = mng;
+            config = conf;
+        }
+
+        this.connect = function (host, port) {
+            host = host || config.server.host;
+            port = port || config.server.port;
+
+            logger.debug('connect to game.com:4343');
+            var sock = io.connect(host + ':' + port);
+            //if ( sock.connected ) {
+                socket = sock;
+                sock.on('updateGameCommands', function(commands){
+                    manager.updateGameCommands(commands);
+                });
+                sock.on('newConnection', function(commands){
+                    manager.updateGameCommands(commands);
+                    manager.manage('front.login', host, port);
+                });
+            //}
+        };
+
+
+        this.login = function(name, pass) {
+            var req = job.request;
+            name = req.name;
+            pass = req.pass;
+
+            // todo game config io socket, domain and port
+
+
+            con.on('login', function (data) {
+                if ( data.success === true ) {
+                    ioLogger.debug('Response Login success: ', data.user);
+
+                    socket = new Socket(con);
+                    con.off('login');
+
+                    job.response({
+                            success: true,
+                            user: data
+                        }
+                    );
+                } else {
+                    loginFailed();
+                }
+            });
+
+            ioLogger.debug('Request User Login:', name);
+            con.emit('login', {name: name, pass: pass});
+        }
+
+        function logout () {
+
         }
 
     }

@@ -17,16 +17,14 @@
 
 define('gameCache', ['logger', 'underscore'], function (Logger, _) {
 
-    Logger.setHandler(Logger.createDefaultHandler({defaultLevel: Logger.DEBUG}));
-    Logger.setLevel(Logger.DEBUG);
-    var logger = Logger.get('GameData Cache');
-
+    // Logger.setHandler(Logger.createDefaultHandler({defaultLevel: Logger.DEBUG}));
+    // Logger.setLevel(Logger.DEBUG);
     var instance,
-        manager;
+        logger = Logger.get('GameData Cache');
 
     function getInstance(){
         if(!instance){
-            instance = new Instance();
+            instance = new GameCache();
         }
         return instance;
     }
@@ -34,17 +32,19 @@ define('gameCache', ['logger', 'underscore'], function (Logger, _) {
     return getInstance();
 
 
-    function Instance(){
+    function GameCache(){
 
         if(instance){
             logger.error('Instance already created');
         }
 
-        var manager;
+        var manager,
+            config;
         this.init = init;
 
-        function init (mng) {
+        function init (mng, conf) {
             manager = mng;
+            config = conf;
         }
     }
 

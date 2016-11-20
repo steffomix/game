@@ -35,6 +35,7 @@ var srcScripts = {
         'gameCache': 'game-cache',
         'socketFrontend': 'socket-frontend',
         'socketBackend': 'socket-backend',
+        'workerSlave': '/js/worker-slave.js',
 
     // game
     'game': '/js/game'
@@ -47,7 +48,7 @@ define('config', [], function () {
 
     return {
         server: {
-            domain: 'game.com',
+            host: 'game.com',
             port: '4343'
         },
         paths: srcScripts,
@@ -66,17 +67,25 @@ require(['config', 'logger', 'jquery', 'worker', 'game'], function (config, Logg
     Logger.setHandler(Logger.createDefaultHandler({
         defaultLevel: Logger.DEBUG
     }));
-
+    logger = Logger.get('Main');
 
     var com;
 
-    var socketManager = new worker(config.worker.gameSocket, 'GameSocket1', socketManagerReady);
+    logger.debug('App start, create worker...');
+    var socketManager = new worker.WorkMaster(config.worker.gameSocket, 'GameSocket1', socketManagerReady, onSocketMessage);
     //socketManager.run('connect', config.server);
 
     function socketManagerReady(job){
-        com = job;
+        logger.debug('SocketManager ready', job);
+        socketManager.run('back.connect', {host: config.server.host, port: config.server.port}, function(job){
+            logger.debug('Connected', job);
+        });
     }
 
+    function onSocketMessage(job){
+        var cmd = job.cmd;
+        var data = job.data;
+    }
 
     $('#btn-login').click(function (e) {
         var name = $('#inp-login-name').value || 'guest',

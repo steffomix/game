@@ -27,13 +27,15 @@ self.require(
         Logger.setHandler(Logger.createDefaultHandler({defaultLevel: Logger.DEBUG}));
         Logger.setLevel(Logger.DEBUG);
         var instance,
-            logger = Logger.get('Socket-Manager');
+            config = slave.config;
+
 
         return getInstance();
 
         function getInstance () {
             if ( instance === undefined ) {
                 instance = new Manager();
+                // overwrite onMessage ***at last***
                 slave.onMessage = instance.manageSlave;
             }
             return instance;
@@ -42,73 +44,36 @@ self.require(
 
         function Manager () {
 
+            var logger = Logger.get('Socket-Manager');
+
             if ( instance ) {
                 var e = 'Socket Manager Instance already created';
                 logger.error(e, new Error().stack);
                 throw(e);
             }
 
-            var commands = {'back.connect': 1};
+            // map workers for apply in method Manager::manage
+            var socketWorkers = {front: front, cache: cache, back: back},
+                // minimal allowed commands
+                commands = {
+                    'back': {
+                        'connect': true
+                    }
+                };
 
             this.manage = manage;
             this.manageSlave = manageSlave;
+            this.updateGameCommands = updateGameCommands;
 
             front.init(this, slave);
-            cache.init(this);
-            back.init(this);
+            cache.init(this, config);
+            back.init(this, config);
 
-            // map workers for apply in method Manager::manage
-            var socketWorkers = {front: front, cache: cache, back: back};
-
-
-            function connect (domain, port, callback) {
-                domain = domain || config.server.domain;
-                port = port || config.server.port;
-
-                logger.debug('connect to game.com:4343');
-                var sock = io.connect(domain + ':' + port);
-                if ( sock.connected ) {
-                    socket = sock;
-                    context ? callback.apply(context) : callback();
-                }
+            function updateGameCommands(data){
+                logger.debug('Update Game Commands', data);
+                commands = data;
             }
 
-            function disconnect () {
-
-            }
-
-            function login (name, pass) {
-                var req = job.request,
-                    name = req.name,
-                    pass = req.pass;
-
-                // todo game config io socket, domain and port
-
-
-                con.on('login', function (data) {
-                    if ( data.success === true ) {
-                        ioLogger.debug('Response Login success: ', data.user);
-
-                        socket = new Socket(con);
-                        con.off('login');
-
-                        job.response({
-                                success: true,
-                                user: data
-                            }
-                        );
-                    } else {
-                        loginFailed();
-                    }
-                });
-
-                ioLogger.debug('Request User Login:', name);
-                con.emit('login', {name: name, pass: pass});
-            }
-
-            function logout () {
-
-            }
 
             /**
              * Receive JobContext from slave, convert to manageable and forward to manage.
@@ -152,26 +117,27 @@ self.require(
                     scope = cmd[0], fn = cmd[1],
                     cmdReadable = scope + '.' + fn;
 
-                if ( !scope || !socketWorkers[scope]) {
+                if ( !scope || !socketWorkers[scope] ) {
                     logger.error('Scope "' + scope + '" not set or invalid', new Error().stack);
                     return null;
                 }
 
-                if ( !fn || !scope[fn]){
+                if ( !fn || !socketWorkers[scope][fn] ) {
                     logger.error('Function "' + fn + '" not set ot invalid', new Error().stack);
                     return null;
                 }
 
-                if ( commands[scope][cmd] === true ) {
+
+                if ( commands[scope][fn] === true ) {
                     // execute command
                     try {
                         logger.debug('Execute command ' + cmdReadable, args);
-                        return socketWorkers[scope][cmd].apply(socketWorkers[scope][cmd], args);
+                        return socketWorkers[scope][fn].apply(socketWorkers[scope][fn], args);
                     } catch (e) {
                         logger.error('Command ' + cmdReadable + ' throw error: ' + e, args, new Error().stack);
                         return null;
                     }
-                } else if ( commands[scope][cmd] === false ) {
+                } else if ( commands[scope][fn] === false ) {
                     // block command
                     logger.warn('Command ' + cmdReadable + ' disabled by Server.', args);
                     return null;
@@ -181,6 +147,7 @@ self.require(
                 }
             }
         }
-    });
+    })
+;
 
 

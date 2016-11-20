@@ -16,35 +16,46 @@
  */
 
 
-var instance;
 define('socketFrontend', ['logger', 'underscore'], function(Logger, _){
 
-    Logger.setHandler(Logger.createDefaultHandler({defaultLevel: Logger.DEBUG}));
-    Logger.setLevel(Logger.DEBUG);
-    var logger = Logger.get('Socket Frontend');
+    // Logger.setHandler(Logger.createDefaultHandler({defaultLevel: Logger.DEBUG}));
+    // Logger.setLevel(Logger.DEBUG);
+    var instance,
+        logger = Logger.get('Socket Frontend');
 
 
+    var instance;
 
     return getInstance();
 
     function getInstance(){
         if(!instance){
-            instance = new Instance();
+            instance = new SocketFrontend();
         }
         return instance;
     }
 
-    function Instance(){
+    function SocketFrontend(){
 
         if(instance){
             logger.error('Instance already created');
         }
-        var manager;
 
+        var manager,
+            slave,
+            config;
         this.init = init;
 
-        function init (mng) {
+        function init (mng, slv) {
             manager = mng;
+            slave = slv;
+            config = slv.config;
+        }
+
+        this.login = function(host, port){
+            var data = {host: host, port: port};
+            logger.debug('Task Slave: login', data);
+            slave.send('showScreen.login', data);
         }
 
     }
