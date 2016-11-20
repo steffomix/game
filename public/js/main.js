@@ -28,18 +28,22 @@ var srcScripts = {
 
     // common shared
     'worker': 'worker-master',
-    'pathfinder': 'pathfinder',
 
     // worker: Server - Client Middleware
-        'socketManager': 'socket-manager',
-        'gameCache': 'game-cache',
-        'socketFrontend': 'socket-frontend',
-        'socketBackend': 'socket-backend',
-        'workerSlave': '/js/worker-slave.js',
+    'socketManager': 'socket-manager',
+    'gameCache': 'game-cache',
+    'pathfinder': 'pathfinder', // used by gamecache
+    'socketFrontend': 'socket-frontend',
+    'socketBackend': 'socket-backend',
+    'workerSlave': '/js/worker-slave.js', // must be full path
 
     // game
-    'game': '/js/game'
-
+    'gameManager': 'game-manager',
+    // html screen container from top to bottom
+    'dialogScreen': 'dialog-screen',
+    'inputScreen': 'input-screen',
+    'hudScreen': 'hud-screen',
+    'gameScreen': 'game-screen'
 };
 
 requirejs.config({paths: srcScripts, baseUrl: '/js/'});
@@ -56,50 +60,47 @@ define('config', [], function () {
             gameSocket: srcScripts.socketManager,
             pathfinder: srcScripts.pathfinder
         }
-
     }
 
 });
 
-require(['config', 'logger', 'jquery', 'worker', 'game'], function (config, Logger, jquery, worker, game) {
+require(['config', 'logger', 'worker', 'gameManager'], function (config, Logger, WorkMaster, gameManager) {
 
     Logger.setLevel(Logger.DEBUG);
     Logger.setHandler(Logger.createDefaultHandler({
         defaultLevel: Logger.DEBUG
     }));
     logger = Logger.get('Main');
-
-    var com;
-
     logger.debug('App start, create worker...');
-    var socketManager = new worker.WorkMaster(config.worker.gameSocket, 'GameSocket1', socketManagerReady, onSocketMessage);
-    //socketManager.run('connect', config.server);
+    var socketManager = new WorkMaster(config.worker.gameSocket, 'GameSocket1', socketManagerReady, onSocketMessage);
 
-    function socketManagerReady(job){
+
+    function socketManagerReady (job) {
         logger.debug('SocketManager ready', job);
-        socketManager.run('back.connect', {host: config.server.host, port: config.server.port}, function(job){
+        socketManager.run('back.connect', {host: config.server.host, port: config.server.port}, function (job) {
             logger.debug('Connected', job);
         });
     }
 
-    function onSocketMessage(job){
-        var cmd = job.cmd;
-        var data = job.data;
-    }
+    function onSocketMessage (job) {
+        var cmd = (job.cmd || '').split('.');
+        var data = job.response;
 
-    $('#btn-login').click(function (e) {
-        var name = $('#inp-login-name').value || 'guest',
-            pass = $('#inp-login-pass').value || 'guest';
+        var c1 = cmd.shift();
+        try {
 
-        com.run('login', [name, pass], function (job) {
-            var res = job.response;
+            switch (c1) {
+                case 'screen':
+                    gameManager.onSocketMessage(cmd.join('.'), data);
+                    break;
+                default:
+                    logger.error('Socket Message "' + cmd + '" not supported', job, new Error().stack);
 
-            if (res.success) {
-                game.start(socketManager, res.user);
             }
-
-        })
-    });
+        } catch (e) {
+            logger.error('Forward socketMessage failed: ' + e, job);
+        }
+    }
 
 
 });

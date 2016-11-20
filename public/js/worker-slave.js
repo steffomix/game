@@ -38,10 +38,10 @@ define(__slaveModuleID__,
          * response with cmd from request
          * @param data any
          */
-        JobContext.prototype.response = function (data) {
+        JobContext.prototype.send = function (cmd, data) {
             self.postMessage({
                 id: this.getId(),
-                cmd: this.cmd,
+                cmd: cmd,
                 data: data,
                 callStack: (this.callStack || '') + (slaveName || '') + new Error('Worker finished').stack.split('\n')
             });
@@ -89,8 +89,8 @@ define(__slaveModuleID__,
                 }, 20, job);
             },
             send: function (cmd, data) {
-                console.log('Socket-slave send ' + cmd, data, this.onMessage)
-                this.socket.send(cmd, data, this.onMessage);
+                console.log('Socket-slave send ' + cmd, data)
+                this.socket.send(cmd, data);
             }
         };
 

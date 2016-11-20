@@ -227,7 +227,11 @@ define(['config', 'logger'], function (config, Logger) {
                 job.response = e.data.data;
                 if (cb) {
                     try {
-                        scope ? cb.apply(scope, job) : cb(job);
+                        if(scope){
+                            cb.apply(scope, job);
+                        }else{
+                            cb(job);
+                        }
                     } catch (e) {
                         console.log(e, console.trace(e));
                     }
@@ -257,7 +261,9 @@ define(['config', 'logger'], function (config, Logger) {
                 this.addEventListener('message', onMessage);
                 try {
                     var job = worker.jobs[e.data.id].job;
-                    job.workerId = workerId;
+                    job.cmd = '';
+                    job.request = null;
+                    job.response = null;
                     createWorkerScope ? createWorkerCallback.apply(createWorkerScope, [job]) : createWorkerCallback(job);
                 } catch (e) {
 
@@ -297,9 +303,7 @@ define(['config', 'logger'], function (config, Logger) {
     }
 
 
-    return {
-        WorkMaster: WorkMaster
-    };
+    return WorkMaster;
 
 })
 ;

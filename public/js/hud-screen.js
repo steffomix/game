@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 17.11.16 Stefan Brinkmann <steffomix@gmail.com>
+ * Copyright (C) 20.11.16 Stefan Brinkmann <steffomix@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,48 +16,33 @@
  */
 
 
-define('socketFrontend', ['logger', 'underscore'], function(Logger, _){
+define('hudScreen', ['logger'], function (Logger) {
 
     // Logger.setHandler(Logger.createDefaultHandler({defaultLevel: Logger.DEBUG}));
     // Logger.setLevel(Logger.DEBUG);
     var instance,
-        logger = Logger.get('Socket Frontend');
+        manager,
+        logger = Logger.get('HudScreen');
 
     return getInstance();
 
-    function getInstance(){
-        if(!instance){
-            instance = new SocketFrontend();
+    function getInstance () {
+        if ( !instance ) {
+            instance = new HudScreen();
         }
         return instance;
     }
 
-    function SocketFrontend(){
+    function HudScreen () {
 
-        if(instance){
-            logger.error('Instance already created');
+        if ( instance ) {
+            logger.error('Instance HudScreen already created');
         }
 
-        var manager,
-            slave,
-            config;
-        this.init = init;
-
-        function init (mng, slv) {
+        this.init = function(mng){
             manager = mng;
-            slave = slv;
-            config = slv.config;
         }
 
-        this.showLogin = function(data){
-
-        }
-
-        this.login = function(host, port){
-            var data = {host: host, port: port};
-            logger.debug('Task Slave: login', data);
-            slave.send('screen.input.showLogin', data);
-        }
 
     }
 });
