@@ -24,9 +24,14 @@ define(__slaveModuleID__,
     [],
     (function () {
 
-        function JobContext(e) {
+        /**
+         * Create Job from message event
+         * @param e
+         * @constructor
+         */
+        function Job(e) {
             this.cmd = e.data.cmd;
-            this.request = e.data.data;
+            this.data = this.request = e.data.data;
             // private id
             var id = e.data.id;
             this.getId = function () {
@@ -35,25 +40,12 @@ define(__slaveModuleID__,
         }
 
         /**
-         * response with cmd from request
-         * @param data any
-         */
-        JobContext.prototype.send = function (cmd, data) {
-            self.postMessage({
-                id: this.getId(),
-                cmd: cmd,
-                data: data,
-                callStack: (this.callStack || '') + (slaveName || '') + new Error('Worker finished').stack.split('\n')
-            });
-        };
-
-        /**
          * response with other cmd
          * most likely for infinite Jobs
          * @param cmd
          * @param data
          */
-        JobContext.prototype.send = function (cmd, data) {
+        Job.prototype.send = function (cmd, data) {
             self.postMessage({
                 id: this.getId(),
                 cmd: cmd,
@@ -61,8 +53,13 @@ define(__slaveModuleID__,
             });
         };
 
-        var slave = {
+        var socketContainer = {
             socket: null,
+            config: null
+        };
+
+        var Socket = function(socketContainer){
+            var self = this;
             /**
              * There sometimes is a timing problem on Google Chrome when the first job occurs
              * before the slave is fully loaded, initialized an onMessage finally overwritten.
@@ -77,32 +74,44 @@ define(__slaveModuleID__,
              * @param job
              */
             // todo Google Chrome (only **without** debugger) seems to bounce initialization and call it twice :-S WTF?!?
-            onMessage: function (job) {
+            self.onMessage = function (job) {
                 var self = this;
-                console.warn('Overwrite worker-slave -> slave -> onMessage. Resend Message in 100ms', {job: job});
+                console.warn('onMessage not replaced or Worker not ready. Resend Message in 10ms', {job: job});
                 setTimeout(function ress(j){
                     if(!j){
                         console.warn('no Job set');
                     }
-                    console.warn('Resend message' + j.cmd, {job: j});
+                    console.warn('Resend message: ' + j.cmd, {job: j});
                     self['onMessage'](j);
-                }, 20, job);
-            },
-            send: function (cmd, data) {
+                }, 10, job);
+            };
+            self.send = function (cmd, data) {
                 console.log('Socket-slave send ' + cmd, data)
-                this.socket.send(cmd, data);
+                socketContainer.socket.send(cmd, data);
+            };
+            self.getConfig = function(){
+                return socketContainer.config;
             }
         };
 
-        var logger,
+        var socket = new Socket(socketContainer),
             slaveId,
             slaveName,
             slaveConfig,
             slaveScript;
 
+        /**
+         * Create a socket Job,
+         * collect data from Event,
+         * initialize requirejs with data from Event,
+         * import main script,
+         * put socket Job into socketContainer, which is part of the initial worker socket
+         * swich start message listener to runtime listener
+         *
+         * @param e
+         */
         function onStart(e) {
-            var job = new JobContext(e);
-
+            var job = new Job(e);
 
             slaveId = job.request.id;
             slaveName = job.request.name;
@@ -119,8 +128,8 @@ define(__slaveModuleID__,
             job.cmd = '';
 
             // register infinite job as main socket
-            slave.socket = job;
-            slave.config = slaveConfig;
+            socketContainer.socket = job;
+            socketContainer.config = slaveConfig;
 
             // remove starting listener
             self.removeEventListener('message', onStart);
@@ -131,24 +140,32 @@ define(__slaveModuleID__,
             console.log('Slave #' + slaveId + ' ' + slaveName + ' with script: "' + slaveScript + '\n Send cmd "***worker started***"');
         }
 
+        /**
+         * Handle incomming runtime messages
+         * @param e
+         */
         function onMessage(e) {
-            console.log('Worker Slave onMessage: ', e.data);
-            var job = new JobContext(e);
+            var job = new Job(e);
+            console.log('Worker Slave onMessage: ', job);
             if (job.cmd == '***worker shutdown***') {
-                console.log('Shutdown Worker' + slaveId + ' "' + slaveName + '" with Scripts: ', slaveScripts);
+                console.log('Shutdown Worker' + slaveId + ' "' + slaveName + '" with Scripts: ', slaveScript);
                 close();
             } else {
-                slave.onMessage(job);
+                socket.onMessage(job);
             }
         }
 
+        // add startup listener
         self.addEventListener('message', onStart);
 
-        self.postMessage({cmd: '***worker ready***'})
+        console.log('Worker Slave waking up. Send cmd "***worker ready***"');
+        self.postMessage({cmd: '***worker ready***'});
 
-        console.log('Worker Slave waking up. Send cmd "***worker ready***"')
-        return slave;
+        // finally return the main worker socket module __slaveModuleID__
+        // with methods:
+        //      send('msg', data) send a message back to main socket on browser side
+        //      onMessage(),
+        //      getData()
+        return socket;
 
     })());
-
-require([__slaveModuleID__], function(slave){});

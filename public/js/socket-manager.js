@@ -22,12 +22,12 @@
  */
 self.require(
     [__slaveModuleID__, 'logger', 'io', 'underscore', 'socketFrontend', 'socketBackend', 'gameCache'],
-    function (slave, Logger, io, _, front, back, cache) {
+    function (socket, Logger, io, _, front, back, cache) {
 
         Logger.setHandler(Logger.createDefaultHandler({defaultLevel: Logger.DEBUG}));
         Logger.setLevel(Logger.DEBUG);
         var instance,
-            config = slave.config;
+            config = socket.getConfig();
 
 
         return getInstance();
@@ -36,7 +36,7 @@ self.require(
             if ( instance === undefined ) {
                 instance = new Manager();
                 // overwrite onMessage ***at last***
-                slave.onMessage = instance.manageSlave;
+                socket.onMessage = instance.onMessage;
             }
             return instance;
         }
@@ -62,10 +62,10 @@ self.require(
                 };
 
             this.manage = manage;
-            this.manageSlave = manageSlave;
+            this.onMessage = onMessage;
             this.updateGameCommands = updateGameCommands;
 
-            front.init(this, slave);
+            front.init(this, socket);
             cache.init(this, config);
             back.init(this, config);
 
@@ -81,10 +81,14 @@ self.require(
              * In all other cases Job.data is used as one (first) function.argument
              * @param job
              */
-            function manageSlave (job) {
+            function onMessage (job) {
                 var cmd = job.cmd,
                     data = job.data,
                     args;
+                if(job.cmd == 'test'){
+                    job.send('testback', 'testback data');
+                    return job.send('testback2', 'testback data2');
+                }
 
                 if ( Array.isArray(data) ) {
                     data.unshift(cmd);

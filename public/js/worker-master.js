@@ -51,11 +51,11 @@ define(['config', 'logger'], function (config, Logger) {
      * @param script {Array} List of scripts to load into the Worker.
      *          Full paths are required (like HTML head script paths).
      * @param name {string} optional Human readable Name
-     * @param createWorkerCallback {function} Callback for initial infinite Job
+     * @param socketManagerReady {function} Callback for initial infinite Job
      * @param createWorkerScope {object} optional apply object for callback
      * @returns {object}
      */
-    function WorkMaster(script, name, createWorkerCallback, infiniteCallback, createWorkerScope) {
+    function WorkMaster(script, name, socketManagerReady, onSocketMessage, createWorkerScope) {
 
 
         var workerId = allWorkerId++;
@@ -107,32 +107,32 @@ define(['config', 'logger'], function (config, Logger) {
             for (var j in worker.jobs) {
                 job = worker.jobs[j];
                 if (worker.jobs.hasOwnProperty(j)) {
-                    job.infinite ? qi.push(worker.jobs[j]) : q.push(worker.jobs[j]);
+                    job.sock ? qi.push(worker.jobs[j]) : q.push(worker.jobs[j]);
                 }
             }
 
             return {
                 runs: q,
-                infinites: qi
+                socks: qi
             };
         }
 
         /**
          *
-         * @param infinite {boolean} the job can response multiple times
+         * @param sock {boolean} the job can response multiple times
          * @param cmd {string} Command for the Worker
          * @param data {any}
          * @param cb {function} callback
          * @param scope {object} optional scope
          * @returns Job {Job}
          */
-        function _run(infinite, cmd, data, cb, scope) {
-            logger.debug('Run ' + (infinite ? 'infinite Job' : 'Job') + ' with cmd: ' + cmd, data);
+        function _run(sock, cmd, data, cb, scope) {
+
             var id = getId(),
-                job = new Job(infinite, id, cmd, data);
+                job = new Job(sock, id, cmd, data);
             worker.jobs[id] = {
                 job: job,
-                infinite: infinite,
+                sock: sock,
                 cb: cb,
                 scope: scope
             };
@@ -146,6 +146,20 @@ define(['config', 'logger'], function (config, Logger) {
         }
 
         /**
+         * Send a fire-and-forget message
+         * @param cmd {string}
+         * @param data any
+         */
+        function send(cmd, data){
+            logger.debug('Send cmd: ' + cmd, data);
+            worker.postMessage({
+                id: null,
+                cmd: cmd,
+                data: data
+            });
+        }
+
+        /**
          * Wrapper to _run().
          * Start a job that can response only one times
          * afterwards its deleted from workers joblist
@@ -156,7 +170,8 @@ define(['config', 'logger'], function (config, Logger) {
          * @param scope {object} optional, applied to callback
          * @returns Job {Job} worker-master.js->Job
          */
-        function run(cmd, data, cb, scope) {
+        function request(cmd, data, cb, scope) {
+            logger.debug('Request cmd: ' + cmd, data);
             return _run(false, cmd, data, cb, scope);
         }
 
@@ -165,13 +180,15 @@ define(['config', 'logger'], function (config, Logger) {
          * Same as run, but the job will *NOT* (never) be deleted
          * and make endless, most likely setInterval-callbacks (responses) possible
          * to provide continously updates to the caller of the job.
+         *
          * @param cmd string
          * @param data any (even number, string, boolean... )
          * @param cb callback function
          * @param scope object optional, applied to callback
          * @returns Job {Job}
          */
-        function infinite(cmd, data, cb, scope) {
+        function socket(cmd, data, cb, scope) {
+            logger.debug('socket cmd: ' + cmd, data);
             return _run(true, cmd, data, cb, scope);
         }
 
@@ -180,51 +197,71 @@ define(['config', 'logger'], function (config, Logger) {
          */
         function shutdown() {
             setupLogger.debug('Shutdown worker "' + name + '"')
-            run('***worker shutdown***');
-            run = infinite = function () {
-                console.error('Worker "' + name + '" with scripts ' + scripts + ' is down.', new Error().stack);
+            send('***worker shutdown***');
+            send = socket = request = function () {
+                console.error('Worker "' + name + '" with script ' + script + ' is down.', new Error().stack);
             }
         }
 
         /**
-         * The Job will be the argument of the callback function
+         * Job will be the argument of the callback function
          *
+         * To check if Job is request or response:
+         *      isRequest = Job.data === Job.request
+         *      isResponse = Job.data === Job.response
+         *
+         * WorkerMaster holds a reference of Job.request and put it back on response.
+         * So Job.request is serialized and de-serialized only on Worker side
+         * and can be compared with Job.request on Browser-side.
+         *
+         * @param sock {bool} true turns the job into a socket
          * @param id {int}
          * @param cmd {string}
          * @param data {any}
          * @constructor
          */
-        function Job(infinite, id, cmd, data) {
-            this.getId = function () {
+        function Job(sock, id, cmd, data) {
+            var self = this;
+            self.getId = function () {
                 return id;
-            }
-            this.cmd = cmd;
-            this.request = data;
-            this.response = null;
-            this.event = null;
-            if(infinite){
-                this.run = run;
+            };
+            self.isSocket = function () {
+                return sock;
+            };
+            self.cmd = cmd;
+            self.data = self.request = data;
+            self.response = null;
+            if(sock){
+                self.send = send;
+                self.request = request;
             }
         }
 
+        /**
+         *
+         * @param e {Event}
+         */
         function onMessage(e) {
             var id = e.data.id;
+            if(!id){
+                logger.error('Receives Message without Id. Reject Message', e);
+                return;
+            }
             var item = this.jobs[id],
                 job, cb, scope;
             if (item) {
                 job = item.job;
-                job.event = e;
                 cb = item.cb;
                 scope = item.scope;
 
-                logger.debug('Receive message with cmd "' + job.cmd + '"', e.data.data);
+                logger.debug('Receive ' + (item.sock ? 'socket' : 'response' ) + ' message with cmd "' + job.cmd + '"', e.data.data);
 
-                if (!item.infinite) {
+                if (!item.sock) {
                     delete this.jobs[id];
                 }else{
                     job.cmd = e.data.cmd;
                 }
-                job.response = e.data.data;
+                job.data = job.response = e.data.data;
                 if (cb) {
                     try {
                         if(scope){
@@ -233,19 +270,22 @@ define(['config', 'logger'], function (config, Logger) {
                             cb(job);
                         }
                     } catch (e) {
-                        console.log(e, console.trace(e));
+                        logger.error('Invoke callback onMessage raised error: ', e);
                     }
                 }
             } else {
-                console.log('Response from deleted Job: ', e.data);
+                console.log('Response from deleted or never existed Job. Reject Message', e);
             }
         }
 
+        /**
+         * Handle Worker startup sequence
+         * @param e {Event}
+         */
         function onWorkerSetup(e) {
             if (e.data.cmd == '***worker ready***') {
                 setupLogger.debug('Setup slave with: ' + script);
-                _run(
-                    true,
+                socket(
                     '***worker start***',
                     {
                         id: workerId,
@@ -253,7 +293,7 @@ define(['config', 'logger'], function (config, Logger) {
                         script: script,
                         config: config
                     },
-                    infiniteCallback,
+                    onSocketMessage,
                     createWorkerScope);
             } else if (e.data.cmd == '***worker started***') {
                 setupLogger.debug('Slave "' + name + '" ready to go. Perform callback...');
@@ -264,7 +304,7 @@ define(['config', 'logger'], function (config, Logger) {
                     job.cmd = '';
                     job.request = null;
                     job.response = null;
-                    createWorkerScope ? createWorkerCallback.apply(createWorkerScope, [job]) : createWorkerCallback(job);
+                    createWorkerScope ? socketManagerReady.apply(createWorkerScope, [job]) : socketManagerReady(job);
                 } catch (e) {
 
                 }
@@ -278,27 +318,10 @@ define(['config', 'logger'], function (config, Logger) {
          */
         worker.addEventListener('message', onWorkerSetup);
 
-        /**
-         * workers first run, will load scripts
-         */
-        /*
-        function setupWorker() {
-            _run(
-                true,
-                '***worker start***',
-                {
-                    id: workerId,
-                    name: name || '',
-                    script: script,
-                    config: config
-                },
-                createWorkerCallback,
-                createWorkerScope);
-        }
-        */
 
-        this.run = run;
-        this.infinite = infinite;
+        this.send = send;
+        this.request = request;
+        this.socket = socket;
         this.queue = queue;
     }
 

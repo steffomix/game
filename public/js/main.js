@@ -77,9 +77,17 @@ require(['config', 'logger', 'worker', 'gameManager'], function (config, Logger,
 
     function socketManagerReady (job) {
         logger.debug('SocketManager ready', job);
-        socketManager.run('back.connect', {host: config.server.host, port: config.server.port}, function (job) {
-            logger.debug('Connected', job);
-        });
+        connect();
+    }
+
+
+
+    function connect(){
+        //socketManager.send('back.connect', {host: config.server.host, port: config.server.port});
+        var sock = socketManager.socket('test', 'testmessage', function(job){
+
+        }, {c: 2342});
+        logger.debug('Connecting...');
     }
 
     function onSocketMessage (job) {

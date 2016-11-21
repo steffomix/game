@@ -49,11 +49,11 @@ define('socketBackend', ['logger', 'underscore', 'io'], function (Logger, _, io)
             config = conf;
         }
 
-        this.connect = function (host, port) {
-            host = host || config.server.host;
-            port = port || config.server.port;
+        this.connect = function (data) {
+            logger.debug('connect: ' + data);
+            var host = data.host || config.server.host,
+                port = data.port || config.server.port;
 
-            logger.debug('connect to game.com:4343');
             var sock = io.connect(host + ':' + port);
             //if ( sock.connected ) {
                 socket = sock;
