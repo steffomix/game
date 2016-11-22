@@ -53,9 +53,14 @@ define(__slaveModuleID__,
             });
         };
 
+        /**
+         * Container to post-inject properties after creation of the socket Instance
+         * @type
+         */
         var socketContainer = {
             socket: null,
-            config: null
+            config: null,
+            logger: null
         };
 
         var Socket = function(socketContainer){
@@ -86,12 +91,9 @@ define(__slaveModuleID__,
                 }, 1000, job);
             };
             self.send = function (cmd, data) {
-                console.log('Socket-slave send ' + cmd, data)
+                socketContainer.logger.trace('Socket-slave send ' + cmd, data)
                 socketContainer.socket.send(cmd, data);
             };
-            self.getConfig = function(){
-                return socketContainer.config;
-            }
         };
 
         var socket = new Socket(socketContainer),
@@ -139,6 +141,12 @@ define(__slaveModuleID__,
             // add runtime listener
             self.addEventListener('message', onMessage);
 
+            require(['logger', 'config'], function(Logger, config){
+                var logger = Logger.getLogger('socketSlave');
+                logger.setLevel(config.logger.workerSlave);
+                socketContainer.logger = logger;
+
+            })
             require([slaveScript], function(socketManager){});
             job.send('***worker started***');
             console.log('Slave #' + slaveId + ' ' + slaveName + ' with script: "' + slaveScript + '\n Send cmd "***worker started***"');

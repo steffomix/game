@@ -40,7 +40,6 @@
 define(['config', 'logger'], function (config, Logger) {
 
 
-
     var allWorkerId = 0;
 
 
@@ -53,8 +52,7 @@ define(['config', 'logger'], function (config, Logger) {
      * @param createWorkerScope {object} optional apply object for callback
      * @returns {object}
      */
-    function WorkMaster(script, name, socketManagerReady, onSocketMessage, createWorkerScope) {
-
+    function WorkMaster (script, name, socketManagerReady, onSocketMessage, createWorkerScope) {
 
         var workerId = allWorkerId++;
         var logger = Logger.getLogger('Worker Master #' + workerId + ' "' + name + '"').setLevel(config.logger.worker || 0);
@@ -62,6 +60,7 @@ define(['config', 'logger'], function (config, Logger) {
         var setupLogger = Logger.getLogger('Worker Master Setup #' + workerId + ' "' + name + '"').setLevel(config.logger.worker || 0);
         var jobId = 0;
         var worker = new Worker(config.paths.workerSlave);
+
 
         setupLogger.trace('Create Worker-master #' + workerId);
         /**
@@ -86,7 +85,7 @@ define(['config', 'logger'], function (config, Logger) {
          */
         worker.jobs = {};
 
-        function getId() {
+        function getId () {
 
             return (jobId++) + '_' + Math.random().toString(36).substring(2);
         }
@@ -97,14 +96,14 @@ define(['config', 'logger'], function (config, Logger) {
          * queue().length return count of open or running jobs
          * @returns {Object} {runs: Array, infinites: Array}
          */
-        function queue() {
+        function queue () {
             var q = [],
                 qi = [],
                 job;
 
             for (var j in worker.jobs) {
                 job = worker.jobs[j];
-                if (worker.jobs.hasOwnProperty(j)) {
+                if ( worker.jobs.hasOwnProperty(j) ) {
                     job.sock ? qi.push(worker.jobs[j]) : q.push(worker.jobs[j]);
                 }
             }
@@ -124,7 +123,7 @@ define(['config', 'logger'], function (config, Logger) {
          * @param scope {object} optional scope
          * @returns Job {Job}
          */
-        function _run(sock, cmd, data, cb, scope) {
+        function _run (sock, cmd, data, cb, scope) {
 
             var id = getId(),
                 job = new Job(sock, id, cmd, data);
@@ -148,7 +147,7 @@ define(['config', 'logger'], function (config, Logger) {
          * @param cmd {string}
          * @param data any
          */
-        function send(cmd, data){
+        function send (cmd, data) {
             try {
                 logger.trace('Send cmd: ' + cmd, data);
                 worker.postMessage({
@@ -156,7 +155,7 @@ define(['config', 'logger'], function (config, Logger) {
                     cmd: cmd,
                     data: data
                 });
-            }catch(e){
+            } catch (e) {
                 logger.error('Send message failed: ' + e);
             }
         }
@@ -172,7 +171,7 @@ define(['config', 'logger'], function (config, Logger) {
          * @param scope {object} optional, applied to callback
          * @returns Job {Job} worker-master.js->Job
          */
-        function request(cmd, data, cb, scope) {
+        function request (cmd, data, cb, scope) {
             logger.trace('Request cmd: ' + cmd, data);
             return _run(false, cmd, data, cb, scope);
         }
@@ -189,7 +188,7 @@ define(['config', 'logger'], function (config, Logger) {
          * @param scope object optional, applied to callback
          * @returns Job {Job}
          */
-        function socket(cmd, data, cb, scope) {
+        function socket (cmd, data, cb, scope) {
             logger.trace('socket cmd: ' + cmd, data);
             return _run(true, cmd, data, cb, scope);
         }
@@ -197,7 +196,7 @@ define(['config', 'logger'], function (config, Logger) {
         /**
          *
          */
-        function shutdown() {
+        function shutdown () {
             setupLogger.trace('Shutdown worker "' + name + '"')
             send('***worker shutdown***');
             send = socket = request = function () {
@@ -222,7 +221,7 @@ define(['config', 'logger'], function (config, Logger) {
          * @param data {any}
          * @constructor
          */
-        function Job(sock, id, cmd, data) {
+        function Job (sock, id, cmd, data) {
             var self = this;
             self.getId = function () {
                 return id;
@@ -233,7 +232,7 @@ define(['config', 'logger'], function (config, Logger) {
             self.cmd = cmd;
             self.data = self.request = data;
             self.response = null;
-            if(sock){
+            if ( sock ) {
                 self.send = send;
                 self.request = request;
             }
@@ -243,32 +242,32 @@ define(['config', 'logger'], function (config, Logger) {
          *
          * @param e {Event}
          */
-        function onMessage(e) {
+        function onMessage (e) {
             var id = e.data.id;
-            if(!id){
+            if ( !id ) {
                 logger.error('Receives Message without Id. Reject Message', e);
                 return;
             }
             var item = this.jobs[id],
                 job, cb, scope;
-            if (item) {
+            if ( item ) {
                 job = item.job;
                 cb = item.cb;
                 scope = item.scope;
 
                 logger.trace('Receive ' + (item.sock ? 'socket' : 'response' ) + ' message with cmd "' + job.cmd + '"', e.data.data);
 
-                if (!item.sock) {
+                if ( !item.sock ) {
                     delete this.jobs[id];
-                }else{
+                } else {
                     job.cmd = e.data.cmd;
                 }
                 job.data = job.response = e.data.data;
-                if (cb) {
+                if ( cb ) {
                     try {
-                        if(scope){
+                        if ( scope ) {
                             cb.apply(scope, job);
-                        }else{
+                        } else {
                             cb(job);
                         }
                     } catch (e) {
@@ -284,8 +283,8 @@ define(['config', 'logger'], function (config, Logger) {
          * Handle Worker startup sequence
          * @param e {Event}
          */
-        function onWorkerSetup(e) {
-            if (e.data.cmd == '***worker ready***') {
+        function onWorkerSetup (e) {
+            if ( e.data.cmd == '***worker ready***' ) {
                 setupLogger.trace('Setup slave with: ' + script);
                 socket(
                     '***worker start***',
@@ -297,7 +296,7 @@ define(['config', 'logger'], function (config, Logger) {
                     },
                     onSocketMessage,
                     createWorkerScope);
-            } else if (e.data.cmd == '***worker started***') {
+            } else if ( e.data.cmd == '***worker started***' ) {
                 setupLogger.trace('Slave "' + name + '" ready to go. Perform callback...');
                 worker.removeEventListener('message', onWorkerSetup);
                 this.addEventListener('message', onMessage);

@@ -2,7 +2,79 @@ extends layout
 
 block content
     script(type='text/javascript', src='/js/main.js')
-    div(id='dialog')
-    div(id='input')
-    div(id='hud')
-    div(id='game')
+
+    div(id='game-container')
+        // window connect
+        div(id='window-connect' class='window')
+            div(class='window-header')
+                div(class='window-header-content') Connect
+            div(class='window-body')
+                table
+                    tr
+                        td Host:
+                        td
+                            input(id='input-connect-host' class='text-input' value='')
+                    tr
+                        td Port:
+                        td
+                            input(id='input-connect-port' class='text-input' value='')
+                    tr
+                        td(colspan='2' style='text-align: center; padding-top: 5px')
+                            button(id='button-connect') Connect
+                    tr
+                        td(id='game-connect-message' colspan='2' style='text-align: center; padding-top: 5px')
+                            | &nbsp;
+
+
+
+        // window login
+        div(id='window-login' class='window')
+            div(class='window-header')
+                div(class='window-header-content') Login
+            div(class='window-body')
+                table
+                    tr
+                        td Host:
+                        td
+                            input(id='input-login-name' class='text-input' value='game.com')
+                    tr
+                        td Port:
+                        td
+                            input(id='input-login-pass' class='text-input' value='4343')
+                    tr
+                        td(colspan='2' style='text-align: center; padding-top: 5px')
+                            button(id='button-login') Connect
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -16,26 +16,23 @@
  */
 
 
-define('hudScreen', ['config', 'logger'], function (config, Logger) {
+define('gameLayer', ['config', 'logger'],
+    function (config, Logger) {
 
     var instance,
         manager,
-        logger = Logger.getLogger('hudScreen').setLevel(config.logger.hudScreen || 0);
+        logger = Logger.getLogger('gameScreen').setLevel(config.logger.gameScreen || 0);
 
     return getInstance();
 
     function getInstance () {
         if ( !instance ) {
-            instance = new HudScreen();
+            instance = new GameLayer();
         }
         return instance;
     }
 
-    function HudScreen () {
-
-        if ( instance ) {
-            logger.error('Instance HudScreen already created');
-        }
+    function GameLayer () {
 
         this.init = function(mng){
             manager = mng;

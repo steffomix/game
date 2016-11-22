@@ -17,41 +17,49 @@
 
 
 define('gameManager',
-    ['config', 'logger', 'jquery', 'gameScreen', 'hudScreen', 'inputScreen', 'dialogScreen'],
-    function (config, Logger, jquery, gameScreen, hudScreen, inputscreen, dialogscreen) {
+    ['config', 'logger', 'workerMaster', 'jquery', 'gameLayer', 'hudLayer', 'inputLayer', 'dialogLayer'],
+    function (config, Logger, WorkerMaster, $, gameLayer, hudLayer, inputLayer, dialogLayer) {
 
         var instance,
-            screens = {
-                game: gameScreen,
-                hud: hudScreen,
-                input: inputscreen,
-                dialog: dialogscreen
+            layer = {
+                game: gameLayer,
+                hud: hudLayer,
+                input: inputLayer,
+                dialog: dialogLayer
             },
             logger = Logger.getLogger('gameManager').setLevel(config.logger.gameManager || 0);
 
-        return getInstance();
-
-        function getInstance () {
-            if ( !instance ) {
-                instance = new GameManager();
-            }
-            return instance;
-        }
-
+        /**
+         * GameManager
+         * @constructor
+         */
         function GameManager () {
 
-            if ( instance ) {
-                logger.error('Instance GameManager already created');
+            var gameSocket = new WorkerMaster('socketManager', 'GameSocket', socketManagerReady, onSocketMessage);
+            gameLayer.init(this);
+            hudLayer.init(this);
+            inputLayer.init(this);
+            dialogLayer.init(this);
+
+            /**
+             * send message through gameSocket to worker
+             */
+            this.socketSend = gameSocket.send;
+            this.socketRequest = gameSocket.request;
+            this.socketCreate = gameSocket.socket;
+
+            function socketManagerReady (job) {
+                logger.trace('SocketManager ready', job);
+                connect();
             }
 
-            this.init = init;
-            this.onSocketMessage = onSocketMessage;
+            this.connect = function() {
 
-            function init () {
-                screens.dialog.init(this);
-                screens.input.init(this);
-                screens.hud.init(this);
-                screens.game.init(this);
+                $('.window, .input, .hud, .game').each(function (e) {
+                    $(this).hide();
+                });
+                $('#window-connect, #game-container').show();
+
             }
 
             function onSocketMessage (cmd, data) {
@@ -64,9 +72,9 @@ define('gameManager',
                         case 'input':
                         case 'dialog':
                             var c2 = c.shift();
-                            if ( screens[c1][c2] ) {
-                                screens[c1][c2].apply(screens[c1][c2], [c.join('.')].concat(data));
-                            }else{
+                            if ( layer[c1][c2] ) {
+                                layer[c1][c2].apply(gameLayer[c1][c2], [c.join('.')].concat(data));
+                            } else {
                                 logger.error('Command ' + cmd + ' not supported');
                             }
                             break;
@@ -79,7 +87,19 @@ define('gameManager',
                 }
             }
 
+
         }
+
+
+        function getInstance () {
+            if ( !instance ) {
+                instance = new GameManager();
+
+            }
+            return instance;
+        }
+
+        return getInstance();
     });
 
 

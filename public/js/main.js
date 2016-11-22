@@ -37,101 +37,58 @@
             'stateMachine': 'lib/state-machine' // https://github.com/jakesgordon/javascript-state-machine
         },
         logger: {}
-
-
     };
 
     // format:
     // module name, path, loglevel
-    // 1 DEBUG
-    // 2 INFO
-    // 4 WARN
-    // 8 ERROR
-    // 99 OFF
+    // 0: trace <- modified: prepend modulename
+    // 1: debug
+    // 2: info
+    // 3: warn
+    // 4: error
+    // 5: off
     var modules = [
 
-        ['main', 'main', 0],
-
-        // common shared
-        ['worker', 'worker-master', 2],
+        // game
+        ['gameManager', 'game-manager', 0],
+        ['dialogLayer', 'dialog-layer', 0],
+        ['inputLayer', 'input-layer', 0],
+        ['hudLayer', 'hud-layer', 0],
+        ['gameLayer', 'game-layer', 0],
 
         // worker: Server - Client Middleware
-        ['socketManager', 'socket-manager', 2],
+        ['socketManager', 'socket-manager', 0],
         ['gameCache', 'game-cache', 2],
         ['pathfinder', 'pathfinder', 2], // used by gamecache
         ['socketFrontend', 'socket-frontend',2],
         ['socketBackend', 'socket-backend', 2],
-        ['workerSlave', '/js/worker-slave.js', 2], // must be full path
+        ['workerMaster', 'worker-master', 0],
+        ['workerSlave', '/js/worker-slave.js', 0], // must be full path
 
-        // game
-        ['gameManager', 'game-manager', 2],
-        // html screen container from top to bottom
-        ['dialogScreen', 'dialog-screen', 2],
-        ['inputScreen', 'input-screen', 2],
-        ['hudScreen', 'hud-screen', 2],
-        ['gameScreen', 'game-screen', 2],
-
-        // views
-        ['viewConnect', 'view/viewConnect', 0]
     ];
 
+    // setup config for paths and logger
+    // The logger is modified to prefix module name on loglevel trace
     modules.forEach(function (item) {
         conf.paths[item[0]] = item[1];
         conf.logger[item[0]] = item[2]
     });
 
+    // setup requirejs
     requirejs.config({paths: conf.paths, baseUrl: conf.baseUrl});
 
+    // create config module to be loadable
     define('config', [], function () {
         return conf;
     });
 
-    define('main', ['config', 'logger', 'worker', 'gameManager'], function (config, Logger, WorkMaster, gameManager) {
+    console.log('Start Game...');
 
-        var logger = Logger.getLogger('main').setLevel(config.logger.main || 0);
-
-        logger.trace('App start, create worker...');
-        var socketManager = new WorkMaster('socketManager', 'GameSocket1', socketManagerReady, onSocketMessage);
-
-
-        function socketManagerReady (job) {
-            logger.trace('SocketManager ready', job);
-            connect();
-        }
-
-        function connect () {
-            socketManager.send('back.connect', [config.server.host, config.server.port]);
-
-            logger.trace('Connecting...');
-        }
-
-        /**
-         * Forward Message
-         * @param job
-         */
-        function onSocketMessage (job) {
-            var cmd = (job.cmd || '').split('.'),
-                data = job.data,
-                c1 = cmd.shift();
-
-            try {
-                switch (c1) {
-                    case 'screen':
-                        gameManager.onSocketMessage(cmd.join('.'), data);
-                        break;
-                    default:
-                        logger.error('Socket Message "' + cmd + '" not supported', job, new Error().stack);
-
-                }
-            } catch (e) {
-                logger.error('Forward socketMessage failed: ' + e, job);
-            }
-        }
-
-
+    require(['gameManager'], function(gameManager){
+        gameManager.connect();
     });
 
-    require(['main'], function(){});
+
 
 })();
 

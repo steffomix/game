@@ -16,26 +16,25 @@
  */
 
 
-define('config', 'gameScreen', ['logger'], function (config, Logger) {
+define('dialogLayer', ['config', 'logger'],
+    function (config, Logger) {
 
+    // Logger.setHandler(Logger.createDefaultHandler({defaultLevel: Logger.DEBUG}));
+    // Logger.setLevel(Logger.DEBUG);
     var instance,
         manager,
-        logger = Logger.getLogger('gameScreen').setLevel(config.logger.gameScreen || 0);
+        logger = Logger.getLogger('dialogScreen').setLevel(config.logger.dialogScreen || 0);
 
     return getInstance();
 
     function getInstance () {
         if ( !instance ) {
-            instance = new GameScreen();
+            instance = new DialogLayer();
         }
         return instance;
     }
 
-    function GameScreen () {
-
-        if ( instance ) {
-            logger.error('Instance GameScreen already created');
-        }
+    function DialogLayer () {
 
         this.init = function(mng){
             manager = mng;

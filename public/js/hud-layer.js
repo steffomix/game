@@ -16,28 +16,23 @@
  */
 
 
-define('dialogScreen', ['config', 'logger'], function (config, Logger) {
+define('hudLayer', ['config', 'logger'],
+    function (config, Logger) {
 
-    // Logger.setHandler(Logger.createDefaultHandler({defaultLevel: Logger.DEBUG}));
-    // Logger.setLevel(Logger.DEBUG);
     var instance,
         manager,
-        logger = Logger.getLogger('dialogScreen').setLevel(config.logger.dialogScreen || 0);
+        logger = Logger.getLogger('hudScreen').setLevel(config.logger.hudScreen || 0);
 
     return getInstance();
 
     function getInstance () {
         if ( !instance ) {
-            instance = new DialogScreen();
+            instance = new HudLayer();
         }
         return instance;
     }
 
-    function DialogScreen () {
-
-        if ( instance ) {
-            logger.error('Instance DialogScreen already created');
-        }
+    function HudLayer () {
 
         this.init = function(mng){
             manager = mng;
