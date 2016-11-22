@@ -39,8 +39,6 @@
 
 define(['config', 'logger'], function (config, Logger) {
 
-    // Logger.setLevel(Logger.DEBUG);
-    // Logger.setHandler(Logger.createDefaultHandler({defaultLevel: Logger.DEBUG}));
 
 
     var allWorkerId = 0;
@@ -59,13 +57,13 @@ define(['config', 'logger'], function (config, Logger) {
 
 
         var workerId = allWorkerId++;
-        var logger = Logger.get('Worker Master #' + workerId + ' "' + name + '"');
+        var logger = Logger.getLogger('Worker Master #' + workerId + ' "' + name + '"').setLevel(config.logger.worker || 0);
 
-        var setupLogger = Logger.get('Worker Master Setup #' + workerId + ' "' + name + '"');
+        var setupLogger = Logger.getLogger('Worker Master Setup #' + workerId + ' "' + name + '"').setLevel(config.logger.worker || 0);
         var jobId = 0;
         var worker = new Worker(config.paths.workerSlave);
 
-        setupLogger.debug('Create Worker-master #' + workerId);
+        setupLogger.trace('Create Worker-master #' + workerId);
         /**
          * Container for running jobs
          * The contents will look like that:
@@ -151,12 +149,16 @@ define(['config', 'logger'], function (config, Logger) {
          * @param data any
          */
         function send(cmd, data){
-            logger.debug('Send cmd: ' + cmd, data);
-            worker.postMessage({
-                id: null,
-                cmd: cmd,
-                data: data
-            });
+            try {
+                logger.trace('Send cmd: ' + cmd, data);
+                worker.postMessage({
+                    id: null,
+                    cmd: cmd,
+                    data: data
+                });
+            }catch(e){
+                logger.error('Send message failed: ' + e);
+            }
         }
 
         /**
@@ -171,7 +173,7 @@ define(['config', 'logger'], function (config, Logger) {
          * @returns Job {Job} worker-master.js->Job
          */
         function request(cmd, data, cb, scope) {
-            logger.debug('Request cmd: ' + cmd, data);
+            logger.trace('Request cmd: ' + cmd, data);
             return _run(false, cmd, data, cb, scope);
         }
 
@@ -188,7 +190,7 @@ define(['config', 'logger'], function (config, Logger) {
          * @returns Job {Job}
          */
         function socket(cmd, data, cb, scope) {
-            logger.debug('socket cmd: ' + cmd, data);
+            logger.trace('socket cmd: ' + cmd, data);
             return _run(true, cmd, data, cb, scope);
         }
 
@@ -196,7 +198,7 @@ define(['config', 'logger'], function (config, Logger) {
          *
          */
         function shutdown() {
-            setupLogger.debug('Shutdown worker "' + name + '"')
+            setupLogger.trace('Shutdown worker "' + name + '"')
             send('***worker shutdown***');
             send = socket = request = function () {
                 console.error('Worker "' + name + '" with script ' + script + ' is down.', new Error().stack);
@@ -254,7 +256,7 @@ define(['config', 'logger'], function (config, Logger) {
                 cb = item.cb;
                 scope = item.scope;
 
-                logger.debug('Receive ' + (item.sock ? 'socket' : 'response' ) + ' message with cmd "' + job.cmd + '"', e.data.data);
+                logger.trace('Receive ' + (item.sock ? 'socket' : 'response' ) + ' message with cmd "' + job.cmd + '"', e.data.data);
 
                 if (!item.sock) {
                     delete this.jobs[id];
@@ -284,7 +286,7 @@ define(['config', 'logger'], function (config, Logger) {
          */
         function onWorkerSetup(e) {
             if (e.data.cmd == '***worker ready***') {
-                setupLogger.debug('Setup slave with: ' + script);
+                setupLogger.trace('Setup slave with: ' + script);
                 socket(
                     '***worker start***',
                     {
@@ -296,7 +298,7 @@ define(['config', 'logger'], function (config, Logger) {
                     onSocketMessage,
                     createWorkerScope);
             } else if (e.data.cmd == '***worker started***') {
-                setupLogger.debug('Slave "' + name + '" ready to go. Perform callback...');
+                setupLogger.trace('Slave "' + name + '" ready to go. Perform callback...');
                 worker.removeEventListener('message', onWorkerSetup);
                 this.addEventListener('message', onMessage);
                 try {

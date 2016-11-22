@@ -20,21 +20,17 @@
  * socketManager
  * Web Worker entry point
  */
-self.require(
-    [__slaveModuleID__, 'logger', 'io', 'underscore', 'socketFrontend', 'socketBackend', 'gameCache'],
-    function (socket, Logger, io, _, front, back, cache) {
+define('socketManager', ['config', 'socket', 'logger', 'io', 'underscore', 'socketFrontend', 'socketBackend', 'gameCache'],
+    function (config, socket, Logger, io, _, front, back, cache) {
 
-        Logger.setHandler(Logger.createDefaultHandler({defaultLevel: Logger.DEBUG}));
-        Logger.setLevel(Logger.DEBUG);
         var instance,
-            config = socket.getConfig();
-
+            logger = Logger.getLogger('socketManager').setLevel(config.logger.socketManager || 0);
 
         return getInstance();
 
         function getInstance () {
             if ( instance === undefined ) {
-                instance = new Manager();
+                instance = new SocketManager();
                 // overwrite onMessage ***at last***
                 socket.onMessage = instance.onMessage;
             }
@@ -42,9 +38,7 @@ self.require(
         }
 
 
-        function Manager () {
-
-            var logger = Logger.get('Socket-Manager');
+        function SocketManager () {
 
             if ( instance ) {
                 var e = 'Socket Manager Instance already created';
@@ -52,8 +46,15 @@ self.require(
                 throw(e);
             }
 
+            front.init(this);
+            cache.init(this);
+            back.init(this);
+
             // map workers for apply in method Manager::manage
-            var socketWorkers = {front: front, cache: cache, back: back},
+            var socketWorkers = {
+                    front: front,
+                    cache: cache,
+                    back: back},
                 // minimal allowed commands
                 commands = {
                     'back': {
@@ -65,18 +66,16 @@ self.require(
             this.onMessage = onMessage;
             this.updateGameCommands = updateGameCommands;
 
-            front.init(this, socket);
-            cache.init(this, config);
-            back.init(this, config);
 
             function updateGameCommands(data){
-                logger.debug('Update Game Commands', data);
+                logger.trace('Update Game Commands', data);
                 commands = data;
             }
 
-
             /**
+             *
              * Receive JobContext from slave, convert to manageable and forward to manage.
+             *
              * If Job.data is an array, all its items will be used as arguments.
              * In all other cases Job.data is used as one (first) function.argument
              * @param job
@@ -85,14 +84,9 @@ self.require(
                 var cmd = job.cmd,
                     data = job.data,
                     args;
-                if(job.cmd == 'test'){
-                    job.send('testback', 'testback data');
-                    return job.send('testback2', 'testback data2');
-                }
 
                 if ( Array.isArray(data) ) {
-                    data.unshift(cmd);
-                    args = data;
+                    args = [cmd].concat(data);
                 } else {
                     args = [cmd, data];
                 }
@@ -135,7 +129,7 @@ self.require(
                 if ( commands[scope][fn] === true ) {
                     // execute command
                     try {
-                        logger.debug('Execute command ' + cmdReadable, args);
+                        logger.trace('Execute command ' + cmdReadable, args);
                         return socketWorkers[scope][fn].apply(socketWorkers[scope][fn], args);
                     } catch (e) {
                         logger.error('Command ' + cmdReadable + ' throw error: ' + e, args, new Error().stack);

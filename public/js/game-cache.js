@@ -15,12 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define('gameCache', ['logger', 'underscore'], function (Logger, _) {
+define('gameCache', ['config', 'socket', 'logger', 'socketManager', 'underscore'],
+    function (config, socket, Logger, _) {
 
     // Logger.setHandler(Logger.createDefaultHandler({defaultLevel: Logger.DEBUG}));
     // Logger.setLevel(Logger.DEBUG);
     var instance,
-        logger = Logger.get('GameData Cache');
+        socketManager,
+        logger = Logger.getLogger('gameCache').setLevel(config.logger.gameCache || 0);
 
     function getInstance(){
         if(!instance){
@@ -38,14 +40,10 @@ define('gameCache', ['logger', 'underscore'], function (Logger, _) {
             logger.error('Instance already created');
         }
 
-        var manager,
-            config;
-        this.init = init;
+        this.init = function(manager){
+            socketManager = manager;
+        };
 
-        function init (mng, conf) {
-            manager = mng;
-            config = conf;
-        }
     }
 
 });

@@ -15,105 +15,125 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-var srcScripts = {
+(function () {
 
-    // third party libs
-    'stacktrace': 'lib/stacktrace.min',
-    'logger': 'lib/logger',
-    'underscore': 'lib/underscore.min',
-    'jquery': 'lib/jquery.min',
-    'io': 'lib/socket.io-client',
-    'pixi': 'lib/pixi.min',
-    'pathfinding': 'lib/pathfinding',
 
-    // common shared
-    'worker': 'worker-master',
-
-    // worker: Server - Client Middleware
-    'socketManager': 'socket-manager',
-    'gameCache': 'game-cache',
-    'pathfinder': 'pathfinder', // used by gamecache
-    'socketFrontend': 'socket-frontend',
-    'socketBackend': 'socket-backend',
-    'workerSlave': '/js/worker-slave.js', // must be full path
-
-    // game
-    'gameManager': 'game-manager',
-    // html screen container from top to bottom
-    'dialogScreen': 'dialog-screen',
-    'inputScreen': 'input-screen',
-    'hudScreen': 'hud-screen',
-    'gameScreen': 'game-screen'
-};
-
-requirejs.config({paths: srcScripts, baseUrl: '/js/'});
-
-define('config', [], function () {
-
-    return {
+    var conf = {
         server: {
             host: 'game.com',
             port: '4343'
         },
-        paths: srcScripts,
-        worker: {
-            gameSocket: srcScripts.socketManager,
-            pathfinder: srcScripts.pathfinder
+        baseUrl: '/js/',
+        paths: {
+
+            // third party libs
+            'logger': 'lib/loglevel-mod', // https://github.com/pimterry/loglevel ***modified***
+            'underscore': 'lib/underscore.min', // http://underscorejs.org/
+            'backbone': 'lib/backbone', // http://backbonejs.org/
+            'jquery': 'lib/jquery.min',
+            'io': 'lib/socket.io-client',
+            'pixi': 'lib/pixi.min',
+            'pathfinding': 'lib/pathfinding', // https://github.com/qiao/PathFinding.js
+            'stateMachine': 'lib/state-machine' // https://github.com/jakesgordon/javascript-state-machine
+        },
+        logger: {}
+
+
+    };
+
+    // format:
+    // module name, path, loglevel
+    // 1 DEBUG
+    // 2 INFO
+    // 4 WARN
+    // 8 ERROR
+    // 99 OFF
+    var modules = [
+
+        ['main', 'main', 0],
+
+        // common shared
+        ['worker', 'worker-master', 2],
+
+        // worker: Server - Client Middleware
+        ['socketManager', 'socket-manager', 2],
+        ['gameCache', 'game-cache', 2],
+        ['pathfinder', 'pathfinder', 2], // used by gamecache
+        ['socketFrontend', 'socket-frontend',2],
+        ['socketBackend', 'socket-backend', 2],
+        ['workerSlave', '/js/worker-slave.js', 2], // must be full path
+
+        // game
+        ['gameManager', 'game-manager', 2],
+        // html screen container from top to bottom
+        ['dialogScreen', 'dialog-screen', 2],
+        ['inputScreen', 'input-screen', 2],
+        ['hudScreen', 'hud-screen', 2],
+        ['gameScreen', 'game-screen', 2],
+
+        // views
+        ['viewConnect', 'view/viewConnect', 0]
+    ];
+
+    modules.forEach(function (item) {
+        conf.paths[item[0]] = item[1];
+        conf.logger[item[0]] = item[2]
+    });
+
+    requirejs.config({paths: conf.paths, baseUrl: conf.baseUrl});
+
+    define('config', [], function () {
+        return conf;
+    });
+
+    define('main', ['config', 'logger', 'worker', 'gameManager'], function (config, Logger, WorkMaster, gameManager) {
+
+        var logger = Logger.getLogger('main').setLevel(config.logger.main || 0);
+
+        logger.trace('App start, create worker...');
+        var socketManager = new WorkMaster('socketManager', 'GameSocket1', socketManagerReady, onSocketMessage);
+
+
+        function socketManagerReady (job) {
+            logger.trace('SocketManager ready', job);
+            connect();
         }
-    }
 
-});
+        function connect () {
+            socketManager.send('back.connect', [config.server.host, config.server.port]);
 
-require(['config', 'logger', 'worker', 'gameManager'], function (config, Logger, WorkMaster, gameManager) {
+            logger.trace('Connecting...');
+        }
 
-    Logger.setLevel(Logger.DEBUG);
-    Logger.setHandler(Logger.createDefaultHandler({
-        defaultLevel: Logger.DEBUG
-    }));
-    logger = Logger.get('Main');
-    logger.debug('App start, create worker...');
-    var socketManager = new WorkMaster(config.worker.gameSocket, 'GameSocket1', socketManagerReady, onSocketMessage);
+        /**
+         * Forward Message
+         * @param job
+         */
+        function onSocketMessage (job) {
+            var cmd = (job.cmd || '').split('.'),
+                data = job.data,
+                c1 = cmd.shift();
 
+            try {
+                switch (c1) {
+                    case 'screen':
+                        gameManager.onSocketMessage(cmd.join('.'), data);
+                        break;
+                    default:
+                        logger.error('Socket Message "' + cmd + '" not supported', job, new Error().stack);
 
-    function socketManagerReady (job) {
-        logger.debug('SocketManager ready', job);
-        connect();
-    }
-
-
-
-    function connect(){
-        //socketManager.send('back.connect', {host: config.server.host, port: config.server.port});
-        var sock = socketManager.socket('test', 'testmessage', function(job){
-
-        }, {c: 2342});
-        logger.debug('Connecting...');
-    }
-
-    function onSocketMessage (job) {
-        var cmd = (job.cmd || '').split('.');
-        var data = job.response;
-
-        var c1 = cmd.shift();
-        try {
-
-            switch (c1) {
-                case 'screen':
-                    gameManager.onSocketMessage(cmd.join('.'), data);
-                    break;
-                default:
-                    logger.error('Socket Message "' + cmd + '" not supported', job, new Error().stack);
-
+                }
+            } catch (e) {
+                logger.error('Forward socketMessage failed: ' + e, job);
             }
-        } catch (e) {
-            logger.error('Forward socketMessage failed: ' + e, job);
         }
-    }
 
 
-});
+    });
 
+    require(['main'], function(){});
 
+})();
 
 
 

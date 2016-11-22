@@ -16,37 +16,85 @@
  */
 
 
-define('inputScreen', ['logger', 'underscore', 'pixi'], function (Logger, _, pixi) {
+define('inputScreen', ['config', 'logger', 'stateMachine', 'viewConnect'], function (config, Logger, stateMachine, viewConnect) {
 
-    // Logger.setHandler(Logger.createDefaultHandler({defaultLevel: Logger.DEBUG}));
-    // Logger.setLevel(Logger.DEBUG);
     var instance,
         manager,
-        logger = Logger.get('InputScreen');
+        sm,
+        logger = Logger.getLogger('inputScreen').setLevel(config.logger.inputScreen || 0);
 
-    return getInstance();
 
     function getInstance () {
         if ( !instance ) {
-            instance = _.extend(new pixi.Stage(), new InputScreen());
+            instance = new InputScreen();
+            setupStateMachine();
         }
         return instance;
     }
 
+
     function InputScreen () {
 
-        if ( instance ) {
-            logger.error('Instance InputScreen already created');
-        }
-
-        this.init = function(mng){
+        this.init = function (mng) {
             manager = mng;
-        }
+        };
 
-        this.showLogin = function(data){
-            logger.debug('showLogin');
-        }
+        this.showLogin = function (data) {
+            viewConnect.show();
+        };
 
+        this.onstart = function (event, from, to, args) {
+            console.log('onstart event: ' + event, 'from: ' + from, 'to: ' + to);
+        };
 
+        this.on_connect = function (event, from, to, args) {
+            console.log('onconnect event: ' + event, args, 'from: ' + from, 'to: ' + to);
+        };
+
+        this.on_login = function (event, from, to, args) {
+            console.log('onlogin event: ' + event, 'from: ' + from, 'to: ' + to);
+        };
+
+        this.on_disconnect = function (event, from, to, args) {
+            console.log('ondisconnect event: ' + event, 'from: ' + from, 'to: ' + to);
+        };
+
+        this.on_running = function (event, from, to, args) {
+            console.log('onrunning event: ' + event, 'from: ' + from, 'to: ' + to);
+        };
+
+        this.on_logout = function (event, from, to, args) {
+            console.log('onlogout  event: ' + event, 'from: ' + from, 'to: ' + to);
+        };
     }
+
+    getInstance();
+
+    instance._connect(1);
+    instance._login(2);
+    instance._logout(3);
+    instance._disconnect(4);
+
+
+    function setupStateMachine () {
+        //var logger = logger;
+        sm = stateMachine.create({
+            initial: 'none',
+            target: instance,
+            error: function (eventName, from, to, args, errorCode, errorMessage, originalException) {
+                //logger.error('event ' + eventName + ' was naughty :- ' + errorMessage);
+            },
+            events: [
+                {name: '_connect', from: 'none', to: ['connect', 'running']},
+                {name: '_login', from: 'connect', to: 'running'},
+                {name: '_logout', from: ['none','running'], to: 'login'},
+                {name: '_disconnect', from: ['login', 'running', 'connected'], to: 'connect'}
+            ]
+        });
+    }
+
+
+    // setup stateMachine
+
+    return instance;
 });

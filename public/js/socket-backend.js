@@ -16,12 +16,12 @@
  */
 
 
-define('socketBackend', ['logger', 'underscore', 'io'], function (Logger, _, io) {
+define('socketBackend', ['config', 'socket', 'logger', 'socketManager', 'underscore', 'io'],
+    function (config, socket, Logger, socketManager, _, io) {
 
-    // Logger.setHandler(Logger.createDefaultHandler({defaultLevel: Logger.DEBUG}));
-    // Logger.setLevel(Logger.DEBUG);
     var instance,
-        logger = Logger.get('Socket Backend');
+        socketManager,
+        logger = Logger.getLogger('socketBackend').setLevel(config.logger.socketBackend || 0);
 
     return getInstance();
 
@@ -38,31 +38,25 @@ define('socketBackend', ['logger', 'underscore', 'io'], function (Logger, _, io)
             logger.error('Instance already created');
         }
 
-        var manager,
-            config,
-            socket;
+        this.init = function(manager){
+            socketManager = manager;
+        };
 
-        this.init = init;
+        this.connect = function (host, port) {
+            var host = host || config.server.host,
+                port = port || config.server.port,
+                uri = host  + ':' +  port;
 
-        function init (mng, conf) {
-            manager = mng;
-            config = conf;
-        }
-
-        this.connect = function (data) {
-            logger.debug('connect: ' + data);
-            var host = data.host || config.server.host,
-                port = data.port || config.server.port;
-
-            var sock = io.connect(host + ':' + port);
+            logger.trace('connect: ', uri);
+            var sock = io.connect(uri);
             //if ( sock.connected ) {
                 socket = sock;
                 sock.on('updateGameCommands', function(commands){
-                    manager.updateGameCommands(commands);
+                    socketManager.updateGameCommands(commands);
                 });
                 sock.on('newConnection', function(commands){
-                    manager.updateGameCommands(commands);
-                    manager.manage('front.login', host, port);
+                    socketManager.updateGameCommands(commands);
+                    socketManager.manage('front.login', host, port);
                 });
             //}
         };
@@ -78,7 +72,7 @@ define('socketBackend', ['logger', 'underscore', 'io'], function (Logger, _, io)
 
             con.on('login', function (data) {
                 if ( data.success === true ) {
-                    ioLogger.debug('Response Login success: ', data.user);
+                    logger.trace('Response Login success: ', data.user);
 
                     socket = new Socket(con);
                     con.off('login');
@@ -93,7 +87,7 @@ define('socketBackend', ['logger', 'underscore', 'io'], function (Logger, _, io)
                 }
             });
 
-            ioLogger.debug('Request User Login:', name);
+            logger.trace('Request User Login:', name);
             con.emit('login', {name: name, pass: pass});
         }
 

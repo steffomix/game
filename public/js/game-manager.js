@@ -17,19 +17,17 @@
 
 
 define('gameManager',
-    ['logger', 'jquery', 'gameScreen', 'hudScreen', 'inputScreen', 'dialogScreen'],
-    function (Logger, jquery, gameScreen, hudScreen, inputscreen, dialogscreen) {
+    ['config', 'logger', 'jquery', 'gameScreen', 'hudScreen', 'inputScreen', 'dialogScreen'],
+    function (config, Logger, jquery, gameScreen, hudScreen, inputscreen, dialogscreen) {
 
-        // Logger.setHandler(Logger.createDefaultHandler({defaultLevel: Logger.DEBUG}));
-        // Logger.setLevel(Logger.DEBUG);
         var instance,
-            logger = Logger.get('GameManager'),
             screens = {
                 game: gameScreen,
                 hud: hudScreen,
                 input: inputscreen,
                 dialog: dialogscreen
-            };
+            },
+            logger = Logger.getLogger('gameManager').setLevel(config.logger.gameManager || 0);
 
         return getInstance();
 
@@ -67,7 +65,7 @@ define('gameManager',
                         case 'dialog':
                             var c2 = c.shift();
                             if ( screens[c1][c2] ) {
-                                screens[c1][c2].apply(screens[c1][c2], data);
+                                screens[c1][c2].apply(screens[c1][c2], [c.join('.')].concat(data));
                             }else{
                                 logger.error('Command ' + cmd + ' not supported');
                             }
@@ -77,7 +75,7 @@ define('gameManager',
                             logger.error('Command ' + cmd + ' not supported');
                     }
                 } catch (e) {
-                    logger.debug('Forward Message to screen "' + cmd + '" failed: ', e, data);
+                    logger.trace('Forward Message to screen "' + cmd + '" failed: ', e, data);
                 }
             }
 

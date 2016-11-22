@@ -16,13 +16,11 @@
  */
 
 
-define('hudScreen', ['logger'], function (Logger) {
+define('hudScreen', ['config', 'logger'], function (config, Logger) {
 
-    // Logger.setHandler(Logger.createDefaultHandler({defaultLevel: Logger.DEBUG}));
-    // Logger.setLevel(Logger.DEBUG);
     var instance,
         manager,
-        logger = Logger.get('HudScreen');
+        logger = Logger.getLogger('hudScreen').setLevel(config.logger.hudScreen || 0);
 
     return getInstance();
 

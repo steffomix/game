@@ -16,13 +16,11 @@
  */
 
 
-define('gameScreen', ['logger'], function (Logger) {
+define('config', 'gameScreen', ['logger'], function (config, Logger) {
 
-    // Logger.setHandler(Logger.createDefaultHandler({defaultLevel: Logger.DEBUG}));
-    // Logger.setLevel(Logger.DEBUG);
     var instance,
         manager,
-        logger = Logger.get('GameScreen');
+        logger = Logger.getLogger('gameScreen').setLevel(config.logger.gameScreen || 0);
 
     return getInstance();
 

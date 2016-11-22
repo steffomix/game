@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 20.11.16 Stefan Brinkmann <steffomix@gmail.com>
+ * Copyright (C) 22.11.16 Stefan Brinkmann <steffomix@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,33 +16,33 @@
  */
 
 
-define('dialogScreen', ['config', 'logger'], function (config, Logger) {
 
-    // Logger.setHandler(Logger.createDefaultHandler({defaultLevel: Logger.DEBUG}));
-    // Logger.setLevel(Logger.DEBUG);
+define('viewConnect', ['config', 'logger', 'underscore', 'backbone', 'jquery'], function(config, Logger, _, Backbone, $) {
+
     var instance,
-        manager,
-        logger = Logger.getLogger('dialogScreen').setLevel(config.logger.dialogScreen || 0);
+        logger = Logger.getLogger('viewConnect').setLevel(config.logger.viewConnect || 0);
 
     return getInstance();
 
     function getInstance () {
         if ( !instance ) {
-            instance = new DialogScreen();
+            instance = new ViewConnect();
         }
         return instance;
     }
 
-    function DialogScreen () {
 
-        if ( instance ) {
-            logger.error('Instance DialogScreen already created');
-        }
+    function ViewConnect () {
 
-        this.init = function(mng){
-            manager = mng;
-        }
+        this.show = function(){
+            logger.trace('show');
+        };
 
+        this.hide = function(){
+
+        };
 
     }
+
+
 });

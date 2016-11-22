@@ -83,7 +83,7 @@ define(__slaveModuleID__,
                     }
                     console.warn('Resend message: ' + j.cmd, {job: j});
                     self['onMessage'](j);
-                }, 10, job);
+                }, 1000, job);
             };
             self.send = function (cmd, data) {
                 console.log('Socket-slave send ' + cmd, data)
@@ -99,6 +99,7 @@ define(__slaveModuleID__,
             slaveName,
             slaveConfig,
             slaveScript;
+
 
         /**
          * Create a socket Job,
@@ -120,9 +121,11 @@ define(__slaveModuleID__,
 
             // config requirejs with data from worker-master
             requirejs.config({paths: slaveConfig.paths});
+            define('config', [], function(){return slaveConfig});
+            define('socket', [], function(){return socket});
 
             // load slave main script (entry point)
-            self.importScripts(slaveScript + '.js');
+            //self.importScripts(slaveScript + '.js');
 
             // delete command
             job.cmd = '';
@@ -136,6 +139,7 @@ define(__slaveModuleID__,
             // add runtime listener
             self.addEventListener('message', onMessage);
 
+            require([slaveScript], function(socketManager){});
             job.send('***worker started***');
             console.log('Slave #' + slaveId + ' ' + slaveName + ' with script: "' + slaveScript + '\n Send cmd "***worker started***"');
         }
