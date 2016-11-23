@@ -22,7 +22,8 @@ define('gameCache', ['config', 'socket', 'logger', 'socketManager', 'underscore'
     // Logger.setLevel(Logger.DEBUG);
     var instance,
         socketManager,
-        logger = Logger.getLogger('gameCache').setLevel(config.logger.gameCache || 0);
+        logger = Logger.getLogger('gameCache');
+        logger.setLevel(config.logger.gameCache || 0);
 
     function getInstance(){
         if(!instance){

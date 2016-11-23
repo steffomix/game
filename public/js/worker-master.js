@@ -55,9 +55,11 @@ define(['config', 'logger'], function (config, Logger) {
     function WorkMaster (script, name, socketManagerReady, onSocketMessage, createWorkerScope) {
 
         var workerId = allWorkerId++;
-        var logger = Logger.getLogger('Worker Master #' + workerId + ' "' + name + '"').setLevel(config.logger.worker || 0);
+        var logger = Logger.getLogger('Worker Master #' + workerId + ' "' + name + '"');
+        logger.setLevel(config.logger.worker || 0);
 
-        var setupLogger = Logger.getLogger('Worker Master Setup #' + workerId + ' "' + name + '"').setLevel(config.logger.worker || 0);
+        var setupLogger = Logger.getLogger('Worker Master Setup #' + workerId + ' "' + name + '"');
+        setupLogger.setLevel(config.logger.worker || 0);
         var jobId = 0;
         var worker = new Worker(config.paths.workerSlave);
 
@@ -115,7 +117,7 @@ define(['config', 'logger'], function (config, Logger) {
         }
 
         /**
-         *
+         * Private wrapper from methods request and socket
          * @param sock {boolean} the job can response multiple times
          * @param cmd {string} Command for the Worker
          * @param data {any}
@@ -144,8 +146,8 @@ define(['config', 'logger'], function (config, Logger) {
 
         /**
          * Send a fire-and-forget message
-         * @param cmd {string}
-         * @param data any
+         * @param cmd {string} command
+         * @param data {array} *should* be an array to be mapped as arguments
          */
         function send (cmd, data) {
             try {
@@ -165,8 +167,8 @@ define(['config', 'logger'], function (config, Logger) {
          * Start a job that can response only one times
          * afterwards its deleted from workers joblist
          * and makes no further callbacks (response) possible.
-         * @param cmd {string} command, optional, defaults to undefined
-         * @param data {any} (even number, string, boolean... ) optional, defaults to undefined
+         * @param cmd {string} command
+         * @param data {array} *should* be an array to be mapped as arguments
          * @param cb {callback} function optional, if not set callback will be skipped quietly
          * @param scope {object} optional, applied to callback
          * @returns Job {Job} worker-master.js->Job
@@ -182,8 +184,8 @@ define(['config', 'logger'], function (config, Logger) {
          * and make endless, most likely setInterval-callbacks (responses) possible
          * to provide continously updates to the caller of the job.
          *
-         * @param cmd string
-         * @param data any (even number, string, boolean... )
+         * @param cmd {string} command
+         * @param data {array} *should* be an array to be mapped as arguments
          * @param cb callback function
          * @param scope object optional, applied to callback
          * @returns Job {Job}

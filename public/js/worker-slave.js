@@ -42,8 +42,8 @@ define(__slaveModuleID__,
         /**
          * response with other cmd
          * most likely for infinite Jobs
-         * @param cmd
-         * @param data
+         * @param cmd {string} command
+         * @param data {array} *should* be an array to be mapped as arguments
          */
         Job.prototype.send = function (cmd, data) {
             self.postMessage({
@@ -55,11 +55,10 @@ define(__slaveModuleID__,
 
         /**
          * Container to post-inject properties after creation of the socket Instance
-         * @type
+         * @type {{socket: null, logger: null}}
          */
         var socketContainer = {
             socket: null,
-            config: null,
             logger: null
         };
 
@@ -104,9 +103,11 @@ define(__slaveModuleID__,
 
 
         /**
-         * Create a socket Job,
+         * Create a socket Job ,
          * collect data from Event,
          * initialize requirejs with data from Event,
+         * define config module
+         * define socket module
          * import main script,
          * put socket Job into socketContainer, which is part of the initial worker socket
          * swich start message listener to runtime listener
@@ -114,6 +115,7 @@ define(__slaveModuleID__,
          * @param e
          */
         function onStart(e) {
+            // will be the gameSocket in socket module
             var job = new Job(e);
 
             slaveId = job.request.id;
@@ -134,7 +136,6 @@ define(__slaveModuleID__,
 
             // register infinite job as main socket
             socketContainer.socket = job;
-            socketContainer.config = slaveConfig;
 
             // remove starting listener
             self.removeEventListener('message', onStart);

@@ -21,7 +21,8 @@ define('hudLayer', ['config', 'logger'],
 
     var instance,
         manager,
-        logger = Logger.getLogger('hudScreen').setLevel(config.logger.hudScreen || 0);
+        logger = Logger.getLogger('hudScreen');
+        logger.setLevel(config.logger.hudScreen || 0);
 
     return getInstance();
 
@@ -38,6 +39,9 @@ define('hudLayer', ['config', 'logger'],
             manager = mng;
         }
 
+        this.hideAll = function(){
+
+        }
 
     }
 });

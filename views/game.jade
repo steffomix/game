@@ -5,7 +5,7 @@ block content
 
     div(id='game-container')
         // window connect
-        div(id='window-connect' class='window')
+        section(id='window-game-connect' class='window')
             div(class='window-header')
                 div(class='window-header-content') Connect
             div(class='window-body')
@@ -13,14 +13,14 @@ block content
                     tr
                         td Host:
                         td
-                            input(id='input-connect-host' class='text-input' value='')
+                            input(id='input-game-connect-host' class='text-input' value='')
                     tr
                         td Port:
                         td
-                            input(id='input-connect-port' class='text-input' value='')
+                            input(id='input-game-connect-port' class='text-input' value='')
                     tr
                         td(colspan='2' style='text-align: center; padding-top: 5px')
-                            button(id='button-connect') Connect
+                            button(id='button-game-connect') Connect
                     tr
                         td(id='game-connect-message' colspan='2' style='text-align: center; padding-top: 5px')
                             | &nbsp;
@@ -28,7 +28,7 @@ block content
 
 
         // window login
-        div(id='window-login' class='window')
+        section(id='window-game-login' class='window')
             div(class='window-header')
                 div(class='window-header-content') Login
             div(class='window-body')
@@ -36,14 +36,17 @@ block content
                     tr
                         td Host:
                         td
-                            input(id='input-login-name' class='text-input' value='game.com')
+                            input(id='input-game-login-name' class='text-input' value='game.com')
                     tr
                         td Port:
                         td
-                            input(id='input-login-pass' class='text-input' value='4343')
+                            input(id='input-game-login-pass' class='text-input' value='4343')
                     tr
                         td(colspan='2' style='text-align: center; padding-top: 5px')
-                            button(id='button-login') Connect
+                            button(id='button-game-login') Connect
+                    tr
+                        td(id='game-login-message' colspan='2' style='text-align: center; padding-top: 5px')
+                            | &nbsp;
 
 
 

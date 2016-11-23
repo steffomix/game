@@ -17,8 +17,8 @@
 
 
 define('gameManager',
-    ['config', 'logger', 'workerMaster', 'jquery', 'gameLayer', 'hudLayer', 'inputLayer', 'dialogLayer'],
-    function (config, Logger, WorkerMaster, $, gameLayer, hudLayer, inputLayer, dialogLayer) {
+    ['config', 'logger', 'workerMaster', 'jquery', 'underscore', 'backbone', 'gameLayer', 'hudLayer', 'inputLayer', 'dialogLayer'],
+    function (config, Logger, WorkerMaster, $, _, backbone, gameLayer, hudLayer, inputLayer, dialogLayer) {
 
         var instance,
             layer = {
@@ -27,7 +27,15 @@ define('gameManager',
                 input: inputLayer,
                 dialog: dialogLayer
             },
-            logger = Logger.getLogger('gameManager').setLevel(config.logger.gameManager || 0);
+            logger = Logger.getLogger('gameManager');
+        logger.setLevel(config.logger.gameManager || 0);
+
+        function User(user){
+            this.getName =  function(){
+                return user.name;
+            }
+        }
+
 
         /**
          * GameManager
@@ -36,10 +44,31 @@ define('gameManager',
         function GameManager () {
 
             var gameSocket = new WorkerMaster('socketManager', 'GameSocket', socketManagerReady, onSocketMessage);
-            gameLayer.init(this);
-            hudLayer.init(this);
-            inputLayer.init(this);
-            dialogLayer.init(this);
+            /**
+             * init layer
+             */
+            try{
+                _.each(layer, function(ly){
+                    ly.init(this);
+                }, this);
+            }catch(e){
+                logger.error('Init Layer failed', e);
+            }
+
+            /**
+             * hide all components of all layer
+             */
+            this.hideAll = function(){
+                _.each(layer, function(ly){
+                    ly.hideAll();
+                });
+            };
+
+            // user data
+            var user = null;
+            this.startGame = function(usr){
+                user = usr;
+            };
 
             /**
              * send message through gameSocket to worker
@@ -48,18 +77,25 @@ define('gameManager',
             this.socketRequest = gameSocket.request;
             this.socketCreate = gameSocket.socket;
 
+            var gameContainer = new (backbone.View.extend({
+                el: $('#game-container'),
+                initialize: function(){
+                    this.$el.hide();
+                    _.bindAll(this, ['show']);
+                },
+                show: function(){
+                    this.$el.show();
+                }
+            }))();
+
             function socketManagerReady (job) {
-                logger.trace('SocketManager ready', job);
-                connect();
-            }
-
-            this.connect = function() {
-
-                $('.window, .input, .hud, .game').each(function (e) {
-                    $(this).hide();
-                });
-                $('#window-connect, #game-container').show();
-
+                try{
+                    logger.trace('GameManager: SocketManager ready', job);
+                    layer.input.displayConnect();
+                    gameContainer.show();
+                }catch(e){
+                    logger.error('connect to server failed', e, job);
+                }
             }
 
             function onSocketMessage (cmd, data) {
@@ -73,17 +109,21 @@ define('gameManager',
                         case 'dialog':
                             var c2 = c.shift();
                             if ( layer[c1][c2] ) {
-                                layer[c1][c2].apply(gameLayer[c1][c2], [c.join('.')].concat(data));
+                                try{
+                                    layer[c1][c2].apply(gameLayer[c1][c2], [c.join('.')].concat(data));
+                                }catch(e){
+                                    logger.error('Invoke Command: "' + c1 + '.' + c2 + '" failed.', data);
+                                }
                             } else {
-                                logger.error('Command ' + cmd + ' not supported');
+                                logger.error('Command "' + cmd + '" not supported');
                             }
                             break;
 
                         default:
-                            logger.error('Command ' + cmd + ' not supported');
+                            logger.error('Command "' + cmd + '" not supported');
                     }
                 } catch (e) {
-                    logger.trace('Forward Message to screen "' + cmd + '" failed: ', e, data);
+                    logger.trace('Forward Command "' + cmd + '" failed: ', e, data);
                 }
             }
 

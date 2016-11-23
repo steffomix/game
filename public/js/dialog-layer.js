@@ -23,7 +23,8 @@ define('dialogLayer', ['config', 'logger'],
     // Logger.setLevel(Logger.DEBUG);
     var instance,
         manager,
-        logger = Logger.getLogger('dialogScreen').setLevel(config.logger.dialogScreen || 0);
+        logger = Logger.getLogger('dialogScreen');
+        logger.setLevel(config.logger.dialogScreen || 0);
 
     return getInstance();
 
@@ -38,6 +39,10 @@ define('dialogLayer', ['config', 'logger'],
 
         this.init = function(mng){
             manager = mng;
+        }
+
+        this.hideAll = function () {
+
         }
 
 

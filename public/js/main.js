@@ -27,21 +27,21 @@
         paths: {
 
             // third party libs
-            'logger': 'lib/loglevel-mod', // https://github.com/pimterry/loglevel ***modified***
+            'logger': 'lib/loglevel.min', // https://github.com/pimterry/loglevel
             'underscore': 'lib/underscore.min', // http://underscorejs.org/
-            'backbone': 'lib/backbone', // http://backbonejs.org/
-            'jquery': 'lib/jquery.min',
-            'io': 'lib/socket.io-client',
-            'pixi': 'lib/pixi.min',
-            'pathfinding': 'lib/pathfinding', // https://github.com/qiao/PathFinding.js
-            'stateMachine': 'lib/state-machine' // https://github.com/jakesgordon/javascript-state-machine
+            'backbone': 'lib/backbone.min', // http://backbonejs.org/
+            'jquery': 'lib/jquery.min', // http://jquery.com/
+            'io': 'lib/socket.io.min', // http://socket.io/
+            'stateMachine': 'lib/state-machine.min', // https://github.com/jakesgordon/javascript-state-machine
+            'pixi': 'lib/pixi.min', // http://www.pixijs.com/
+            'pathfinding': 'lib/pathfinding' // https://github.com/qiao/PathFinding.js
         },
         logger: {}
     };
 
     // format:
     // module name, path, loglevel
-    // 0: trace <- modified: prepend modulename
+    // 0: trace
     // 1: debug
     // 2: info
     // 3: warn
@@ -85,7 +85,6 @@
     console.log('Start Game...');
 
     require(['gameManager'], function(gameManager){
-        gameManager.connect();
     });
 
 

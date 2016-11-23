@@ -21,7 +21,8 @@ define('socketBackend', ['config', 'socket', 'logger', 'socketManager', 'undersc
 
     var instance,
         socketManager,
-        logger = Logger.getLogger('socketBackend').setLevel(config.logger.socketBackend || 0);
+        logger = Logger.getLogger('socketBackend');
+        logger.setLevel(config.logger.socketBackend || 0);
 
     return getInstance();
 

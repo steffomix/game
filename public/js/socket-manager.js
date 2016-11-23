@@ -24,7 +24,8 @@ define('socketManager', ['config', 'socket', 'logger', 'io', 'underscore', 'sock
     function (config, socket, Logger, io, _, front, back, cache) {
 
         var instance,
-            logger = Logger.getLogger('socketManager').setLevel(config.logger.socketManager || 0);
+            logger = Logger.getLogger('socketManager');
+        logger.setLevel(config.logger.socketManager || 0);
 
         return getInstance();
 

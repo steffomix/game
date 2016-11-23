@@ -21,7 +21,8 @@ define('gameLayer', ['config', 'logger'],
 
     var instance,
         manager,
-        logger = Logger.getLogger('gameScreen').setLevel(config.logger.gameScreen || 0);
+        logger = Logger.getLogger('gameScreen');
+        logger.setLevel(config.logger.gameScreen || 0);
 
     return getInstance();
 
@@ -38,6 +39,9 @@ define('gameLayer', ['config', 'logger'],
             manager = mng;
         }
 
+        this.hideAll = function(){
+
+        }
 
     }
 });

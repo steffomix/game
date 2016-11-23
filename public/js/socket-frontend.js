@@ -21,7 +21,8 @@ define('socketFrontend', ['config', 'socket', 'logger', 'underscore'],
 
     var instance,
         socketManager,
-        logger = Logger.getLogger('socketFrontend').setLevel(config.logger.socketFrontend || 0);
+        logger = Logger.getLogger('socketFrontend');
+        logger.setLevel(config.logger.socketFrontend || 0);
 
     return getInstance();
 

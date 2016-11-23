@@ -11,8 +11,14 @@ body {
     background: linear-gradient(to bottom, blue, white 80%, orange);
 }
 
-#game-container{
 
+#game-container{
+    display: none;
+}
+
+
+.window{
+    display: none;
 }
 
 input, button{
@@ -24,13 +30,11 @@ input, button{
 
 button{
     background-color: rgba(255,255,255,.8);
-
 }
 
 .window-header{
     width: 100%;
     border-bottom: 5px solid rgba(0,0,0,.5);
-
 }
 
 .window-header-content{
