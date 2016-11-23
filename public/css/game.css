@@ -11,13 +11,10 @@ body {
     background: linear-gradient(to bottom, blue, white 80%, orange);
 }
 
-
 #game-container{
-    display: none;
-}
-
-
-.window{
+    position: absolute;
+    left: 0px;
+    top: 0px;
     display: none;
 }
 

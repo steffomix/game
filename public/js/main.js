@@ -51,19 +51,17 @@
 
         // game
         ['gameManager', 'game-manager', 0],
-        ['dialogLayer', 'dialog-layer', 0],
-        ['inputLayer', 'input-layer', 0],
-        ['hudLayer', 'hud-layer', 0],
-        ['gameLayer', 'game-layer', 0],
+        ['workerMaster', 'worker-master', 0],
+        ['gameSocket', 'game-socket', 0],
+        ['components', 'game-components', 0],
+        ['util', 'util', 0],
 
         // worker: Server - Client Middleware
-        ['socketManager', 'socket-manager', 0],
-        ['gameCache', 'game-cache', 2],
-        ['pathfinder', 'pathfinder', 2], // used by gamecache
-        ['socketFrontend', 'socket-frontend',2],
-        ['socketBackend', 'socket-backend', 2],
-        ['workerMaster', 'worker-master', 0],
-        ['workerSlave', '/js/worker-slave.js', 0], // must be full path
+        ['workerSocket', 'worker/worker-socket', 0],
+        ['gameCache', 'worker/game-cache', 2],
+        ['pathfinder', 'worker/pathfinder', 2], // used by gamecache
+        ['serverSocket', 'worker/server-socket', 2],
+        ['workerSlave', '/js/worker/worker-slave.js', 0], // must be full path
 
     ];
 

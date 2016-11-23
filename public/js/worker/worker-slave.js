@@ -124,7 +124,7 @@ define(__slaveModuleID__,
             slaveConfig = job.request.config;
 
             // config requirejs with data from worker-master
-            requirejs.config({paths: slaveConfig.paths});
+            requirejs.config({paths: slaveConfig.paths, baseUrl: slaveConfig.baseUrl});
             define('config', [], function(){return slaveConfig});
             define('socket', [], function(){return socket});
 
@@ -148,7 +148,7 @@ define(__slaveModuleID__,
                 socketContainer.logger = logger;
 
             })
-            require([slaveScript], function(socketManager){});
+            require([slaveScript], function(){});
             job.send('***worker started***');
             console.log('Slave #' + slaveId + ' ' + slaveName + ' with script: "' + slaveScript + '\n Send cmd "***worker started***"');
         }

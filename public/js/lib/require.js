@@ -1973,6 +1973,7 @@ var requirejs, require, define;
                 // where the worker gets garbage-collected after calling
                 // importScripts(): https://webkit.org/b/153317
                 setTimeout(function() {}, 0);
+
                 importScripts(url);
 
                 //Account for anonymous modules
@@ -1980,7 +1981,7 @@ var requirejs, require, define;
             } catch (e) {
                 context.onError(makeError('importscripts',
                                 'importScripts failed for ' +
-                                    moduleName + ' at ' + url,
+                                    moduleName + ' at ' + url + ': ' + e.message,
                                 e,
                                 [moduleName]));
             }

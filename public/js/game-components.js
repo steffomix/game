@@ -16,44 +16,45 @@
  */
 
 
-define('inputLayer', ['config', 'logger', 'jquery', 'underscore', 'backbone'],
-    function (config, Logger, $, _, Backbone) {
+define('components', ['config', 'logger', 'gameSocket', 'jquery', 'underscore', 'backbone', 'util'],
+    function (config, Logger, gameSocket, $, _, Backbone, util) {
 
-        var inputLayer,
-            gameManager,
-            logger = Logger.getLogger('inputScreen');
-        logger.setLevel(config.logger.inputScreen || 0);
+        var components,
+            logger = Logger.getLogger('components');
+        logger.setLevel(config.logger.components || 0);
 
         function getInputLayer () {
-            if ( !inputLayer ) {
-                inputLayer = new InputLayer();
+            if ( !components ) {
+                components = new Components();
                 //setupStateMachine();
             }
-            return inputLayer;
+            return components;
         }
 
-        function InputLayer () {
+        function Components () {
 
-            this.init = function (mng) {
-                gameManager = mng;
-            };
+            gameSocket.addModule('components', this);
 
-            /**
-             * hide all inputLayer conponents
-             */
-            this.hideAll = function () {
-                _.each(components, function(comp){
-                    comp.hide();
-                });
-            };
-
-            this.displayConnect = function(){
-                gameManager.hideAll();
-                components.connect.show();
-            };
 
             var components = {
 
+                /**
+                 * gameContainer
+                 */
+                gameContainer: new (Backbone.View.extend({
+                    el: $('#game-container'),
+                    initialize: function(){
+                        this.$el.hide();
+                        _.bindAll(this, ['show']);
+                    },
+                    show: function(){
+                        this.$el.show();
+                    }
+                }))(),
+
+                /**
+                 * login
+                 */
                 login: new (Backbone.View.extend({
                     /**
                      * backbone
@@ -62,6 +63,7 @@ define('inputLayer', ['config', 'logger', 'jquery', 'underscore', 'backbone'],
                     el_user: $('#input-game-login-user'),
                     el_pass: $('#input-game-login-pass'),
                     el_msg: $('#game-login-message'),
+                    el_body: $('body'),
                     initialize: function () {
                         this.el_user.val(localStorage['server.login.user']);
                         _.bindAll(this, 'show', 'hide');
@@ -83,15 +85,19 @@ define('inputLayer', ['config', 'logger', 'jquery', 'underscore', 'backbone'],
                             gameManager.startGame(user);
                         }
                     },
-                    show: function(){
+                    show: function () {
                         this.$el.show();
+                        util.centerWindowAsync(this.el_body, this.$el);
                     },
-                    hide: function(){
+                    hide: function () {
                         this.$el.hide();
                     }
 
                 }))(),
 
+                /**
+                 * connect
+                 */
                 connect: new (Backbone.View.extend({
                     /**
                      * backbone
@@ -100,6 +106,7 @@ define('inputLayer', ['config', 'logger', 'jquery', 'underscore', 'backbone'],
                     el_host: $('#input-game-connect-host'),
                     el_port: $('#input-game-connect-port'),
                     el_msg: $('#game-connect-message'),
+                    el_body: $('body'),
                     initialize: function () {
                         this.el_host.val(localStorage['server.host'] || 'game.com');
                         this.el_port.val(localStorage['server.port'] || 4343);
@@ -127,19 +134,18 @@ define('inputLayer', ['config', 'logger', 'jquery', 'underscore', 'backbone'],
                         }
                     },
                     /**
-                     * inputLayer
+                     * components
                      */
                     show: function () {
                         this.el_host.val(localStorage['server.host']);
                         this.el_port.val(localStorage['server.port']);
                         this.$el.show();
+                        util.centerWindowAsync(this.el_body, this.$el);
                     },
                     hide: function () {
                         this.$el.hide();
                     }
                 }))()
-
-
             }
         }
 

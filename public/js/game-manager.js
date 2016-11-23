@@ -17,16 +17,10 @@
 
 
 define('gameManager',
-    ['config', 'logger', 'workerMaster', 'jquery', 'underscore', 'backbone', 'gameLayer', 'hudLayer', 'inputLayer', 'dialogLayer'],
-    function (config, Logger, WorkerMaster, $, _, backbone, gameLayer, hudLayer, inputLayer, dialogLayer) {
+    ['config', 'logger', 'gameSocket', 'components'],
+    function (config, Logger, gameSocket, components) {
 
         var instance,
-            layer = {
-                game: gameLayer,
-                hud: hudLayer,
-                input: inputLayer,
-                dialog: dialogLayer
-            },
             logger = Logger.getLogger('gameManager');
         logger.setLevel(config.logger.gameManager || 0);
 
@@ -43,89 +37,7 @@ define('gameManager',
          */
         function GameManager () {
 
-            var gameSocket = new WorkerMaster('socketManager', 'GameSocket', socketManagerReady, onSocketMessage);
-            /**
-             * init layer
-             */
-            try{
-                _.each(layer, function(ly){
-                    ly.init(this);
-                }, this);
-            }catch(e){
-                logger.error('Init Layer failed', e);
-            }
-
-            /**
-             * hide all components of all layer
-             */
-            this.hideAll = function(){
-                _.each(layer, function(ly){
-                    ly.hideAll();
-                });
-            };
-
-            // user data
-            var user = null;
-            this.startGame = function(usr){
-                user = usr;
-            };
-
-            /**
-             * send message through gameSocket to worker
-             */
-            this.socketSend = gameSocket.send;
-            this.socketRequest = gameSocket.request;
-            this.socketCreate = gameSocket.socket;
-
-            var gameContainer = new (backbone.View.extend({
-                el: $('#game-container'),
-                initialize: function(){
-                    this.$el.hide();
-                    _.bindAll(this, ['show']);
-                },
-                show: function(){
-                    this.$el.show();
-                }
-            }))();
-
-            function socketManagerReady (job) {
-                try{
-                    logger.trace('GameManager: SocketManager ready', job);
-                    layer.input.displayConnect();
-                    gameContainer.show();
-                }catch(e){
-                    logger.error('connect to server failed', e, job);
-                }
-            }
-
-            function onSocketMessage (cmd, data) {
-                var c = cmd.split('.'),
-                    c1 = c.shift();
-                try {
-                    switch (c1) {
-                        case 'game':
-                        case 'hud':
-                        case 'input':
-                        case 'dialog':
-                            var c2 = c.shift();
-                            if ( layer[c1][c2] ) {
-                                try{
-                                    layer[c1][c2].apply(gameLayer[c1][c2], [c.join('.')].concat(data));
-                                }catch(e){
-                                    logger.error('Invoke Command: "' + c1 + '.' + c2 + '" failed.', data);
-                                }
-                            } else {
-                                logger.error('Command "' + cmd + '" not supported');
-                            }
-                            break;
-
-                        default:
-                            logger.error('Command "' + cmd + '" not supported');
-                    }
-                } catch (e) {
-                    logger.trace('Forward Command "' + cmd + '" failed: ', e, data);
-                }
-            }
+            gameSocket.addModule('manager', this);
 
 
         }
@@ -141,5 +53,26 @@ define('gameManager',
 
         return getInstance();
     });
+
+/*
+ M = Backbone.Model.extend();
+ C = Backbone.Collection.extend({
+ model: M,
+ comparator: function(m) {
+ return -m.get('date').getTime();
+ }
+ });
+
+ var c = new C();
+ c.add([
+ { date: new Date(2011,  0, 10) },
+ { date: new Date(2010,  1, 11) },
+ { date: new Date(2012, 11, 23) },
+ { date: new Date(2009,  6,  6) },
+ { date: new Date(2000,  8,  1) },
+ ]);
+ for(var i = 0; i < c.models.length; ++i)
+ console.log(c.models[i].get('date'));
+ */
 
 
