@@ -17,8 +17,8 @@
 
 
 define('gameManager',
-    ['config', 'logger', 'gameSocket', 'components'],
-    function (config, Logger, gameSocket, components) {
+    ['config', 'logger', 'gameSocket', 'interface'],
+    function (config, Logger, gameSocket, interface) {
 
         var instance,
             logger = Logger.getLogger('gameManager');
@@ -47,6 +47,8 @@ define('gameManager',
         function GameManager () {
 
             gameSocket.addModule('game', this);
+
+            interface.reset();
 
         }
 

@@ -20,7 +20,7 @@
  * workerSocket
  * Web Worker entry point
  */
-define('workerSocket', ['config', 'logger', 'socket', 'server', 'commandRouter'],
+define('workerSocket', ['config', 'logger', 'socket', 'commandRouter'],
     function (config, Logger, socket, Router) {
 
         var instance,
@@ -46,7 +46,7 @@ define('workerSocket', ['config', 'logger', 'socket', 'server', 'commandRouter']
             this.addModule = router.addModule;
             this.removeModule = router.removeModule;
 
-            server.addModule('game', this);
+            //server.addModule('game', this);
 
             socket.onMessage = router.route;
             this.send = socket.send;

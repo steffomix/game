@@ -16,7 +16,7 @@
  */
 
 
-define('components', ['config', 'logger', 'gameSocket', 'jquery', 'underscore', 'backbone', 'util'],
+define('interface', ['config', 'logger', 'gameSocket', 'jquery', 'underscore', 'backbone', 'util'],
     function (config, Logger, gameSocket, $, _, Backbone, util) {
 
         var instance,
@@ -28,7 +28,7 @@ define('components', ['config', 'logger', 'gameSocket', 'jquery', 'underscore', 
 
         function getInstance () {
             if ( !instance ) {
-                instance = new Components();
+                instance = new Interface();
             }
             return instance;
         }
@@ -37,9 +37,10 @@ define('components', ['config', 'logger', 'gameSocket', 'jquery', 'underscore', 
             gameSocket.send('server.disconnect', []);
         }
 
-        function Components () {
+        function Interface () {
+            gameSocket.addModule('interface', this);
 
-            logger.trace('initialize Components');
+            logger.trace('initialize interface components');
             var self = this,
                 componentGroups = {
                     dialog: 4,
@@ -193,7 +194,7 @@ define('components', ['config', 'logger', 'gameSocket', 'jquery', 'underscore', 
             /**
              * start or reset game
              */
-            function startGame () {
+            this.reset = function() {
                 disconnect();
                 // start game
                 _.each(self.components, function (c) {
@@ -204,8 +205,6 @@ define('components', ['config', 'logger', 'gameSocket', 'jquery', 'underscore', 
                 self.components.gameContainer.show();
             }
 
-            logger.trace('Start Game');
-            startGame();
 
         }
 

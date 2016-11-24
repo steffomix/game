@@ -51,7 +51,7 @@
         ['gameManager', 'game-manager', 0],
         ['workerMaster', 'worker-master', 0],
         ['gameSocket', 'game-socket', 0],
-        ['components', 'game-components', 0],
+        ['interface', 'game-interface', 0],
         ['util', 'util', 0],
 
         // worker: Server - Client Middleware
