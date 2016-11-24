@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 18.11.16 Stefan Brinkmann <steffomix@gmail.com>
+ * Copyright (C) 20.11.16 Stefan Brinkmann <steffomix@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,28 +15,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define('gameCache', ['config', 'logger','workerSocket', 'server', 'underscore'],
-    function (config, Logger, workerSocket, server, _) {
+
+define('workerManager', ['config', 'logger', 'socket', 'commandRouter', 'server', 'workerSocket', 'gameCache'],
+    function (config, Logger, socket, Router, server, workerSocket, gameCache) {
 
     var instance,
-        logger = Logger.getLogger('gameCache');
-        logger.setLevel(config.logger.gameCache || 0);
+        logger = Logger.getLogger('workerManager');
+    logger.setLevel(config.logger.workerManager || 0);
 
-    function getInstance(){
-        if(!instance){
-            instance = new GameCache();
+    return getInstance();
+
+    function getInstance () {
+        if ( !instance ) {
+            instance = new WorkerManager();
         }
         return instance;
     }
 
-    return getInstance();
+    function WorkerManager () {
 
-    function GameCache(){
-        // register at game-websocket to receive commands
-        workerSocket.addModule('cache', this);
-        // register at server socket to receive commands
-        server.addModule('cache', this);
+        // server can send commands to cache
+        server.addModule('manager', this);
+        // socket can send commands to cache
+        workerSocket.addModule('manager', this);
+
 
     }
-
 });

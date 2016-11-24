@@ -16,7 +16,7 @@
  */
 
 
-define('gameUtil', ['config', 'logger'], function (config, Logger) {
+define('util', ['config', 'logger'], function (config, Logger) {
 
     var instance,
         logger = Logger.getLogger('gameUtil');
@@ -26,12 +26,12 @@ define('gameUtil', ['config', 'logger'], function (config, Logger) {
 
     function getInstance () {
         if ( !instance ) {
-            instance = new GameUtil();
+            instance = new Util();
         }
         return instance;
     }
 
-    function GameUtil () {
+    function Util () {
 
         /**
          * center window in frame async

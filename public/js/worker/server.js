@@ -16,12 +16,12 @@
  */
 
 
-define('serverSocket', ['config', 'logger', 'io', 'underscore'],
-    function (config, Logger, io, gameSocket, _) {
+define('server', ['config', 'logger', 'io', 'commandRouter', 'workerSocket', 'underscore'],
+    function (config, Logger, io, Router, workerSocket, _) {
 
         var instance,
-            logger = Logger.getLogger('serverSocket');
-        logger.setLevel(config.logger.serverSocket || 0);
+            logger = Logger.getLogger('server');
+        logger.setLevel(config.logger.server || 0);
 
         return getInstance();
 
@@ -33,39 +33,38 @@ define('serverSocket', ['config', 'logger', 'io', 'underscore'],
         }
 
         function ServerSocket () {
-            var commands = {
+            var connection,
+                commands = {
                     'back': {
                         'connect': true
                     }
                 },
-                modules = {};
+                router = new Router('Server');
 
-            /**
-             *
-             * @param name
-             * @param module
-             */
-            this.addModule = function (name, module) {
-                if ( modules[name] ) {
-                    logger.warn('SocketManager addModule: Module "' + name + '" already set.');
-                } else {
-                    modules[name] = module;
+            this.addModule = router.addModule;
+            this.removeModule = router.removeModule;
+
+            workerSocket.addModule('server', this);
+
+            this.send = function(cmd, data){
+                if(connection && connection.connected){
+                    connection.send(cmd, data);
                 }
             };
-
             this.connect = function (host, port) {
                 var uri = (host || config.server.host) + ':' + (port || config.server.port);
 
                 logger.trace('connect: ', uri);
-                serverSocket = io.connect(uri);
-                serverSocket.on('updateGameCommands', function (commands) {
+                connection = io.connect(uri);
+                connection.on('updateGameCommands', function (commands) {
                     updateGameCommands(commands);
                 });
-                serverSocket.on('newConnection', function (commands) {
+                connection.on('newConnection', function (commands) {
                     updateGameCommands(commands);
-                    gameSocket.send('input.onConnect');
+                    socket.send('input.onConnect');
                 });
             };
+
 
 
             function updateGameCommands (data) {

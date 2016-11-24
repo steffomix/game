@@ -150,7 +150,7 @@ define(__slaveModuleID__,
             })
             require([slaveScript], function(){});
             job.send('***worker started***');
-            console.log('Slave #' + slaveId + ' ' + slaveName + ' with script: "' + slaveScript + '\n Send cmd "***worker started***"');
+            // console.log('Slave #' + slaveId + ' ' + slaveName + ' with script: "' + slaveScript + '\n Send cmd "***worker started***"');
         }
 
         /**
@@ -159,11 +159,12 @@ define(__slaveModuleID__,
          */
         function onMessage(e) {
             var job = new Job(e);
-            console.log('Worker Slave onMessage: ', job);
+            // console.log('Worker Slave onMessage: ', job);
             if (job.cmd == '***worker shutdown***') {
                 console.log('Shutdown Worker' + slaveId + ' "' + slaveName + '" with Scripts: ', slaveScript);
                 close();
             } else {
+                // forward to main socket
                 socket.onMessage(job);
             }
         }
@@ -171,7 +172,7 @@ define(__slaveModuleID__,
         // add startup listener
         self.addEventListener('message', onStart);
 
-        console.log('Worker Slave waking up. Send cmd "***worker ready***"');
+        console.log('Worker waking up, ready for setup.');
         self.postMessage({cmd: '***worker ready***'});
 
         // finally return the main worker socket module __slaveModuleID__

@@ -16,11 +16,10 @@
  */
 
 
-define('gameSocket', ['config', 'logger', 'workerMaster', 'underscore'],
-    function (config, Logger, WorkerMaster, _) {
+define('gameSocket', ['config', 'logger', 'workerMaster', 'commandRouter'],
+    function (config, Logger, WorkerMaster, CommandRouter) {
 
         var instance,
-            listener = {},
             logger = Logger.getLogger('gameSocket');
         logger.setLevel(config.logger.gameSocket || 0);
 
@@ -38,23 +37,25 @@ define('gameSocket', ['config', 'logger', 'workerMaster', 'underscore'],
          * @constructor
          */
         function GameSocket () {
-            var gameSocket = new WorkerMaster('gameCache', 'GameCache', socketManagerReady, routeMessage),
-                modules = {},
-                socketReady = false;
+            var socket,
+                socketReady = false,
+                router = new CommandRouter('GameSocket'),
+                socketMaster = new WorkerMaster(
+                    // initial script
+                    'workerManager',
+                    // human readable name
+                    'WorkerManager',
+                    // worker ready to rumble callback
+                    function (sock) {
+                        socket = sock;
+                        socketReady = true;
+                    },
+                    // onMessage callback
+                    router.route
+                );
 
-            /**
-             *
-             * @param name
-             * @param module
-             */
-            this.addModule = function (name, module) {
-                logger.trace('GameSocket addModule: ' + name);
-                if ( listener[name] ) {
-                    logger.error('GameSocket: Module' + name + ' already set.');
-                } else {
-                    modules[name] = module;
-                }
-            };
+            this.addModule = router.addModule;
+            this.removeModule = router.removeModule;
 
             /**
              *
@@ -63,7 +64,7 @@ define('gameSocket', ['config', 'logger', 'workerMaster', 'underscore'],
              */
             this.send = function (cmd, data) {
                 if ( socketReady ) {
-                    gameSocket.send(cmd, data);
+                    socket.send(cmd, data);
                 } else {
                     resendMessage(this.send, cmd, data);
                 }
@@ -78,13 +79,16 @@ define('gameSocket', ['config', 'logger', 'workerMaster', 'underscore'],
              */
             this.request = function (cmd, data, cb, ct) {
                 if ( socketReady ) {
-                    gameSocket.request(cmd, data, cb, ct);
+                    socket.request(cmd, data, cb, ct);
                 } else {
                     resendMessage(this.request, cmd, data, cb, ct);
                 }
             };
 
             /**
+             * Send a Message as normal.
+             * The Job received from Worker is a socket to the Main-thread.
+             * The response Job from the Worker to the Main thread is the other side of the socket.
              *
              * @param cmd
              * @param data
@@ -93,9 +97,9 @@ define('gameSocket', ['config', 'logger', 'workerMaster', 'underscore'],
              */
             this.socket = function (cmd, data, cb, ct) {
                 if ( socketReady ) {
-                    gameSocket.socket(cmd, data, cb, ct);
+                    socketMaster.socket(cmd, data, cb, ct);
                 } else {
-                    resendMessage(this.socket, cmd, data, cb, ct);
+                    resendMessage(socket, cmd, data, cb, ct);
                 }
             };
 
@@ -108,45 +112,17 @@ define('gameSocket', ['config', 'logger', 'workerMaster', 'underscore'],
              * @param ct
              */
             function resendMessage (fn, cmd, data, cb, ct) {
-                logger.warn('GameSocket not ready yet. Resend Message in 1sec.');
+                logger.warn('GameSocket not ready yet. Resend Command in 1sec.: ', cmd, data);
                 setTimeout(function (cmd, data, cb, ct) {
-                    fn(cmd, data, cb, ct);
+                    if ( socketReady ) {
+                        logger.info('Resend Command from unready gameSocket: ', cmd, data);
+                        fn(cmd, data, cb, ct);
+                    } else {
+                        resendMessage(cmd, data, cb, ct);
+                    }
+
                 }, 1000, cmd, data, cb, ct);
             }
 
-            /**
-             *
-             * @param job
-             */
-            function socketManagerReady (job) {
-                socketReady = true;
-            }
-
         }
-
-        /**
-         *
-         * @param cmd
-         * @param data
-         */
-        function routeMessage (cmd, data) {
-            var c = cmd.split('.'),
-                c1 = c.shift();
-            try {
-                if ( modules[c1] ) {
-                    var obj = modules[c1],
-                        c2 = c.shift(),
-                        fn = modules[c1][c2];
-                    // isFunction check from underscore
-                    if ( !!(fn && fn.constructor && fn.call && fn.apply) ) {
-                        fn.apply(obj, data);
-                    }
-                } else {
-                    logger.error('Command "' + cmd + '" not supported');
-                }
-            } catch (e) {
-                logger.error('Route Message "' + cmd + '" throw error:' + e, data);
-            }
-        }
-
     });

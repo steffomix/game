@@ -24,6 +24,15 @@ define('gameManager',
             logger = Logger.getLogger('gameManager');
         logger.setLevel(config.logger.gameManager || 0);
 
+        return getInstance();
+
+        function getInstance () {
+            if ( !instance ) {
+                instance = new GameManager();
+            }
+            return instance;
+        }
+
         function User(user){
             this.getName =  function(){
                 return user.name;
@@ -37,21 +46,10 @@ define('gameManager',
          */
         function GameManager () {
 
-            gameSocket.addModule('manager', this);
-
+            gameSocket.addModule('game', this);
 
         }
 
-
-        function getInstance () {
-            if ( !instance ) {
-                instance = new GameManager();
-
-            }
-            return instance;
-        }
-
-        return getInstance();
     });
 
 /*

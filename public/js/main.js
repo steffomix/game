@@ -17,7 +17,6 @@
 
 (function () {
 
-
     var conf = {
         server: {
             host: 'game.com',
@@ -41,8 +40,7 @@
 
     // format:
     // module name, path, loglevel
-    // 0: trace
-    // 1: debug
+    // 1: trace
     // 2: info
     // 3: warn
     // 4: error
@@ -57,19 +55,30 @@
         ['util', 'util', 0],
 
         // worker: Server - Client Middleware
+        ['workerManager', 'worker/worker-manager', 0],
         ['workerSocket', 'worker/worker-socket', 0],
+        ['commandRouter', 'command-router', 0],
         ['gameCache', 'worker/game-cache', 2],
         ['pathfinder', 'worker/pathfinder', 2], // used by gamecache
-        ['serverSocket', 'worker/server-socket', 2],
+        ['server', 'worker/server', 2],
         ['workerSlave', '/js/worker/worker-slave.js', 0], // must be full path
-
     ];
 
     // setup config for paths and logger
     // The logger is modified to prefix module name on loglevel trace
     modules.forEach(function (item) {
-        conf.paths[item[0]] = item[1];
-        conf.logger[item[0]] = item[2]
+        var module = item[0],
+            path = item[1],
+            logLevel = item[2];
+
+        conf.paths[module] = path;
+        conf.logger[module] = logLevel;
+        // conf.logger[module] = 1; // all trace
+        // conf.logger[module] = 2; // all info
+        // conf.logger[module] = 3; // all warn
+        // conf.logger[module] = 4; // all error
+        // conf.logger[module] = 5; // all off
+
     });
 
     // setup requirejs
