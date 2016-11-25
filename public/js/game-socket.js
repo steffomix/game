@@ -39,7 +39,12 @@ define('gameSocket', ['config', 'logger', 'workerMaster', 'commandRouter'],
         function GameSocket () {
             var socket,
                 socketReady = false,
-                router = new CommandRouter('GameSocket'),
+                router = new CommandRouter('GameSocket',
+                    {
+                        'server.connect': true,
+                        'server.login': true,
+                    }
+                ),
                 socketMaster = new WorkerMaster(
                     // initial script
                     'gameCache',

@@ -38,6 +38,7 @@ define('interface', ['config', 'logger', 'gameSocket', 'jquery', 'underscore', '
         }
 
         function Interface () {
+            // Register this at socket to receive commends through
             gameSocket.addModule('interface', this);
 
             logger.trace('initialize interface components');

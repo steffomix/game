@@ -58,6 +58,7 @@
         ['workerManager', 'worker/worker-manager', 0],
         ['workerSocket', 'worker/worker-socket', 0],
         ['commandRouter', 'command-router', 0],
+        ['commandFilter', 'command-filter', 0],
         ['gameCache', 'worker/game-cache', 2],
         ['pathfinder', 'worker/pathfinder', 2], // used by gamecache
         ['server', 'worker/server', 2],

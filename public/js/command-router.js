@@ -15,60 +15,116 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define('commandRouter', ['config', 'logger'], function (config, Logger) {
-    var logger = Logger.getLogger('commandRouter');
-    logger.setLevel(config.logger.commandRouter || 0);
+define('commandRouter', ['config', 'logger', 'commandFilter'],
+    function (config, Logger, commandFilter) {
 
-    function CommandRouter (name) {
+        var logger = Logger.getLogger('commandRouter');
+        logger.setLevel(config.logger.commandRouter || 0);
 
-        var modules = {};
 
-        this.addModule = function (key, module) {
-            if ( modules[key] ) {
-                logger.warn('CommandRouter: Module "' + key + '" already set');
-            }else{
-                modules[key] = module;
-            }
-        };
+        function CommandRouter (name, commands) {
 
-        this.removeModule = function(key) {
-            delete modules[key];
-        };
+            var modules = {};
 
-        /**
-         *
-         * @param cmd {string} <module>.<command>
-         * @param args {array} [args...]
-         */
-        this.route = function (job, args) {
-            var cmd;
-            if(typeof job === 'string'){
-                cmd = job;
-            }else{
-                cmd = job.cmd;
-                args = job.data;
-            }
-            logger.info('Router ' + name + ' route Command: "' + cmd + '" with: ' + args);
-            var c = cmd.split('.'),
-                c1 = c.shift();
-            try {
-                if ( modules[c1] ) {
-                    var obj = modules[c1],
-                        c2 = c.shift(),
-                        fn = modules[c1][c2];
-                    // isFunction check from underscore
-                    if ( !!(fn && fn.constructor && fn.call && fn.apply) ) {
-                        fn.apply(obj, args);
-                    }
+            this.setFilter = commandFilter.setFilter;
+            this.removefilter = commandFilter.removeFilter;
+
+            this.addModule = function (key, module) {
+                if ( modules[key] ) {
+                    logger.warn('CommandRouter: Module "' + key + '" already set');
                 } else {
-                    logger.error('Command target "' + cmd + '" not found', args);
+                    modules[key] = module;
                 }
-            } catch (e) {
-                logger.error('Route Message "' + cmd + '" throw error:' + e, args);
+            };
+
+            this.removeModule = function (key) {
+                delete modules[key];
+            };
+
+            /**
+             *
+             * @param cmd {string} <module>.<command>
+             * @param args {array} [args...]
+             */
+            this.route = function (job, args) {
+                var cmd;
+                if ( typeof job === 'string' ) {
+                    cmd = job;
+                } else {
+                    cmd = job.cmd;
+                    args = job.data;
+                }
+                if ( !commandFilter.filter(cmd) ) {
+                    logger.warn('Router ' + name + ' filter out command ' + cmd, args);
+                }
+                logger.info('Router ' + name + ' route Command: "' + cmd + '" with: ' + args);
+                var c = cmd.split('.'),
+                    c1 = c.shift();
+                try {
+                    if ( modules[c1] ) {
+                        var obj = modules[c1],
+                            c2 = c.shift(),
+                            fn = modules[c1][c2];
+                        // isFunction check from underscore
+                        if ( !!(fn && fn.constructor && fn.call && fn.apply) ) {
+                            fn.apply(obj, args);
+                        }
+                    } else {
+                        logger.error('Command target "' + cmd + '" not found', args);
+                    }
+                } catch (e) {
+                    logger.error('Route Message "' + cmd + '" throw error:' + e, args);
+                }
+            }
+
+
+            /**
+             * Filter-List of **allowed** commands
+             *
+             * @param commands {string || object} Object keys should have a true value to enable command.
+             * @param value {bool} only required when command is a string.
+             *
+             * @constructor
+             */
+
+            function Filter () {
+
+                var _filter = {};
+                var self = this;
+
+                self.filter = filter;
+                self.setFilter = setFilter;
+                self.removeFilter = removeFilter;
+
+                /**
+                 * Check if command is allowed
+                 * @param cmd
+                 * @returns {boolean}
+                 */
+                function filter (cmd) {
+                    return (!!_filter[cmd]);
+                }
+
+                /**
+                 * Add or overwrite Filter
+                 * @param k
+                 * @param v
+                 * @returns {boolean}
+                 */
+                function setFilter (k, v) {
+                    _filter[k] = !!v;
+                }
+
+                /**
+                 * Delete filter from list
+                 * @param k
+                 */
+                function removeFilter (k) {
+                    delete _filter[k];
+                }
             }
         }
-    }
 
-    return CommandRouter;
+        return CommandRouter;
 
-});
+    });

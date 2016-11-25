@@ -17,8 +17,8 @@
 
 
 define('gameManager',
-    ['config', 'logger', 'gameSocket', 'interface'],
-    function (config, Logger, gameSocket, interface) {
+    ['config', 'logger', 'gameSocket', 'commandFilter', 'interface', 'underscore'],
+    function (config, Logger, gameSocket, commandFilter, interface, _) {
 
         var instance,
             logger = Logger.getLogger('gameManager');
@@ -45,6 +45,14 @@ define('gameManager',
          * @constructor
          */
         function GameManager () {
+
+            _.each({
+                'interface.reset': 1
+            }, function(v, k){
+                commandFilter.setFilter(k, v);
+            });
+
+
 
             gameSocket.addModule('game', this);
 
