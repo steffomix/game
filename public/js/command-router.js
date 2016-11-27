@@ -15,19 +15,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define('commandRouter', ['config', 'logger', 'commandFilter'],
-    function (config, Logger, commandFilter) {
+define('commandRouter', ['config', 'logger'],
+    function (config, Logger) {
 
         var logger = Logger.getLogger('commandRouter');
         logger.setLevel(config.logger.commandRouter || 0);
 
 
-        function CommandRouter (name, commands) {
+        function CommandRouter (name) {
 
-            var modules = {};
+            var modules = {},
+                filter = new Filter();
 
-            this.setFilter = commandFilter.setFilter;
-            this.removefilter = commandFilter.removeFilter;
+            /**
+             * Set allowed command
+             * @type {string}
+             */
+            this.setFilter = filter.setFilter;
+
+
+            this.removefilter = filter.removeFilter;
 
             this.addModule = function (key, module) {
                 if ( modules[key] ) {
@@ -35,10 +42,6 @@ define('commandRouter', ['config', 'logger', 'commandFilter'],
                 } else {
                     modules[key] = module;
                 }
-            };
-
-            this.removeModule = function (key) {
-                delete modules[key];
             };
 
             /**
@@ -54,7 +57,7 @@ define('commandRouter', ['config', 'logger', 'commandFilter'],
                     cmd = job.cmd;
                     args = job.data;
                 }
-                if ( !commandFilter.filter(cmd) ) {
+                if ( !filter.filter(cmd) ) {
                     logger.warn('Router ' + name + ' filter out command ' + cmd, args);
                 }
                 logger.info('Router ' + name + ' route Command: "' + cmd + '" with: ' + args);
@@ -89,21 +92,17 @@ define('commandRouter', ['config', 'logger', 'commandFilter'],
 
             function Filter () {
 
-                var _filter = {};
-                var self = this;
-
-                self.filter = filter;
-                self.setFilter = setFilter;
-                self.removeFilter = removeFilter;
+                var filter = {},
+                    self = this;
 
                 /**
                  * Check if command is allowed
                  * @param cmd
                  * @returns {boolean}
                  */
-                function filter (cmd) {
-                    return (!!_filter[cmd]);
-                }
+                self.filter = function(cmd) {
+                    return (!!filter[cmd]);
+                };
 
                 /**
                  * Add or overwrite Filter
@@ -111,16 +110,16 @@ define('commandRouter', ['config', 'logger', 'commandFilter'],
                  * @param v
                  * @returns {boolean}
                  */
-                function setFilter (k, v) {
-                    _filter[k] = !!v;
-                }
+                self.setFilter = function(k, v) {
+                    filter[k] = !!v;
+                };
 
                 /**
                  * Delete filter from list
                  * @param k
                  */
-                function removeFilter (k) {
-                    delete _filter[k];
+                self.removeFilter = function(k) {
+                    delete filter[k];
                 }
             }
         }

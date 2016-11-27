@@ -20,7 +20,12 @@ define('gameSocket', ['config', 'logger', 'workerMaster', 'commandRouter'],
     function (config, Logger, WorkerMaster, CommandRouter) {
 
         var instance,
+            commandWhiteList = {
+                'server.connect': true,
+                'server.login': true
+            },
             logger = Logger.getLogger('gameSocket');
+
         logger.setLevel(config.logger.gameSocket || 0);
 
         return getInstance();
@@ -39,12 +44,7 @@ define('gameSocket', ['config', 'logger', 'workerMaster', 'commandRouter'],
         function GameSocket () {
             var socket,
                 socketReady = false,
-                router = new CommandRouter('GameSocket',
-                    {
-                        'server.connect': true,
-                        'server.login': true,
-                    }
-                ),
+                router = new CommandRouter('GameSocket', commandWhiteList),
                 socketMaster = new WorkerMaster(
                     // initial script
                     'gameCache',
@@ -60,7 +60,7 @@ define('gameSocket', ['config', 'logger', 'workerMaster', 'commandRouter'],
                 );
 
             this.addModule = router.addModule;
-            this.removeModule = router.removeModule;
+            this.route = router.route;
 
             /**
              *

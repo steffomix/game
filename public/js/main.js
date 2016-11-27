@@ -48,11 +48,12 @@
     var modules = [
 
         // game
+        ['util', 'util', 0],
         ['gameManager', 'game-manager', 0],
         ['workerMaster', 'worker-master', 0],
         ['gameSocket', 'game-socket', 0],
         ['interface', 'game-interface', 0],
-        ['util', 'util', 0],
+        ['interfaceComponents', 'interface-components'],
 
         // worker: Server - Client Middleware
         ['workerManager', 'worker/worker-manager', 0],
@@ -62,7 +63,7 @@
         ['gameCache', 'worker/game-cache', 2],
         ['pathfinder', 'worker/pathfinder', 2], // used by gamecache
         ['server', 'worker/server', 2],
-        ['workerSlave', '/js/worker/worker-slave.js', 0], // must be full path
+        ['workerSlave', '/js/worker/worker-slave.js', 0] // must be full path
     ];
 
     // setup config for paths and logger
