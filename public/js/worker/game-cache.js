@@ -15,28 +15,64 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define('gameCache', ['config', 'logger','workerSocket', 'server', 'underscore'],
-    function (config, Logger, workerSocket, server, _) {
+define('workerRouter', ['commandRouter'], function (commandRouter) {
 
-    var instance,
-        logger = Logger.getLogger('gameCache');
-        logger.setLevel(config.logger.gameCache || 0);
+    var instance;
+    return getInstance();
+    function getInstance () {
+        if ( !instance ) {
+            try {
+                instance = commandRouter.getRouter('WorkerRouter');
+            } catch (e) {
+                console.log('Module workerRouter create Instance: ', e);
+            }
 
-    function getInstance(){
-        if(!instance){
-            instance = new GameCache();
         }
         return instance;
     }
 
+});
+
+define('serverRouter', ['commandRouter'], function (commandRouter) {
+
+    var instance;
     return getInstance();
-
-    function GameCache(){
-        // register at game-websocket to receive commands
-        workerSocket.addModule('cache', this);
-        // register at server socket to receive commands
-        server.addModule('cache', this);
-
+    function getInstance () {
+        if ( !instance ) {
+            try {
+                instance = commandRouter.getRouter('ServerRouter');
+            } catch (e) {
+                console.log('Module serverRouter create Instance: ', e);
+            }
+        }
+        return instance;
     }
 
 });
+
+define('gameCache', ['config', 'logger', 'workerSocket', 'workerRouter', 'server', 'serverRouter', 'underscore'],
+    function (config, Logger, workerSocket, workerRouter, server, serverRouter, _) {
+
+        var instance,
+            logger = Logger.getLogger('gameCache');
+        logger.setLevel(config.logger.gameCache || 0);
+
+        return getInstance();
+
+        function getInstance () {
+            if ( !instance ) {
+                instance = new GameCache();
+            }
+            return instance;
+        }
+
+
+        function GameCache () {
+            // register at game-websocket to receive commands
+            workerRouter.addModule('cache', this);
+            // register at server socket to receive commands
+            serverRouter.addModule('cache', this);
+
+        }
+
+    });

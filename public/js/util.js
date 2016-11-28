@@ -16,7 +16,7 @@
  */
 
 
-define('util', ['config', 'logger'], function (config, Logger) {
+define('util', ['config', 'logger', 'underscore'], function (config, Logger, _) {
 
     var instance,
         logger = Logger.getLogger('gameUtil');
@@ -38,7 +38,7 @@ define('util', ['config', 'logger'], function (config, Logger) {
          * @param frame {$} outer frame, usually frame
          * @param win {$} the window to center in frame
          */
-        this.centerWindowAsync = function(frame, win){
+        this.centerWindowAsync = function (frame, win) {
             setTimeout(_centerWindow, 0, frame, win);
         };
         /**
@@ -47,7 +47,7 @@ define('util', ['config', 'logger'], function (config, Logger) {
          * @param win
          * @returns {{left, top}|{int}}
          */
-        this.centerWindow = function(frame, win){
+        this.centerWindow = function (frame, win) {
             return _centerWindow(frame, win);
         };
         function _centerWindow (frame, win) {
@@ -65,6 +65,56 @@ define('util', ['config', 'logger'], function (config, Logger) {
             });
             return {left: wLeft, top: wTop}
         }
-        
+
+
+        /**
+         * "Select" Components on given conditions
+         * @param conditions {array} [[key, compare, value,], ...]
+         */
+        this.findByConditions = function (targets, conditions) {
+            var selected = [];
+            _.each(targets, function (item) {
+                var hits = 0;
+                try {
+                    for (var i = 0; i < conditions.length; i++) {
+                        var k = conditions[i][0],
+                            c = conditions[i][1],
+                            v = conditions[i][2];
+                        switch (c) {
+                            case '=':
+                                item[k] === v && hits++;
+                                break;
+                            case '>':
+                                item[k] > v && hits++;
+                                break;
+                            case '>=':
+                                item[k] >= v && hits++;
+                                break;
+                            case '<':
+                                item[k] < v && hits++;
+                                break;
+                            case '<=':
+                                item[k] <= v && hits++;
+                                break;
+                            case '!=':
+                                item[k] != v && hits++;
+                                break;
+                            case 'in':
+                                _.find(v, function (v) {
+                                    return item[k] === v;
+                                }) && hits++;
+                                break;
+
+                            default:
+                                logger.error('FindByConditions: Unsupported condition "' + c + '" ');
+                        }
+                        hits == conditions.length && selected.push(item);
+                    }
+                } catch (e) {
+                    logger.error('findByConditions: throw Error: ' + e, targets, conditions);
+                }
+            });
+            return selected;
+        }
     }
 });

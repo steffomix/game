@@ -20,8 +20,8 @@
  * workerSocket
  * Web Worker entry point
  */
-define('workerSocket', ['config', 'logger', 'socket', 'commandRouter'],
-    function (config, Logger, socket, Router) {
+define('workerSocket', ['config', 'logger', 'workerSlaveSocket', 'workerRouter', 'serverRouter'],
+    function (config, Logger, socket, workerRouter, serverRouter) {
 
         var instance,
             logger = Logger.getLogger('workerSocket');
@@ -41,17 +41,10 @@ define('workerSocket', ['config', 'logger', 'socket', 'commandRouter'],
          * @constructor
          */
         function WorkerSocket () {
-            var router = new Router('WorkerSocket');
 
-            this.addModule = router.addModule;
-            this.removeModule = router.removeModule;
-
-            //server.addModule('game', this);
-
-            socket.onMessage = router.route;
+            serverRouter.addModule('workerSocket', this, {send: true});
+            socket.onMessage = workerRouter.route;
             this.send = socket.send;
-
-
         }
     })
 ;

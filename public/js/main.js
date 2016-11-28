@@ -56,10 +56,8 @@
         ['interfaceComponents', 'interface-components'],
 
         // worker: Server - Client Middleware
-        ['workerManager', 'worker/worker-manager', 0],
         ['workerSocket', 'worker/worker-socket', 0],
         ['commandRouter', 'command-router', 0],
-        ['commandFilter', 'command-filter', 0],
         ['gameCache', 'worker/game-cache', 2],
         ['pathfinder', 'worker/pathfinder', 2], // used by gamecache
         ['server', 'worker/server', 2],
@@ -75,6 +73,8 @@
 
         conf.paths[module] = path;
         conf.logger[module] = logLevel;
+
+
         // conf.logger[module] = 1; // all trace
         // conf.logger[module] = 2; // all info
         // conf.logger[module] = 3; // all warn
@@ -91,11 +91,29 @@
         return conf;
     });
 
-    console.log('Start Game...');
+    define('gameRouter', ['commandRouter'], function (commandRouter) {
 
-    require(['gameManager'], function(gameManager){
+        var instance;
+        return getInstance();
+        function getInstance () {
+            if ( !instance ) {
+                try {
+                    instance = commandRouter.getRouter('GameRouter');
+                } catch (e) {
+                    console.error('Module gameRouter create Instance: ', e);
+                }
+
+            }
+            return instance;
+        }
+
     });
 
+
+    console.log('Start Game...');
+
+    require(['gameManager'], function (gameManager) {
+    });
 
 
 })();

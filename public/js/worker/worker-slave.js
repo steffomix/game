@@ -90,7 +90,7 @@ define(__slaveModuleID__,
                 }, 1000, job);
             };
             self.send = function (cmd, data) {
-                socketContainer.logger.trace('Socket-slave send ' + cmd, data)
+                socketContainer.logger.info('Socket-slave send ' + cmd, data)
                 socketContainer.socket.send(cmd, data);
             };
         };
@@ -126,10 +126,7 @@ define(__slaveModuleID__,
             // config requirejs with data from worker-master
             requirejs.config({paths: slaveConfig.paths, baseUrl: slaveConfig.baseUrl});
             define('config', [], function(){return slaveConfig});
-            define('socket', [], function(){return socket});
-
-            // load slave main script (entry point)
-            //self.importScripts(slaveScript + '.js');
+            define('workerSlaveSocket', [], function(){return socket});
 
             // delete command
             job.cmd = '';
@@ -150,7 +147,6 @@ define(__slaveModuleID__,
             })
             require([slaveScript], function(){});
             job.send('***worker started***');
-            // console.log('Slave #' + slaveId + ' ' + slaveName + ' with script: "' + slaveScript + '\n Send cmd "***worker started***"');
         }
 
         /**
@@ -175,11 +171,6 @@ define(__slaveModuleID__,
         console.log('Worker waking up, ready for setup.');
         self.postMessage({cmd: '***worker ready***'});
 
-        // finally return the main worker socket module __slaveModuleID__
-        // with methods:
-        //      send('msg', data) send a message back to main socket on browser side
-        //      onMessage(),
-        //      getData()
         return socket;
 
     })());

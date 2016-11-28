@@ -62,7 +62,7 @@ define('workerMaster', ['config', 'logger'], function (config, Logger) {
         var worker = new Worker(config.paths.workerSlave);
 
 
-        logger.trace('Create Worker-master #' + workerId);
+        logger.info('Create Worker-master #' + workerId);
         /**
          * Container for running jobs
          * The contents will look like that:
@@ -149,7 +149,7 @@ define('workerMaster', ['config', 'logger'], function (config, Logger) {
          */
         function send (cmd, data) {
             try {
-                logger.trace('WorkerMaster: Send cmd: ' + cmd, data);
+                logger.info('WorkerMaster: Send cmd: ' + cmd, data);
                 worker.postMessage({
                     id: null,
                     cmd: cmd,
@@ -172,7 +172,7 @@ define('workerMaster', ['config', 'logger'], function (config, Logger) {
          * @returns Job {Job} worker-master.js->Job
          */
         function request (cmd, data, cb, scope) {
-            logger.trace('WorkerMaster: Request cmd: ' + cmd, data);
+            logger.info('WorkerMaster: Request cmd: ' + cmd, data);
             return _run(false, cmd, data, cb, scope);
         }
 
@@ -189,7 +189,7 @@ define('workerMaster', ['config', 'logger'], function (config, Logger) {
          * @returns Job {Job}
          */
         function socket (cmd, data, cb, scope) {
-            logger.trace('WorkerMaster: socket cmd: ' + cmd, data);
+            logger.info('WorkerMaster: socket cmd: ' + cmd, data);
             return _run(true, cmd, data, cb, scope);
         }
 
@@ -247,7 +247,7 @@ define('workerMaster', ['config', 'logger'], function (config, Logger) {
                 cb = item.cb;
                 scope = item.scope;
 
-                logger.trace('WorkerMaster: Receive ' + (item.sock ? 'socket' : 'response' ) + ' message with cmd "' + job.cmd + '"', e.data.data);
+                logger.info('WorkerMaster: Receive ' + (item.sock ? 'socket' : 'response' ) + ' message with cmd "' + job.cmd + '"', e.data.data);
 
                 if ( !item.sock ) {
                     delete this.jobs[id];
@@ -277,7 +277,7 @@ define('workerMaster', ['config', 'logger'], function (config, Logger) {
          */
         function onWorkerSetup (e) {
             if ( e.data.cmd == '***worker ready***' ) {
-                logger.trace('WorkerMaster: Setup slave with: ' + script);
+                logger.info('WorkerMaster: Setup slave with: ' + config.baseUrl + config.paths[script] + '.js');
                 socket(
                     '***worker start***',
                     {
@@ -289,7 +289,7 @@ define('workerMaster', ['config', 'logger'], function (config, Logger) {
                     onSocketMessage,
                     createWorkerScope);
             } else if ( e.data.cmd == '***worker started***' ) {
-                logger.trace('WorkerMaster: Slave "' + name + '" ready to go. Perform callback...');
+                logger.info('WorkerMaster: Slave "' + name + '" ready to go. Perform callback...');
                 worker.removeEventListener('message', onWorkerSetup);
                 this.addEventListener('message', onMessage);
                 try {

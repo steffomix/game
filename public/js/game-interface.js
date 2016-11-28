@@ -41,13 +41,21 @@ define('interface', ['config', 'logger', 'gameSocket', 'interfaceComponents', 'u
 
 
             // Register this at socket to receive commends through
-            socket.addModule('interface', this);
+            socket.addModule('interface', this, {
+                onConnect: 1,
+                onLogin: 1
+            });
 
-            logger.trace('initialize interface components');
+            logger.info('initialize interface components');
+
+            this.onConnect = function(){
+                components.showLogin();
+            }
+
 
             disconnect();
             // start game
-            components.reset();
+            components.showConnect();
 
 
 

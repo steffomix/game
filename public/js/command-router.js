@@ -15,38 +15,87 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define('commandRouter', ['config', 'logger'],
-    function (config, Logger) {
+define('commandRouter', ['config', 'logger', 'underscore'],
+    function (config, Logger, _) {
 
-        var logger = Logger.getLogger('commandRouter');
+        // predefined router
+        var router = {},
+            logger = Logger.getLogger('commandRouter');
+
         logger.setLevel(config.logger.commandRouter || 0);
 
+        return {
+            getRouter: _getRouter
+        };
 
+
+        /**
+         *
+         * @param name
+         * @returns {*}
+         * @private
+         */
+
+        function _getRouter(name){
+            if(router[name]){
+                return router[name];
+            }else{
+                var newRouter = new CommandRouter(name);
+                name = '' + name;
+                logger.info('Create CommandRouter ' + name);
+                router[name] = newRouter;
+                return newRouter;
+            }
+        }
+
+        /**
+         * Creates a command router instance
+         * @param name {string} Only used as logging prefix
+         * @constructor
+         */
         function CommandRouter (name) {
 
             var modules = {},
+                commandBlacklist = {},
                 filter = new Filter();
 
+            this.status = function(){
+                logger.info('CommandRouter "' + name + '" Status: ', {
+                    filter: filter.getFilter(),
+                    blacklist: _.clone(commandBlacklist)
+                });
+            };
+
             /**
-             * Set allowed command
-             * @type {string}
+             * Add module to command receivers list and
+             * combines name and command to command 'name.command'.
+             * E.g. router.route('moduleName.command', []);
+             * @param name {string} command prefix and module name
+             * @param module {object}
+             * @param commands {object} key<command>:value<boolean enabled> pairs
              */
-            this.setFilter = filter.setFilter;
-
-
-            this.removefilter = filter.removeFilter;
-
-            this.addModule = function (key, module) {
-                if ( modules[key] ) {
-                    logger.warn('CommandRouter: Module "' + key + '" already set');
+            this.addModule = function (name, module, commands) {
+                if ( modules[name] ) {
+                    return logger.error('CommandRouter: Module "' + name + '" already set');
                 } else {
-                    modules[key] = module;
+                    modules[name] = module;
+                    _.each(commands, function(value, key){
+                        filter.addFilter(name + '.' + key, value);
+                    });
                 }
             };
 
             /**
+             * add command to blacklist
+             * @param command
+             */
+            this.deny = function(command){
+                commandBlacklist['' + command] = true;
+            };
+
+            /**
              *
-             * @param cmd {string} <module>.<command>
+             * @param job {string} <module>.<command>
              * @param args {array} [args...]
              */
             this.route = function (job, args) {
@@ -57,10 +106,10 @@ define('commandRouter', ['config', 'logger'],
                     cmd = job.cmd;
                     args = job.data;
                 }
-                if ( !filter.filter(cmd) ) {
-                    logger.warn('Router ' + name + ' filter out command ' + cmd, args);
+                if ( commandBlacklist[cmd] || !filter.allow(cmd) ) {
+                    return logger.warn('Router ' + name + ' filter out command ' + cmd, args);
                 }
-                logger.info('Router ' + name + ' route Command: "' + cmd + '" with: ' + args);
+                logger.info('Router ' + name + ' route Command: ' + cmd, args);
                 var c = cmd.split('.'),
                     c1 = c.shift();
                 try {
@@ -78,18 +127,14 @@ define('commandRouter', ['config', 'logger'],
                 } catch (e) {
                     logger.error('Route Message "' + cmd + '" throw error:' + e, args);
                 }
-            }
+            };
 
 
             /**
              * Filter-List of **allowed** commands
              *
-             * @param commands {string || object} Object keys should have a true value to enable command.
-             * @param value {bool} only required when command is a string.
-             *
              * @constructor
              */
-
             function Filter () {
 
                 var filter = {},
@@ -100,30 +145,28 @@ define('commandRouter', ['config', 'logger'],
                  * @param cmd
                  * @returns {boolean}
                  */
-                self.filter = function(cmd) {
+                self.allow = function(cmd) {
                     return (!!filter[cmd]);
                 };
 
                 /**
-                 * Add or overwrite Filter
+                 * Add Filter
                  * @param k
                  * @param v
                  * @returns {boolean}
                  */
-                self.setFilter = function(k, v) {
+                self.addFilter = function(k, v) {
                     filter[k] = !!v;
                 };
 
                 /**
-                 * Delete filter from list
-                 * @param k
+                 * Return a cloned list of current filters
                  */
-                self.removeFilter = function(k) {
-                    delete filter[k];
+                self.getFilter = function(){
+                    return _.clone(filter);
                 }
             }
         }
 
-        return CommandRouter;
 
     });

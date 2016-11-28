@@ -16,8 +16,8 @@
  */
 
 
-define('server', ['config', 'logger', 'io', 'commandRouter', 'workerSocket', 'underscore'],
-    function (config, Logger, io, Router, workerSocket, _) {
+define('server', ['config', 'logger', 'io', 'workerRouter', 'serverRouter', 'underscore'],
+    function (config, Logger, io, workerRouter, serverRouter, _) {
 
         var instance,
             logger = Logger.getLogger('server');
@@ -33,47 +33,41 @@ define('server', ['config', 'logger', 'io', 'commandRouter', 'workerSocket', 'un
         }
 
         function ServerSocket () {
-            var connection,
-                commands = {
-                    'back': {
-                        'connect': true
-                    }
-                },
-                router = new Router('Server');
+            var connection;
 
-            this.addModule = router.addModule;
-            this.removeModule = router.removeModule;
-
-            workerSocket.addModule('server', this);
+            workerRouter.addModule('server', this, {
+                send: true,
+                connect: true,
+                disconnect: true
+            })
 
             this.send = function(cmd, data){
                 if(connection && connection.connected){
                     connection.send(cmd, data);
                 }
             };
+
+            this.disconnect = function(){
+                try{
+                    connection.disconnect();
+                }catch(e){
+                    logger.warn('Server connection disconnect failec: ' + e);
+                }
+            };
+
             this.connect = function (host, port) {
                 var uri = (host || config.server.host) + ':' + (port || config.server.port);
 
-                logger.trace('connect: ', uri);
+                logger.info('connect: ', uri);
                 connection = io.connect(uri);
-                connection.on('updateGameCommands', function (commands) {
-                    updateGameCommands(commands);
-                });
                 connection.on('newConnection', function (commands) {
-                    updateGameCommands(commands);
-                    socket.send('input.onConnect');
+                    serverRouter.route('workerSocket.send', ['interface.onConnect']);
                 });
+
+                connection.on('command', function(data){
+                    serverRouter.route(data.cmd, data.data);
+                })
             };
 
-
-
-            function updateGameCommands (data) {
-                logger.trace('Update Game Commands', data);
-                commands = data;
-            }
-
-
         }
-
-
     });
