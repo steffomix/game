@@ -36,38 +36,44 @@ define('server', ['config', 'logger', 'io', 'workerRouter', 'serverRouter', 'und
             var connection;
 
             workerRouter.addModule('server', this, {
-                send: true,
-                connect: true,
-                disconnect: true
-            })
+                send: function(job){
+                    var cmd = job.data.cmd;
+                    var data = job.data;
+                    send(cmd, data);
+                },
+                connect: function(job){
+                    connect(job.data.host, job.data.port);
+                },
+                disconnect: disconnect
+            });
 
-            this.send = function(cmd, data){
+            function send(cmd, data){
                 if(connection && connection.connected){
                     connection.send(cmd, data);
                 }
-            };
+            }
 
-            this.disconnect = function(){
+            function disconnect(){
                 try{
                     connection.disconnect();
                 }catch(e){
-                    logger.warn('Server connection disconnect failec: ' + e);
+                    logger.warn('Server connection disconnect failed: ' + e);
                 }
-            };
+            }
 
-            this.connect = function (host, port) {
+            function connect(host, port) {
                 var uri = (host || config.server.host) + ':' + (port || config.server.port);
 
                 logger.info('connect: ', uri);
                 connection = io.connect(uri);
                 connection.on('newConnection', function (commands) {
-                    serverRouter.route('workerSocket.send', ['interface.onConnect']);
+                    serverRouter.command('workerSocket.send', ['interface.onConnect', null]);
                 });
 
                 connection.on('command', function(data){
                     serverRouter.route(data.cmd, data.data);
                 })
-            };
+            }
 
         }
     });

@@ -41,7 +41,11 @@ define('gameManager',
          */
         function GameManager () {
 
-            socket.addModule(this);
+            socket.addModule('game', this, {
+                start: function(job){
+                    interface.showGameScreen();
+                }
+            });
 
         }
 

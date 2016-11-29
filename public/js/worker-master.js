@@ -37,6 +37,8 @@
  */
 
 
+
+
 define('workerMaster', ['config', 'logger'], function (config, Logger) {
 
 
@@ -88,30 +90,6 @@ define('workerMaster', ['config', 'logger'], function (config, Logger) {
         function getId () {
 
             return (jobId++) + '_' + Math.random().toString(36).substring(2);
-        }
-
-        /**
-         *
-         * Copy and return jobs into an array
-         * queue().length return count of open or running jobs
-         * @returns {Object} {runs: Array, infinites: Array}
-         */
-        function queue () {
-            var q = [],
-                qi = [],
-                job;
-
-            for (var j in worker.jobs) {
-                job = worker.jobs[j];
-                if ( worker.jobs.hasOwnProperty(j) ) {
-                    job.sock ? qi.push(worker.jobs[j]) : q.push(worker.jobs[j]);
-                }
-            }
-
-            return {
-                runs: q,
-                socks: qi
-            };
         }
 
         /**
@@ -313,7 +291,6 @@ define('workerMaster', ['config', 'logger'], function (config, Logger) {
         this.send = send;
         this.request = request;
         this.socket = socket;
-        this.queue = queue;
     }
 
 

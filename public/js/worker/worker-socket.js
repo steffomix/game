@@ -42,7 +42,9 @@ define('workerSocket', ['config', 'logger', 'workerSlaveSocket', 'workerRouter',
          */
         function WorkerSocket () {
 
-            serverRouter.addModule('workerSocket', this, {send: true});
+            serverRouter.addModule('workerSocket', this, {
+                send: socket.send
+            });
             socket.onMessage = workerRouter.route;
             this.send = socket.send;
         }

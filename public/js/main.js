@@ -47,17 +47,20 @@
     // 5: off
     var modules = [
 
-        // game
+        // game/shared
         ['util', 'util', 0],
         ['gameManager', 'game-manager', 0],
         ['workerMaster', 'worker-master', 0],
         ['gameSocket', 'game-socket', 0],
-        ['interface', 'game-interface', 0],
-        ['interfaceComponents', 'interface-components'],
-
-        // worker: Server - Client Middleware
         ['workerSocket', 'worker/worker-socket', 0],
         ['commandRouter', 'command-router', 0],
+
+        // interface
+        ['interface', 'interface/interface', 0],
+        ['interfaceAccount', 'interface/interface-account'],
+        ['interfaceModels', 'interface/interface-models'],
+
+        // worker: Server - Client Middleware
         ['gameCache', 'worker/game-cache', 2],
         ['pathfinder', 'worker/pathfinder', 2], // used by gamecache
         ['server', 'worker/server', 2],

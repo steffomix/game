@@ -36,10 +36,10 @@ define('commandRouter', ['config', 'logger', 'underscore'],
          * @private
          */
 
-        function _getRouter(name){
-            if(router[name]){
+        function _getRouter (name) {
+            if ( router[name] ) {
                 return router[name];
-            }else{
+            } else {
                 var newRouter = new CommandRouter(name);
                 name = '' + name;
                 logger.info('Create CommandRouter ' + name);
@@ -57,14 +57,8 @@ define('commandRouter', ['config', 'logger', 'underscore'],
 
             var modules = {},
                 commandBlacklist = {},
-                filter = new Filter();
+                listener = new Listener();
 
-            this.status = function(){
-                logger.info('CommandRouter "' + name + '" Status: ', {
-                    filter: filter.getFilter(),
-                    blacklist: _.clone(commandBlacklist)
-                });
-            };
 
             /**
              * Add module to command receivers list and
@@ -79,8 +73,8 @@ define('commandRouter', ['config', 'logger', 'underscore'],
                     return logger.error('CommandRouter: Module "' + name + '" already set');
                 } else {
                     modules[name] = module;
-                    _.each(commands, function(value, key){
-                        filter.addFilter(name + '.' + key, value);
+                    _.each(commands, function (fn, key) {
+                        listener.addListener(name + '.' + key, fn);
                     });
                 }
             };
@@ -89,82 +83,65 @@ define('commandRouter', ['config', 'logger', 'underscore'],
              * add command to blacklist
              * @param command
              */
-            this.deny = function(command){
+            this.deny = function (command) {
                 commandBlacklist['' + command] = true;
             };
 
+
             /**
-             *
-             * @param job {string} <module>.<command>
-             * @param args {array} [args...]
+             * Map Arguments to Job-like Object and forward command to route.
+             * The Job-like Object has no Worker Message Id or any alike functionality 
+             * and can *NOT* be used to send through Worker Socket.
+             * @param cmd {string} <module>.<command>
+             * @param data {any} 
              */
-            this.route = function (job, args) {
-                var cmd;
-                if ( typeof job === 'string' ) {
-                    cmd = job;
-                } else {
-                    cmd = job.cmd;
-                    args = job.data;
+            this.command = function (cmd, data) {
+                logger.info('Router ' + name + ': forward command: ' + cmd, data);
+                this.route({
+                    cmd: cmd,
+                    data: data
+                });
+            };
+
+            /**
+             * 
+             * @param job {object} {cmd: string, data: any}
+             */
+            this.route = function (job) {
+                var cmd = job.cmd;
+                if (commandBlacklist[cmd]) {
+                    return logger.warn('Router ' + name + ' skip blacklisted: ' + cmd, job);
                 }
-                if ( commandBlacklist[cmd] || !filter.allow(cmd) ) {
-                    return logger.warn('Router ' + name + ' filter out command ' + cmd, args);
-                }
-                logger.info('Router ' + name + ' route Command: ' + cmd, args);
-                var c = cmd.split('.'),
-                    c1 = c.shift();
+                logger.info('Router ' + name + ': route job: ' + cmd, job);
+                var mod = cmd.split('.')[0];
                 try {
-                    if ( modules[c1] ) {
-                        var obj = modules[c1],
-                            c2 = c.shift(),
-                            fn = modules[c1][c2];
-                        // isFunction check from underscore
-                        if ( !!(fn && fn.constructor && fn.call && fn.apply) ) {
-                            fn.apply(obj, args);
+                    if ( modules[mod] ) {
+                        var obj = modules[mod],
+                            fn = listener.getListener(cmd);
+                        if ( _.isFunction(fn) ) {
+                            fn.apply(obj, [job]);
+                        } else {
+                            logger.error('Router ' + name + ': target "' + cmd + '" is not a function.', job);
                         }
                     } else {
-                        logger.error('Command target "' + cmd + '" not found', args);
+                        logger.error('Router ' + name + ': target "' + cmd + '" not found.', job);
                     }
                 } catch (e) {
-                    logger.error('Route Message "' + cmd + '" throw error:' + e, args);
+                    logger.error('Route ' + name + ': "' + cmd + '" throw error:' + e, job);
                 }
             };
 
-
-            /**
-             * Filter-List of **allowed** commands
-             *
-             * @constructor
-             */
-            function Filter () {
-
-                var filter = {},
+            function Listener () {
+                var listener = {},
                     self = this;
 
-                /**
-                 * Check if command is allowed
-                 * @param cmd
-                 * @returns {boolean}
-                 */
-                self.allow = function(cmd) {
-                    return (!!filter[cmd]);
+                self.getListener = function (cmd) {
+                    return listener[cmd];
                 };
 
-                /**
-                 * Add Filter
-                 * @param k
-                 * @param v
-                 * @returns {boolean}
-                 */
-                self.addFilter = function(k, v) {
-                    filter[k] = !!v;
+                self.addListener = function (k, v) {
+                    listener[k] = v;
                 };
-
-                /**
-                 * Return a cloned list of current filters
-                 */
-                self.getFilter = function(){
-                    return _.clone(filter);
-                }
             }
         }
 
