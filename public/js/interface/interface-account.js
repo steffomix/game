@@ -17,7 +17,7 @@
 
 
 define('interfaceAccount', ['config', 'logger', 'gameSocket', 'jquery', 'underscore', 'backbone', 'interfaceApp'],
-    function (config, Logger, socket, $, _, Backbone, app) {
+    function (config, Logger, socket, $, _, Backbone, interfaceApp) {
 
         var instance,
             logger = Logger.getLogger('interfaceAccount');
@@ -38,7 +38,7 @@ define('interfaceAccount', ['config', 'logger', 'gameSocket', 'jquery', 'undersc
             /**
              * login
              */
-            this.login = new (Backbone.View.extend(_.extend(app, {
+            this.login = new (Backbone.View.extend(_.extend(new interfaceApp(), {
                 /**
                  * backbone
                  */
@@ -49,7 +49,9 @@ define('interfaceAccount', ['config', 'logger', 'gameSocket', 'jquery', 'undersc
                 el_body: $('body'),
                 initialize: function () {
                     this.el_user.val(localStorage['server.login.user']);
-                    _.bindAll(this, 'show', 'hide', 'onLogin');
+                    _.bindAll(this, 'onLogin');
+                    this.listenTo(this.accountEvents, 'showLogin', this.onShow);
+                    this.registerView('login', this);
                 },
                 events: {'click #button-game-login': 'login'},
                 login: function () {
@@ -57,21 +59,20 @@ define('interfaceAccount', ['config', 'logger', 'gameSocket', 'jquery', 'undersc
                     var pass = (this.el_pass.val() || '');
                     if ( user && pass ) {
                         localStorage['server.login.user'] = user;
-                        gameManager.socketRequest('back.login', [user, pass], this.onLogin, this);
+                        socket.send('server.login', [user, pass]);
                     }
                 },
                 onLogin: function (failMsg, user) {
                     if ( failMsg ) {
-                        // todo i18n
-                        el_msg.val('Login failed. Check your data.');
+                        this.el_msg.val(this.translate('Login failed. Check your data.'));
                     } else {
-                        gameManager.startGame(user);
+                        this.accountEvents.trigger('startGame');
                     }
                 },
                 /**
                  * default
                  */
-                show: function () {
+                onShow: function () {
                     this.$el.show();
                     this.util.centerWindowAsync(this.el_body, this.$el);
                 },
@@ -84,7 +85,7 @@ define('interfaceAccount', ['config', 'logger', 'gameSocket', 'jquery', 'undersc
             /**
              * connect
              */
-            this.connect = new (Backbone.View.extend(_.extend(app, {
+            this.connect = new (Backbone.View.extend(_.extend(new interfaceApp(), {
                 /**
                  * backbone
                  */
@@ -96,7 +97,8 @@ define('interfaceAccount', ['config', 'logger', 'gameSocket', 'jquery', 'undersc
                 initialize: function () {
                     this.el_host.val(localStorage['server.host'] || 'game.com');
                     this.el_port.val(localStorage['server.port'] || 4343);
-                    this.listenTo(this.app.events, 'showConnect', this.onShow);
+                    this.listenTo(this.accountEvents, 'showConnect', this.onShow);
+                    this.registerView('connect', this);
                 },
                 events: {
                     'click #button-game-connect': 'connect',

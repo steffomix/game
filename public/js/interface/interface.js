@@ -15,34 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
-define('interfaceApp', ['config', 'logger', 'backbone', 'underscore', 'gameSocket', 'util'],
-    function (config, logger, Backbone, _, socket, groups) {
-
-        var instance;
-        return getInstance();
-        function getInstance () {
-            if ( !instance ) {
-                instance = new InterfaceBase();
-            }
-            return instance;
-        }
-
-        function InterfaceBase () {
-            this.app = {
-                events: _.extend({}, Backbone.Events),
-                interfaceGroups: {
-                    none: 0,
-                    account: 1
-                }
-            }
-        }
-    });
-
-
 define('interface', ['config', 'logger', 'backbone', 'underscore', 'gameSocket',
         'interfaceApp', 'interfaceAccount'],
-    function (config, Logger, Backbone, _, socket, app, account) {
+    function (config, Logger, Backbone, _, socket, interfaceApp, account) {
 
         var instance,
             logger = Logger.getLogger('interface');
@@ -70,7 +45,9 @@ define('interface', ['config', 'logger', 'backbone', 'underscore', 'gameSocket',
 
             var components = {
                 gameContainer: new (Backbone.View.extend(
-                    _.extend(app, {
+                    _.extend(
+                        new interfaceApp(),
+                        {
                         el: $('#game-container'),
                         initialize: function () {
                             this.$el.hide();
@@ -84,7 +61,8 @@ define('interface', ['config', 'logger', 'backbone', 'underscore', 'gameSocket',
                 account: account
             }
 
-            app.app.events.trigger('showConnect');
+            var ev = new interfaceApp();
+            ev.accountEvents.trigger('showConnect');
 
 
         }

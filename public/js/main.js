@@ -48,23 +48,25 @@
     var modules = [
 
         // game/shared
-        ['util', 'util', 0],
+        ['util', 'util', 4],
+        ['i18n', 'i18n', 4],
         ['gameManager', 'game-manager', 0],
-        ['workerMaster', 'worker-master', 0],
-        ['gameSocket', 'game-socket', 0],
-        ['workerSocket', 'worker/worker-socket', 0],
-        ['commandRouter', 'command-router', 0],
+        ['workerMaster', 'worker-master', 4],
+        ['gameSocket', 'game-socket', 4],
+        ['workerSocket', 'worker/worker-socket', 4],
+        ['commandRouter', 'command-router', 4],
 
         // interface
         ['interface', 'interface/interface', 0],
-        ['interfaceAccount', 'interface/interface-account'],
-        ['interfaceModels', 'interface/interface-models'],
+        ['interfaceApp', 'interface/interface-app', 0],
+        ['interfaceAccount', 'interface/interface-account', 0],
+        ['interfaceModels', 'interface/interface-models', 0],
 
         // worker: Server - Client Middleware
-        ['gameCache', 'worker/game-cache', 2],
-        ['pathfinder', 'worker/pathfinder', 2], // used by gamecache
-        ['server', 'worker/server', 2],
-        ['workerSlave', '/js/worker/worker-slave.js', 0] // must be full path
+        ['gameCache', 'worker/game-cache', 0],
+        ['pathfinder', 'worker/pathfinder', 0], // used by gamecache
+        ['server', 'worker/server', 0],
+        ['workerSlave', '/js/worker/worker-slave.js', 3] // must be full path
     ];
 
     // setup config for paths and logger
