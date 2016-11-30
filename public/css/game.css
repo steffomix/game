@@ -50,14 +50,16 @@ button{
 }
 
 #window-login{
-    position: inherit;
+    display: none;
+    position: absolute;
     left: 40%;
     top: 40%;
 }
 
 #window-connect{
+    display: none;
     position: absolute;
-    left: 30%;
-    top: 40%;
+    left: 0;
+    top: 0;
 }
 

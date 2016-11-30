@@ -33,18 +33,7 @@ define('interface', ['config', 'logger', 'backbone', 'underscore', 'gameSocket',
 
         function Interface () {
 
-            // Register this at socket to receive commends through
-            socket.addModule('interface', this, {
-                onConnect: function () {
-                    components.showLogin();
-                },
-                onLogin: function () {
-
-                }
-            });
-
-            var components = {
-                gameContainer: new (Backbone.View.extend(
+            var gameContainer = new (Backbone.View.extend(
                     _.extend(
                         new interfaceApp(),
                         {
@@ -57,12 +46,15 @@ define('interface', ['config', 'logger', 'backbone', 'underscore', 'gameSocket',
                             this.$el.show();
                         }
                     })
-                ))(),
-                account: account
-            }
+                ))();
 
-            var ev = new interfaceApp();
-            ev.accountEvents.trigger('showConnect');
+            var app = new interfaceApp();
+            window.addEventListener('resize', function(){
+                app.globalEvents.trigger('resizeWindow');
+            });
+            gameContainer.show();
+            app.interfaceEvents.trigger('hideAll');
+            app.accountEvents.trigger('showConnect');
 
 
         }

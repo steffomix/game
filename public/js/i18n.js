@@ -35,22 +35,18 @@ define('i18n', ['config', 'logger', 'underscore'], function (config, Logger, _) 
         var lang = 'en',
             defaultLang = 'en',
             translations = {
-                en: {
-
-                },
-                de: {
-
-                }
+                en: {},
+                de: {}
             };
 
         /**
          * Set current used translation
          * @param l {string} translation key, defaults to 'en'
          */
-        this.setLang = function(l){
-            if(!translations[l]){
+        this.setLang = function (l) {
+            if ( !translations[l] ) {
                 logger.warn('I18n Lang "' + l + '" does not exist. Use default: ' + defaultLang);
-            }else{
+            } else {
                 lang = l;
             }
         };
@@ -59,28 +55,40 @@ define('i18n', ['config', 'logger', 'underscore'], function (config, Logger, _) 
          *
          * @returns {string} current set lang
          */
-        this.getLang = function(){
+        this.getLang = function () {
             return lang;
-        }
+        };
 
         /**
          * Uses underscore.template for data insert
          * @param key {string}
-         * @param data {object}
+         * @param data {object} optional
          */
-        this.translate = function(key, data){
-            var trans;
-            try{
-                if (data){
-                    trans = _.template(translations[lang][key], data);
-                }else{
-                    trans = translations[lang][key];
+        this.translate = function (key, data) {
+            try {
+                if ( translations[lang][key] == undefined ) {
+                    trans = key;
+                    logger.info('Translation Key "' + key + '" not found.');
+                } else {
+                    var trans = translations[lang][key];
+                }
+                if ( data ) {
+                    trans = _.template(trans)(data);
                 }
                 return trans;
-            }catch(e){
+            } catch (e) {
                 logger.error('I18n key "' + key + '" throw error: ' + e, data);
                 return key;
             }
+        };
+
+        this.translateKeys = function (moduleName, keys) {
+            var self = this,
+                trans = {};
+            _.each(keys, function (key) {
+                trans[moduleName + '_' + key] = keys[key] ? self.translate(key, keys[key]) : self.translate(key);
+            })
+            return trans;
         }
     }
 });

@@ -15,24 +15,62 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define('interfaceApp', ['config', 'logger', 'i18n', 'backbone', 'underscore', 'util'],
-    function (config, Logger, i18n, Backbone, _, util) {
+define('interfaceApp', ['config', 'logger', 'gameSocket', 'gameRouter', 'i18n', 'backbone', 'underscore', 'jquery', 'util'],
+    function (config, Logger, socket, router, i18n, Backbone, _, $, util) {
 
         var logger = Logger.getLogger('interfaceApp');
         logger.setLevel(config.logger.interfaceApp || 0);
 
-        var views = {},
-            accountEvents = _.extend({}, Backbone.Events);
+        var views = {}
+            $body = $('body'),
+            globalEvents = _.extend({}, Backbone.Events),
+            accountEvents = _.extend({}, Backbone.Events),
+            interfaceEvents = _.extend({}, Backbone.Events);
 
-        function registerView (name, view) {
-            if(views[name]){
-                return logger.error('InterfaceApp::registerView "' + name + '" already set.', view);
+        _.templateSettings = {
+            evaluate: /\{\{([\s\S]+?)\}\}/g,
+            interpolate: /\{\{=([\s\S]+?)\}\}/g,
+            escape: /\{\{-([\s\S]+?)\}\}/g
+        };
+
+
+        function render (data, templ) {
+            data = data || this.viewData || {};
+            templ = templ || this.template;
+
+            try {
+                this.$el.html(_.template(templ)(data));
+            } catch (e) {
+                this.$el.html('Render error: ' + e);
+                logger.error('Render Error: ', e, data, templ);
             }
-            views[name] = view;
+        }
+
+        function prepareTemplate(){
+            this.template = this.$el.html();
+            this.$el.html('');
+        }
+
+        function hide(){
+            this.$el.html('');
+            this.$el.hide();
+        }
+
+        function centerWindow(){
+            this.util.centerWindowAsync(this.$body, this.$el);
         }
 
         function InterfaceApp () {
-            this.registerView = registerView;
+            this.$body = $body;
+            this.centerWindow = centerWindow;
+            this.hide = hide;
+            this.prepareTemplate = prepareTemplate;
+            this.translateKeys = i18n.translateKeys;
+            this.render = render;
+            this.socket = socket;
+            this.router = router;
+            this.globalEvents = globalEvents;
+            this.interfaceEvents = interfaceEvents;
             this.accountEvents = accountEvents;
             this.translate = i18n.translate;
             this.util = util;

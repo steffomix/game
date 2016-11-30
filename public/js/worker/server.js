@@ -16,8 +16,8 @@
  */
 
 
-define('server', ['config', 'logger', 'io', 'workerRouter', 'serverRouter', 'underscore'],
-    function (config, Logger, io, workerRouter, serverRouter, _) {
+define('server', ['config', 'logger', 'io', 'workerSlaveSocket', 'workerRouter', 'serverRouter', 'underscore'],
+    function (config, Logger, io, socket, workerRouter, serverRouter, _) {
 
         var instance,
             logger = Logger.getLogger('server');
@@ -67,7 +67,7 @@ define('server', ['config', 'logger', 'io', 'workerRouter', 'serverRouter', 'und
                 logger.info('connect: ', uri);
                 connection = io.connect(uri);
                 connection.on('newConnection', function (commands) {
-                    serverRouter.command('workerSocket.send', ['interface.onConnect', null]);
+                    socket.send('interface.onConnect');
                 });
 
                 connection.on('command', function(data){

@@ -1,54 +1,56 @@
 extends layout
 
 block content
-    script(type='text/javascript', src='/js/main.js')
 
-    div(id='game-container')
+    section(id='game-container')
         // window connect
-        section(id='window-game-connect' class='window')
-            div(class='window-header')
-                div(class='window-header-content') Connect
-            div(class='window-body')
-                table
-                    tr
-                        td Host:
-                        td
-                            input(id='input-game-connect-host' class='text-input' value='')
-                    tr
-                        td Port:
-                        td
-                            input(id='input-game-connect-port' class='text-input' value='')
-                    tr
-                        td(colspan='2' style='text-align: center; padding-top: 5px')
-                            button(id='button-game-connect') Connect
-                    tr
-                        td(id='game-connect-message' colspan='2' style='text-align: center; padding-top: 5px')
-                            | &nbsp;
-
+        section(id='window-game-connect')
+            div(class='window')
+                div(class='window-header')
+                    div(class='window-header-content') Connect
+                div(class='window-body')
+                    table
+                        tr
+                            td Host:
+                            td
+                                input(id='input-game-connect-host' class='text-input' value='')
+                        tr
+                            td Port:
+                            td
+                                input(id='input-game-connect-port' class='text-input' value='')
+                        tr
+                            td(colspan='2' style='text-align: center; padding-top: 5px')
+                                button(id='button-game-connect') {{= connect_connect }}
+                        tr
+                            td(id='game-connect-message' colspan='2' style='text-align: center; padding-top: 5px')
+                                | &nbsp;
 
 
         // window login
-        section(id='window-game-login' class='window')
-            div(class='window-header')
-                div(class='window-header-content') Login
-            div(class='window-body')
-                table
-                    tr
-                        td Host:
-                        td
-                            input(id='input-game-login-name' class='text-input' value='game.com')
-                    tr
-                        td Port:
-                        td
-                            input(id='input-game-login-pass' class='text-input' value='4343')
-                    tr
-                        td(colspan='2' style='text-align: center; padding-top: 5px')
-                            button(id='button-game-login') Connect
-                    tr
-                        td(id='game-login-message' colspan='2' style='text-align: center; padding-top: 5px')
-                            | &nbsp;
+        section(id='window-game-login')
+            div(class='window')
+                div(class='window-header')
+                    div(class='window-header-content') Login
+                div(class='window-body')
+                    table
+                        tr
+                            td Host:
+                            td
+                                input(id='input-game-login-name' class='text-input' value='game.com')
+                        tr
+                            td Port:
+                            td
+                                input(id='input-game-login-pass' class='text-input' value='4343')
+                        tr
+                            td(colspan='2' style='text-align: center; padding-top: 5px')
+                                button(id='button-game-login') {{ login }}
+                        tr
+                            td(id='game-login-message' colspan='2' style='text-align: center; padding-top: 5px')
+                                | &nbsp;
 
 
+
+    script(type='text/javascript', src='/js/main.js')
 
 
 
