@@ -15,13 +15,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define('interface', ['config', 'logger', 'backbone', 'underscore', 'gameSocket',
-        'interfaceApp', 'interfaceAccount'],
-    function (config, Logger, Backbone, _, socket, interfaceApp, account) {
+define('interface', ['config', 'logger', 'backbone', 'underscore', 'gameSocket', 'interfaceApp','interfaceConnect',
+        'interfaceLogin'],
+    function (config, Logger, Backbone, _, socket, interfaceApp) {
 
         var instance,
             logger = Logger.getLogger('interface');
         logger.setLevel(config.logger.interface || 0);
+
+        _.each([
+
+        ], function(module){
+            require([module], function(){});
+        });
 
         return getInstance();
         function getInstance () {
@@ -31,33 +37,25 @@ define('interface', ['config', 'logger', 'backbone', 'underscore', 'gameSocket',
             return instance;
         }
 
+
+
         function Interface () {
 
-            var gameContainer = new (Backbone.View.extend(
-                    _.extend(
-                        new interfaceApp(),
-                        {
-                        el: $('#game-container'),
-                        initialize: function () {
-                            this.$el.hide();
-                            _.bindAll(this, ['show']);
-                        },
-                        show: function () {
-                            this.$el.show();
-                        }
-                    })
-                ))();
+            new (Backbone.View.extend(_.extend(new interfaceApp(),
+                {
+                    el: $('#game-container'),
+                    initialize: function () {
+                        var self = this;
+                        window.addEventListener('resize', function () {
+                            self.globalEvents.trigger('resizeWindow');
+                        });
+                        this.accountEvents.trigger('serverDisconnect');
 
-            var app = new interfaceApp();
-            window.addEventListener('resize', function(){
-                app.globalEvents.trigger('resizeWindow');
-            });
-            gameContainer.show();
-            app.interfaceEvents.trigger('hideAll');
-            app.accountEvents.trigger('showConnect');
-
+                        this.$el.fadeIn();
+                    }
+                })
+            ))();
 
         }
-
-
     });
+

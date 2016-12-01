@@ -37,40 +37,56 @@ define('server', ['config', 'logger', 'io', 'workerSlaveSocket', 'workerRouter',
 
             workerRouter.addModule('server', this, {
                 send: function(job){
-                    var cmd = job.data.cmd;
-                    var data = job.data;
+                    var cmd = job.data.cmd,
+                        data = job.data;
                     send(cmd, data);
                 },
                 connect: function(job){
-                    connect(job.data.host, job.data.port);
+                    connect(job.data.host, job.data.port, job.data.callback);
                 },
-                disconnect: disconnect
+                disconnect: disconnect,
+                login: function(job){
+                    send('login', job.data);
+                }
             });
 
             function send(cmd, data){
                 if(connection && connection.connected){
-                    connection.send(cmd, data);
+                    connection.emit(cmd, data);
                 }
             }
 
             function disconnect(){
                 try{
                     connection.disconnect();
+                    connenction = null;
                 }catch(e){
                     logger.warn('Server connection disconnect failed: ' + e);
                 }
             }
 
-            function connect(host, port) {
+            function connect(host, port, callback) {
                 var uri = (host || config.server.host) + ':' + (port || config.server.port);
 
                 logger.info('connect: ', uri);
                 connection = io.connect(uri);
-                connection.on('newConnection', function (commands) {
-                    socket.send('interface.onConnect');
+
+                connection.on('connect', function () {
+                    logger.info('Server: onConnect');
+                    socket.send('interfaceConnect.connect');
+                });
+                connection.on('disconnect', function () {
+                    logger.info('Server: onDisconnect');
+                    socket.send('interfaceConnect.disconnect');
                 });
 
+                connection.on('login', function(data){
+                    logger.info('Server: onLogin', data);
+                    socket.send('interfaceLogin.login', data);
+                })
+
                 connection.on('command', function(data){
+                    logger.info('onCommand', data);
                     serverRouter.route(data.cmd, data.data);
                 })
             }

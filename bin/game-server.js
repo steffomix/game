@@ -37,11 +37,11 @@ orm.connect(config.server.db, function (db) {
         console.log('New Connection ID ' + connection.id);
         connection.on('login', function (data) {
 
-            orm.Users.find({name: data.name}, function (err, user) {
+            orm.Users.find({name: data.user}, function (err, user) {
                 try {
                     // check password
                     var p1 = data.pass,
-                        p2 = user[0].pass;
+                        p2 = user[0].password;
 
                     if (user.length && user[0].pass == data.pass) {
                         connection.removeAllListeners();
@@ -82,7 +82,12 @@ orm.connect(config.server.db, function (db) {
                         });
                         connection.disconnect();
                     }
+
                 }catch(e){
+                    connection.emit('login', {
+                        success: false,
+                        message: 'login failed'
+                    });
                     // todo Logger
                     console.warn('Login User failed: ', e, new Error().stack)
                 }

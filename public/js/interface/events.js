@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 20.11.16 Stefan Brinkmann <steffomix@gmail.com>
+ * Copyright (C) 01.12.16 Stefan Brinkmann <steffomix@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,24 +15,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+define(['underscore'], function(_){
 
-define('models', ['config', 'logger'], function (config, Logger) {
-
-    var instance,
-        logger = Logger.getLogger('models');
-    logger.setLevel(config.logger.models || 0);
-
-    return getInstance();
-
-    function getInstance () {
-        if ( !instance ) {
-            instance = new Models();
-        }
-        return instance;
-    }
-
-    function Models () {
-
+    var globalEvents = {
+        get windowResize(){return 'global.windowResize'}
 
     }
+
+    var interfaceEvents = {
+
+    }
+
+    var accountEvents = {
+
+    }
+
+
+    return {
+        get global(){return globalEvents},
+        get interface(){return interfaceEvents}
+
+
+    };
+
 });

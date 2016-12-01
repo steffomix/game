@@ -21,8 +21,8 @@ define('interfaceApp', ['config', 'logger', 'gameSocket', 'gameRouter', 'i18n', 
         var logger = Logger.getLogger('interfaceApp');
         logger.setLevel(config.logger.interfaceApp || 0);
 
-        var views = {}
-            $body = $('body'),
+        var $body = $('body'),
+            templates = {},
             globalEvents = _.extend({}, Backbone.Events),
             accountEvents = _.extend({}, Backbone.Events),
             interfaceEvents = _.extend({}, Backbone.Events);
@@ -32,7 +32,6 @@ define('interfaceApp', ['config', 'logger', 'gameSocket', 'gameRouter', 'i18n', 
             interpolate: /\{\{=([\s\S]+?)\}\}/g,
             escape: /\{\{-([\s\S]+?)\}\}/g
         };
-
 
         function render (data, templ) {
             data = data || this.viewData || {};
@@ -46,14 +45,37 @@ define('interfaceApp', ['config', 'logger', 'gameSocket', 'gameRouter', 'i18n', 
             }
         }
 
-        function prepareTemplate(){
-            this.template = this.$el.html();
+        /**
+         * Grab Template from Html Body
+         * and store a copy, named by its html-id in templates
+         */
+        function grabTemplate(){
+            var id = this.$el.attr('id'),
+                html = this.$el.html();
+            if(!id){
+                logger.error('Template has no id: ', html);
+            }
+            this.template = templates[id] = html;
             this.$el.html('');
         }
 
+        /**
+         * Get a previous grabbed Template by its html id
+         * @param id
+         * @returns {*}
+         */
+        function getTemplate(id){
+            if(templates[id]){
+                return templates[id];
+            }else{
+                var msg = 'Template ' + id + ' not found.';
+                logger.error(msg);
+                return '<div>' + msg + '</div>';
+            }
+        }
+
         function hide(){
-            this.$el.html('');
-            this.$el.hide();
+            this.$el.html('').hide();
         }
 
         function centerWindow(){
@@ -61,10 +83,11 @@ define('interfaceApp', ['config', 'logger', 'gameSocket', 'gameRouter', 'i18n', 
         }
 
         function InterfaceApp () {
+            this.getTemplate = getTemplate;
             this.$body = $body;
             this.centerWindow = centerWindow;
             this.hide = hide;
-            this.prepareTemplate = prepareTemplate;
+            this.grabTemplate = grabTemplate;
             this.translateKeys = i18n.translateKeys;
             this.render = render;
             this.socket = socket;

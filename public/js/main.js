@@ -50,17 +50,21 @@
         // game/shared
         ['util', 'util', 4],
         ['i18n', 'i18n', 4],
+
+        ['translation', 'translation', 0],
         ['gameManager', 'game-manager', 0],
+        ['gameRouter', 'game-router', 0],
         ['workerMaster', 'worker-master', 4],
         ['gameSocket', 'game-socket', 4],
         ['workerSocket', 'worker/worker-socket', 4],
         ['commandRouter', 'command-router', 4],
 
         // interface
+        ['events', 'interface/events', 0],
         ['interface', 'interface/interface', 0],
         ['interfaceApp', 'interface/interface-app', 0],
-        ['interfaceAccount', 'interface/interface-account', 0],
-        ['interfaceModels', 'interface/interface-models', 0],
+        ['interfaceConnect', 'interface/interface-connect', 0],
+        ['interfaceLogin', 'interface/interface-login', 0],
 
         // worker: Server - Client Middleware
         ['gameCache', 'worker/game-cache', 0],
@@ -77,7 +81,7 @@
             logLevel = item[2];
 
         conf.paths[module] = path;
-        conf.logger[module] = logLevel;
+        conf.logger[module] = 0;//logLevel;
 
 
         // conf.logger[module] = 1; // all trace
@@ -97,7 +101,6 @@
     });
 
     define('gameRouter', ['commandRouter'], function (commandRouter) {
-
         var instance;
         return getInstance();
         function getInstance () {
@@ -107,11 +110,9 @@
                 } catch (e) {
                     console.error('Module gameRouter create Instance: ', e);
                 }
-
             }
             return instance;
         }
-
     });
 
 

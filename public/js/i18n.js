@@ -16,7 +16,7 @@
  */
 
 
-define('i18n', ['config', 'logger', 'underscore'], function (config, Logger, _) {
+define('i18n', ['config', 'logger', 'underscore', 'translation'], function (config, Logger, _, translations) {
 
     var instance,
         logger = Logger.getLogger('i18n');
@@ -33,12 +33,7 @@ define('i18n', ['config', 'logger', 'underscore'], function (config, Logger, _) 
 
     function I18n () {
         var lang = 'en',
-            defaultLang = 'en',
-            translations = {
-                en: {},
-                de: {}
-            };
-
+            defaultLang = 'en';
         /**
          * Set current used translation
          * @param l {string} translation key, defaults to 'en'
@@ -82,13 +77,20 @@ define('i18n', ['config', 'logger', 'underscore'], function (config, Logger, _) 
             }
         };
 
+
         this.translateKeys = function (moduleName, keys) {
             var self = this,
-                trans = {};
-            _.each(keys, function (key) {
-                trans[moduleName + '_' + key] = keys[key] ? self.translate(key, keys[key]) : self.translate(key);
-            })
-            return trans;
+                data = {};
+            try{
+                _.each(keys, function (key) {
+                    var translationKey = moduleName + '.' + key,
+                        trans = translations[lang][translationKey];
+                    data[key] = (trans == undefined ? translationKey : self.translate(translationKey));
+                });
+            }catch(e){
+                logger.error('TranslateKeys throw error on module '+module+': ', e, keys);
+            }
+            return data;
         }
     }
 });

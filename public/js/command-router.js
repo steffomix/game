@@ -18,23 +18,14 @@
 define('commandRouter', ['config', 'logger', 'underscore'],
     function (config, Logger, _) {
 
-        // predefined router
         var router = {},
             logger = Logger.getLogger('commandRouter');
-
         logger.setLevel(config.logger.commandRouter || 0);
 
         return {
             getRouter: _getRouter
         };
 
-
-        /**
-         *
-         * @param name
-         * @returns {*}
-         * @private
-         */
 
         function _getRouter (name) {
             if ( router[name] ) {

@@ -19,7 +19,7 @@
 
 
 define('gameManager',
-    ['config', 'logger', 'gameSocket', 'interface', 'underscore'],
+    ['config', 'logger', 'gameSocket', 'underscore', 'interface'],
     function (config, Logger, socket, _) {
 
         var instance,
@@ -41,35 +41,9 @@ define('gameManager',
          */
         function GameManager () {
 
-            socket.addModule('game', this, {
-                start: function(job){
-                    interface.showGameScreen();
-                }
-            });
-
         }
 
     });
 
-/*
- M = Backbone.Model.extend();
- C = Backbone.Collection.extend({
- model: M,
- comparator: function(m) {
- return -m.get('date').getTime();
- }
- });
-
- var c = new C();
- c.add([
- { date: new Date(2011,  0, 10) },
- { date: new Date(2010,  1, 11) },
- { date: new Date(2012, 11, 23) },
- { date: new Date(2009,  6,  6) },
- { date: new Date(2000,  8,  1) },
- ]);
- for(var i = 0; i < c.models.length; ++i)
- console.log(c.models[i].get('date'));
- */
 
 
