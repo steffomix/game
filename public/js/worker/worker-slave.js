@@ -31,7 +31,7 @@ define(__slaveModuleID__,
          */
         function Job(e) {
             this.cmd = e.data.cmd;
-            this.data = this.request = e.data.data;
+            this.data = e.data.data;
             // private id
             var id = e.data.id;
             this.getId = function () {
@@ -118,10 +118,10 @@ define(__slaveModuleID__,
             // will be the gameSocket in socket module
             var job = new Job(e);
 
-            slaveId = job.request.id;
-            slaveName = job.request.name;
-            slaveScript = job.request.script;
-            slaveConfig = job.request.config;
+            slaveId = job.data.id;
+            slaveName = job.data.name;
+            slaveScript = job.data.script;
+            slaveConfig = job.data.config;
 
             // config requirejs with data from worker-master
             requirejs.config({paths: slaveConfig.paths, baseUrl: slaveConfig.baseUrl});
@@ -168,7 +168,7 @@ define(__slaveModuleID__,
         // add startup listener
         self.addEventListener('message', onStart);
 
-        console.log('Worker waking up, ready for setup.');
+        //console.log('Worker waking up, ready for setup.');
         self.postMessage({cmd: '***worker ready***'});
 
         return socket;

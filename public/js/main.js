@@ -28,7 +28,7 @@
             // third party libs
             'logger': 'lib/loglevel.min', // https://github.com/pimterry/loglevel
             'underscore': 'lib/underscore.min', // http://underscorejs.org/
-            'backbone': 'lib/backbone.min', // http://backbonejs.org/
+            'backbone': 'lib/backbone', // http://backbonejs.org/
             'jquery': 'lib/jquery.min', // http://jquery.com/
             'io': 'lib/socket.io.min', // http://socket.io/
             'stateMachine': 'lib/state-machine.min', // https://github.com/jakesgordon/javascript-state-machine
@@ -50,17 +50,17 @@
         // game/shared
         ['util', 'util', 4],
         ['i18n', 'i18n', 4],
-
         ['translation', 'translation', 0],
+        ['eventDispatcher', 'event-dispatcher', 0],
+        ['dictCommands', 'dict-commands', 0],
         ['gameManager', 'game-manager', 0],
         ['gameRouter', 'game-router', 0],
         ['workerMaster', 'worker-master', 4],
         ['gameSocket', 'game-socket', 4],
         ['workerSocket', 'worker/worker-socket', 4],
-        ['commandRouter', 'command-router', 4],
+        ['commandRouter', 'command-router', 0],
 
         // interface
-        ['events', 'interface/events', 0],
         ['interface', 'interface/interface', 0],
         ['interfaceApp', 'interface/interface-app', 0],
         ['interfaceConnect', 'interface/interface-connect', 0],
@@ -81,7 +81,7 @@
             logLevel = item[2];
 
         conf.paths[module] = path;
-        conf.logger[module] = 0;//logLevel;
+        conf.logger[module] = logLevel;
 
 
         // conf.logger[module] = 1; // all trace

@@ -15,21 +15,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define('interface', ['config', 'logger', 'backbone', 'underscore', 'gameSocket', 'interfaceApp','interfaceConnect',
-        'interfaceLogin'],
-    function (config, Logger, Backbone, _, socket, interfaceApp) {
 
-        var instance,
+define(['config', 'logger', 'backbone', 'underscore', 'gameSocket', 'interfaceApp', 'eventDispatcher'],
+    function (config, Logger, Backbone, _, socket, interfaceApp, dispatcher) {
+
+        var interfaces = {},
+            instance,
             logger = Logger.getLogger('interface');
         logger.setLevel(config.logger.interface || 0);
 
-        _.each([
-
-        ], function(module){
-            require([module], function(){});
+        _.each(config.paths, function (v, k) {
+            if ( v.indexOf('interface/') != -1 ) {
+                interfaces[k] = require([k], function () {
+                });
+            }
         });
 
         return getInstance();
+
         function getInstance () {
             if ( !instance ) {
                 instance = new Interface();
@@ -38,24 +41,20 @@ define('interface', ['config', 'logger', 'backbone', 'underscore', 'gameSocket',
         }
 
 
-
         function Interface () {
 
             new (Backbone.View.extend(_.extend(new interfaceApp(),
                 {
                     el: $('#game-container'),
                     initialize: function () {
-                        var self = this;
                         window.addEventListener('resize', function () {
-                            self.globalEvents.trigger('resizeWindow');
+                            dispatcher.global.windowResize.trigger();
                         });
-                        this.accountEvents.trigger('serverDisconnect');
-
+                        dispatcher.server.disconnect.trigger();
                         this.$el.fadeIn();
                     }
                 })
             ))();
-
         }
     });
 

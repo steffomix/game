@@ -15,23 +15,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define('interfaceApp', ['config', 'logger', 'gameSocket', 'gameRouter', 'i18n', 'backbone', 'underscore', 'jquery', 'util'],
+define(['config', 'logger', 'gameSocket', 'gameRouter', 'i18n', 'backbone', 'underscore', 'jquery', 'util'],
     function (config, Logger, socket, router, i18n, Backbone, _, $, util) {
 
         var logger = Logger.getLogger('interfaceApp');
         logger.setLevel(config.logger.interfaceApp || 0);
 
         var $body = $('body'),
-            templates = {},
-            globalEvents = _.extend({}, Backbone.Events),
-            accountEvents = _.extend({}, Backbone.Events),
-            interfaceEvents = _.extend({}, Backbone.Events);
+            templates = {};
 
         _.templateSettings = {
             evaluate: /\{\{([\s\S]+?)\}\}/g,
             interpolate: /\{\{=([\s\S]+?)\}\}/g,
             escape: /\{\{-([\s\S]+?)\}\}/g
         };
+
+
 
         function render (data, templ) {
             data = data || this.viewData || {};
@@ -92,9 +91,6 @@ define('interfaceApp', ['config', 'logger', 'gameSocket', 'gameRouter', 'i18n', 
             this.render = render;
             this.socket = socket;
             this.router = router;
-            this.globalEvents = globalEvents;
-            this.interfaceEvents = interfaceEvents;
-            this.accountEvents = accountEvents;
             this.translate = i18n.translate;
             this.util = util;
 

@@ -16,8 +16,8 @@
  */
 
 
-define('interfaceConnect', ['config', 'logger', 'backbone', 'underscore', 'jquery', 'interfaceApp'],
-    function (config, Logger, Backbone, _, $, App) {
+define(['config', 'logger', 'backbone', 'underscore', 'jquery', 'interfaceApp','eventDispatcher'],
+    function (config, Logger, Backbone, _, $, App, dispatcher) {
 
     var instance,
         logger = Logger.getLogger('interfaceConnect');
@@ -49,25 +49,31 @@ define('interfaceConnect', ['config', 'logger', 'backbone', 'underscore', 'jquer
                 this.viewData = this.translateKeys('connect', [
                     'connect', 'host', 'port'
                 ]);
-                this.listenTo(this.globalEvents, 'resizeWindow', this.onResize);
-                this.listenTo(this.interfaceEvents, 'hideAll', this.hide);
-                this.listenTo(this.accountEvents, 'serverDisconnect', this.onShow);
+
+                dispatcher.global.windowResize(this, this.centerWindow);
+                dispatcher.server.disconnect(this, this.onShow);
+                dispatcher.interface.hideAll(this, this.hideAll);
+                dispatcher.server.connect(this, this.hide);
 
                 $(this.el_host).val(localStorage['server.host'] || 'game.com');
                 $(this.el_port).val(localStorage['server.port'] || 4343);
 
                 this.router.addModule('interfaceConnect', this, {
                     connect: function(){
-                        this.interfaceEvents.trigger('hideAll');
-                        this.accountEvents.trigger('showLogin');
+                        dispatcher.server.connect.trigger();
                     },
                     disconnect: function(){
-                        this.interfaceEvents.trigger('hideAll');
-                        this.globalEvents.trigger('serverDisconnect');
-                        this.onShow();
-                    }
-                })
+                        dispatcher.interface.hideAll.trigger();
+                        dispatcher.server.disconnect.trigger();
+                        dispatcher.interface.off(this.hideAll);
 
+                    }
+                });
+                this.onShow();
+            },
+            hideAll: function(){
+                this.hide();
+                logger.info('connect.hideAll');
             },
             connect: function (e) {
                 var host = (/[0-9a-z\.\/]+/.exec($(this.el_host).val()) || [''])[0],

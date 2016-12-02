@@ -16,8 +16,8 @@
  */
 
 
-define('interfaceLogin', ['config', 'logger', 'jquery', 'underscore', 'backbone', 'interfaceApp'],
-    function (config, Logger, $, _, Backbone, interfaceApp) {
+define(['config', 'logger', 'jquery', 'underscore', 'backbone', 'interfaceApp', 'eventDispatcher'],
+    function (config, Logger, $, _, Backbone, interfaceApp, dispatcher) {
 
         var instance,
             logger = Logger.getLogger('interfaceLogin');
@@ -55,27 +55,22 @@ define('interfaceLogin', ['config', 'logger', 'jquery', 'underscore', 'backbone'
                     // bind user events
                     _.bindAll(this, 'login');
                     // resize window
-                    this.listenTo(this.globalEvents, 'resizeWindow', function () {
-                        this.util.centerWindowAsync(this.$body, this.$el);
-                    });
-                    // hide all
-                    this.listenTo(this.interfaceEvents, 'hideAll', this.hide);
-                    // show on connect
-                    this.listenTo(this.accountEvents, 'showLogin', this.show);
+                    dispatcher.global.windowResize(this, this.centerWindow);
+                    dispatcher.interface.hideAll(this, this.hideAll);
+                    dispatcher.server.connect(this, this.show);
 
                     /**
                      * router:
                      * interfaceLogin.login
                      */
                     this.router.addModule('interfaceLogin', this, {
-                        // server send login success or fail
                         login: function (job) {
                             var self = this;
-                            try{
+                            try {
                                 if ( job.data.success ) {
                                     logger.info('Login success');
                                     //self.hide();
-                                    self.globalEvents.trigger('startGame');
+                                    dispatcher.global.gameStart.trigger();
                                     $(this.el_msg).html(this.translate('login.success'));
                                 } else {
                                     self.$el.fadeOut(1);
@@ -84,21 +79,22 @@ define('interfaceLogin', ['config', 'logger', 'jquery', 'underscore', 'backbone'
                                     }, 2000);
                                     $(this.el_msg).html(this.translate('login.fail'));
                                 }
-                            }catch(e){
+                            } catch (e) {
                                 logger.error(e, job);
                             }
                         }
                     });
                 },
-                onResize: function () {
-                    this.util.centerWindowAsync(this.$body, this.$el);
+                hideAll: function () {
+                    this.hide();
+                    logger.info('login.hideAll');
                 },
                 login: function () {
                     var user = ($(this.el_user).val() || '');
                     var pass = ($(this.el_pass).val() || '');
                     if ( user && pass ) {
                         localStorage['server.login.user'] = user;
-                        this.socket.send('server.login', {user:user, pass:pass});
+                        this.socket.send('server.login', {user: user, pass: pass});
                         //this.$el.fadeOut();
                     } else {
                         $(this.el_msg).text(this.translate('login.dataIncomplete'))
@@ -110,7 +106,7 @@ define('interfaceLogin', ['config', 'logger', 'jquery', 'underscore', 'backbone'
                 show: function () {
                     this.render();
                     $(this.el_user).val(localStorage['server.login.user'] || '');
-                    this.onResize();
+                    this.centerWindow();
                     this.$el.fadeIn();
                 }
             })))();

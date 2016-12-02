@@ -103,7 +103,7 @@ define('commandRouter', ['config', 'logger', 'underscore'],
                 if (commandBlacklist[cmd]) {
                     return logger.warn('Router ' + name + ' skip blacklisted: ' + cmd, job);
                 }
-                logger.info('Router ' + name + ': route job: ' + cmd, job);
+                logger.info(name, job);
                 var mod = cmd.split('.')[0];
                 try {
                     if ( modules[mod] ) {
@@ -112,10 +112,10 @@ define('commandRouter', ['config', 'logger', 'underscore'],
                         if ( _.isFunction(fn) ) {
                             fn.apply(obj, [job]);
                         } else {
-                            logger.error('Router ' + name + ': target "' + cmd + '" is not a function.', job);
+                            logger.error('Router ' + name + ': target "' + cmd + '" is not a function.', job, listener.listener);
                         }
                     } else {
-                        logger.error('Router ' + name + ': target "' + cmd + '" not found.', job);
+                        logger.error('Router ' + name + ': target "' + cmd + '" not found.', job, listener.listener);
                     }
                 } catch (e) {
                     logger.error('Route ' + name + ': "' + cmd + '" throw error:' + e, job);
@@ -125,6 +125,8 @@ define('commandRouter', ['config', 'logger', 'underscore'],
             function Listener () {
                 var listener = {},
                     self = this;
+
+                self.listener = listener;
 
                 self.getListener = function (cmd) {
                     return listener[cmd];

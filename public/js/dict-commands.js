@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 01.12.16 Stefan Brinkmann <steffomix@gmail.com>
+ * Copyright (C) 02.12.16 Stefan Brinkmann <steffomix@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,27 +15,34 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['underscore'], function(_){
+/**
+ * help to keep track of all those millions of commands
+ */
+define([], function () {
 
-    var globalEvents = {
-        get windowResize(){return 'global.windowResize'}
+    var interfaceConnect = {
+        get connect () {
+            return 'connect'
+        },
+        get disconnect () {
+            return 'disconnect';
+        }
+    };
 
-    }
-
-    var interfaceEvents = {
-
-    }
-
-    var accountEvents = {
-
-    }
+    var interfaceLogin ={
+        get login(){return 'login'},
+        get logout(){return 'logout'}
+    };
 
 
     return {
-        get global(){return globalEvents},
-        get interface(){return interfaceEvents}
+        get interfaceConnect(){
+            return interfaceConnect;
+        },
+        get interfaceLogin(){
+            return interfaceLogin;
+        }
+    }
 
-
-    };
 
 });
