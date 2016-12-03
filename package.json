@@ -12,6 +12,7 @@
     "enforce": "^0.1.6",
     "express": "~4.14.0",
     "gulp": "^3.9.1",
+    "httpdispatcher": "^2.0.1",
     "jade": "~1.11.0",
     "javascript-state-machine": "^2.4.0",
     "jquery": "^3.1.1",

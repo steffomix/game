@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<title>Game</title>
+<link rel="stylesheet" href="/css/normalize.css">
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/css/game.css">
+<script type="text/javascript" src="/js/lib/require.js"></script>
+<script type="text/javascript" src="/js/main.js"></script>
+
+</html>
+<body id="body">
+
+<section id="game-container">
+    <!-- window connect-->
+    <section id="window-game-connect" class="window-container">
+        <div class="window">
+            <div class="window-header">
+                <div class="window-header-content">{{= connect }}</div>
+            </div>
+            <div class="window-body">
+                <table>
+                    <tr>
+                        <td>{{= host }}:</td>
+                        <td><input id="input-game-connect-host" value="" class="text-input"></td>
+                    </tr>
+                    <tr>
+                        <td>{{= port }}:</td>
+                        <td><input id="input-game-connect-port" value="" class="text-input"></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="text-align: center; padding-top: 5px">
+                            <button id="button-game-connect">{{= connect }}</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td id="game-connect-message" colspan="2" style="text-align: center; padding-top: 5px">
+                            &nbsp;</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </section>
+    <!-- window login-->
+    <section id="window-game-login" class="window-container">
+        <div class="window">
+            <div class="window-header">
+                <div class="window-header-content">{{= login }}</div>
+            </div>
+            <div class="window-body">
+                <table>
+                    <tr>
+                        <td>{{= username }}:</td>
+                        <td><input id="input-game-login-name" value="game.com" class="text-input"></td>
+                    </tr>
+                    <tr>
+                        <td>{{= password }}:</td>
+                        <td><input id="input-game-login-pass" value="4343" class="text-input"></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="text-align: center; padding-top: 5px">
+                            <button id="button-game-login">{{= login }}</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td id="game-login-message" colspan="2" style="text-align: center; padding-top: 5px">&nbsp;</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </section>
+</section>
+</body>
+
+
