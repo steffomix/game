@@ -19,7 +19,7 @@ e.emit('test', 1,4,8);
 
 // create Database if not exists and start server
 // @todo hash password, remove login bypass
-orm.connect(config.server.db, function (db) {
+orm.connect(function (db) {
     // accept connections
     server.sockets.on('connection', function (connection) {
 
