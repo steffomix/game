@@ -20,12 +20,24 @@ var _ = require('underscore');
 
 
 var listener = {};
-var e = function(key, fn){}
+var e = function(key, fn){};
 exports = module.exports = {
 
+    global: {
+        appInit: e
+    },
     db: {
         connect: e
+    },
+    io: {
+        connect: e,
+        disconnect: e
+    },
+    socket: {
+        login: e,
+        logout: e,
     }
+
 };
 
 _.each(exports, function(groupObj, groupName){
@@ -44,7 +56,7 @@ _.each(exports, function(groupObj, groupName){
             listener[groupName].on(itemName, fn);
         };
         groupObj[itemName].trigger = function(){
-            listener[groupName].emit.apply({}, [itemName].concat(Array.prototype.slice.call(arguments)));
+            listener[groupName].emit.apply(listener[groupName], [itemName].concat(Array.prototype.slice.call(arguments)));
         };
         groupObj[itemName].once = function(fn){
             listener[groupName].once(itemName, fn);

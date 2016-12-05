@@ -20,7 +20,10 @@
  */
 exports.server = {
     name: 'Rotting Planet',
-    env: process.env.NODE_ENV || "development",
+    publicHtml: '../public',
     port: 3000,
-    db: 'sqlite://db/db.sqlite3'
+    db: 'sqlite://db/db.sqlite3',
+    path: {
+
+    }
 }

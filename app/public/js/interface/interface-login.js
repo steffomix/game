@@ -77,7 +77,7 @@ define(['config', 'logger', 'jquery', 'underscore', 'backbone', 'interfaceApp', 
                                     dispatcher.server.login.trigger();
                                     $(this.el_msg).html(this.translate('login.success'));
                                 } else {
-                                    $(this.el_msg).html(this.translate('login.fail'));
+                                    $(this.el_msg).html(job.data.success || this.translate('login.fail'));
                                 }
                             } catch (e) {
                                 logger.error(e, job);

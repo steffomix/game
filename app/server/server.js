@@ -1,9 +1,9 @@
 //
 
 
-var publicHtml = '../public',
-    config = require('./config'),
+var config = require('./config'),
     http = require('http'),
+    io = require('socket.io'),
     fs = require('fs'),
     path = require('path'),
     server = http.createServer(function (request, response) {
@@ -11,7 +11,7 @@ var publicHtml = '../public',
 
         var filePath = request.url;
         if ( filePath == '/' ) filePath = '/index.html';
-        filePath = publicHtml + filePath;
+        filePath = config.server.publicHtml + filePath;
 
         var extname = String(path.extname(filePath)).toLowerCase();
         var contentType = 'text/html';
@@ -59,4 +59,7 @@ var publicHtml = '../public',
 server.listen(config.server.port);
 console.log('Server running at http://127.0.0.1:' + config.server.port);
 
-exports.httpServer = server;
+exports = module.exports = {
+    http: server,
+    socket: io(server)
+}
