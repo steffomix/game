@@ -30,13 +30,17 @@ exports = module.exports = {
         connect: e
     },
     io: {
-        connect: e,
-        disconnect: e
+        connect: e
     },
-    socket: {
+    player: {
+        disconnect: e,
         login: e,
-        logout: e,
+        logout: e
+    },
+    world: {
+
     }
+
 
 };
 

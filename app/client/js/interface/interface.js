@@ -48,8 +48,9 @@ define(['config', 'logger', 'backbone', 'underscore', 'gameSocket', 'interfaceAp
                     el: $('#game-container'),
                     initialize: function () {
                         window.addEventListener('resize', function () {
-                            dispatcher.global.windowResize.trigger('test');
+                            dispatcher.global.windowResize.trigger();
                         });
+
                         dispatcher.server.disconnect.trigger();
                         this.$el.fadeIn();
                     }

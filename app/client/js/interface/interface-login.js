@@ -73,7 +73,7 @@ define(['config', 'logger', 'jquery', 'underscore', 'backbone', 'interfaceApp', 
                             try {
                                 if ( job.data.success ) {
                                     logger.info('Login success');
-                                    //self.hide();
+                                    // self.hide();
                                     dispatcher.server.login.trigger();
                                     $(this.el_msg).html(this.translate('login.success'));
                                 } else {

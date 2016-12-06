@@ -5,20 +5,25 @@ var server = require('./server'),
         config: require('./config.js'),
         dispatcher: require('./event-dispatcher'),
         http: server.http,
-        socket: server.socket
+        socket: server.socket,
+
+        /**
+         * preload modules to receive appInit event
+         */
+        socketManager: require('./socket-manager'),
+        Player: require('./player'),
+        worldManager: require('./world-manager'),
+        world: require('./world')
     };
 
+
+
 // load and sync sqlite database
-require('./db').connect(onDbConnect);
-
-// preload Modules for appInit event
-require('./socket-events');
-require('./player');
-require('./world');
-
-// start app on loaded db
-function onDbConnect(db){
+require('./db').connect(function (db){
     coreModules.db = db;
+
+    // dispatch appInit with all coreModules
+    coreModules.dispatcher.global.appInit.trigger(coreModules);
 
     var so = coreModules.socket,
         dsp = coreModules.dispatcher.io;
@@ -27,13 +32,7 @@ function onDbConnect(db){
         dsp.connect.trigger(so);
     });
 
-    so.on('disconnect', function(e){
-        dsp.disconnect.trigger(e);
-    });
-
-    // dispatch appInit with all coreModules
-    coreModules.dispatcher.global.appInit.trigger(coreModules);
-}
+});
 
 
 

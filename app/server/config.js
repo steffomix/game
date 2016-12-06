@@ -20,7 +20,7 @@
  */
 exports.server = {
     name: 'Rotting Planet',
-    publicHtml: '../public',
+    publicHtml: '../client',
     port: 3000,
     db: 'sqlite://db/db.sqlite3',
     path: {

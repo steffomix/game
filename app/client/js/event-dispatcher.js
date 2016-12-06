@@ -55,6 +55,7 @@
                     },
                     global: {
                         windowResize: e,
+                        windowBeforeUnload: e,
                         gameStart: e
                     },
                     interface: {

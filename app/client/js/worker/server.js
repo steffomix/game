@@ -25,42 +25,46 @@ define('server', ['config', 'logger', 'io', 'workerSlaveSocket', 'workerRouter',
 
         return getInstance();
 
-        function getInstance () {
-            if ( !instance ) {
+        function getInstance() {
+            if (!instance) {
                 instance = new ServerSocket();
             }
             return instance;
         }
 
-        function ServerSocket () {
+        function ServerSocket() {
             var connection;
 
             workerRouter.addModule('server', this, {
-                send: function(job){
+                send: function (job) {
                     var cmd = job.data.cmd,
                         data = job.data;
                     send(cmd, data);
                 },
-                connect: function(job){
+                connect: function (job) {
                     connect(job.data.host, job.data.port);
                 },
-                disconnect: disconnect,
-                login: function(job){
+                disconnect: function () {
+                    connection.disconnect();
+                    logger.warn('Server disconnected by client.');
+                },
+                login: function (job) {
                     send('login', job.data);
                 }
             });
 
-            function send(cmd, data){
-                if(connection && connection.connected){
+            function send(cmd, data) {
+                if (connection && connection.connected) {
                     connection.emit(cmd, data);
                 }
             }
 
-            function disconnect(){
-                try{
+            function disconnect() {
+                try {
                     connection.disconnect();
                     connection = null;
-                }catch(e){
+                    logger.warn('Server disconnected by client.');
+                } catch (e) {
                     logger.warn('Server connection disconnect failed: ' + e);
                 }
             }
@@ -80,12 +84,22 @@ define('server', ['config', 'logger', 'io', 'workerSlaveSocket', 'workerRouter',
                     socket.send('interfaceConnect.disconnect');
                 });
 
-                connection.on('login', function(data){
+                connection.on('login', function (data) {
                     logger.info('Server: onLogin', data);
                     socket.send('interfaceLogin.login', data);
                 });
 
-                connection.on('command', function(data){
+                connection.on('broadcastMessage', function (data) {
+                    var cmd = data.cmd;
+                    logger.info('Server: broadcastMessage', data);
+                    socket.send('interfaceChat.broadcastMessage', {
+                        context: cmd,
+                        name: data.name
+                    });
+
+                });
+
+                connection.on('command', function (data) {
                     logger.info('onCommand', data);
                     serverRouter.command(data.cmd, data.data);
                 })

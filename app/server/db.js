@@ -2,8 +2,7 @@ var config = require('./config'),
     orm = require('orm');
 
 exports = module.exports = {
-    connect: connect,
-    db: null
+    connect: connect
 }
 
 function connect(callback) {
@@ -141,7 +140,7 @@ function connect(callback) {
                     console.log(e);
                 }
             });
-            //module.exports.db = db;
+            exports.db = db;
 
             callback(exports);
         });
