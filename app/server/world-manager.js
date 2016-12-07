@@ -3,15 +3,7 @@
  */
 
 
-var _ = require('underscore'),
-    dispatcher = require('./event-dispatcher'),
-    World = require('./world'),
-    db;
-
-dispatcher.global.appInit.once(function (core) {
-    db = core.db;
-    World = require('./world');
-});
+var db = require('./db');
 
 
 exports = module.exports = new WorldManager();
@@ -20,18 +12,28 @@ function WorldManager(){
 
     var loadedWorlds = {}
 
-    this.getWorld = function(id){
-        var world = db.Worlds.get(id, function(err, worlds){
-            if(!err && worlds.length){
-                return loadedWorlds[id] = new World(worlds[0]);
-            }else{
-                return createWorld(id);
-            }
-        })
-    }
+    this.getWorld = function(player, callback){
+        var id = player.location.worldId;
 
-    function createWorld(id){
-        db.Worlds.create({id: id}, function(err, world){
+        if(!id){
+            return createWorld(player);
+        }
+        if(loadedWorlds[id]){
+            return loadedWorlds[id];
+        }
+        db.Worlds.get(id, function(err, world) {
+            if (!err) {
+                return loadedWorlds[id] = new World(world);
+            } else {
+                return createWorld(player);
+            }
+        });
+
+    };
+
+    function createWorld(player){
+        var id = player.user.id;
+        db.Worlds.create({user_id: id}, function(err, world){
             return new World(world);
         });
     }

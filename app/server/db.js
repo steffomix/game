@@ -8,7 +8,7 @@ exports = module.exports = {
 function connect(callback) {
     var tbl = {
             users: 'users',            // user data
-            userlocations: 'userlocations',   // users recent spawn locations
+            playerlocations: 'playerlocations',   // users recent spawn locations
             worlds: 'worlds',           // users worlds, names and configs
             tiles: 'tiles',            // tiles itself with image name, default behave etc...
             tilegroups: 'tilegroups',       // types of tiles itself
@@ -79,7 +79,7 @@ function connect(callback) {
                 data: {type: 'text'}
             });
 
-        var UserLocations = exports.UserLocations = db.define(tbl.userlocations,
+        var PlayerLocations = exports.PlayerLocations = db.define(tbl.playerlocations,
             {
                 id: {type: 'serial', key: true},
                 user_id: {type: 'integer'},
@@ -106,7 +106,7 @@ function connect(callback) {
 
 
         Worlds.hasOne('user', Users, {reverse: tbl.worlds});
-        UserLocations.hasOne('user', Users, {reverse: tbl.userlocations});
+        PlayerLocations.hasOne('user', Users, {reverse: tbl.playerlocations});
         UniverseTiles.hasOne('user', Users, {reverse: tbl.universetiles});
         UniverseTiles.hasOne('tilegroups', TileGroups, {reverse: tbl.universetiles});
         HomeTiles.hasOne('user', Users, {reverse: tbl.hometiles});
@@ -141,6 +141,12 @@ function connect(callback) {
                 }
             });
             exports.db = db;
+
+            exports.areas = {
+                '1': HomeTiles,
+                '2': ShipTiles,
+                '3': UniverseTiles
+            };
 
             callback(exports);
         });

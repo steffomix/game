@@ -3,13 +3,9 @@
  */
 
 var _ = require('underscore'),
+    db = require('./db'),
     dispatcher = require('./event-dispatcher'),
-    Player = require('./player'),
-    db;
-
-dispatcher.global.appInit.once(function (core) {
-    db = core.db;
-});
+    Player = require('./player');
 
 exports = module.exports = new SocketManager();
 

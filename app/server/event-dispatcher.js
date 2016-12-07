@@ -24,7 +24,6 @@ var e = function(key, fn){};
 exports = module.exports = {
 
     global: {
-        appInit: e
     },
     db: {
         connect: e

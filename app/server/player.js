@@ -3,25 +3,44 @@
  */
 
 var _ = require('underscore'),
+    db = require('./db'),
     dispatcher = require('./event-dispatcher'),
-    worldManager,
-    db;
-
-dispatcher.global.appInit.once(function (core) {
-    db = core.db;
-    worldManager = core.worldManager;
-});
+    Location = require('./player-location');
 
 exports = module.exports = Player;
 
-function Player(socket) {
-    var self = this;
-    self.socket = socket;
-    self.user = {};
 
-    this.init = function(){
-        worldManager.getWorld(this.user.id);
+
+function Player(socket) {
+    this.socket = socket;
+    this.user = {};
+    this.location = _.extend(this, new Location());
+    var self = this;
+
+    /**
+     * Init Player onLogin
+     */
+    this.initPlayer = function(){
+        this.location.initLocation();
     };
+
+    /**
+     * called on floor changes or first game enter
+     */
+    this.onUpdateFloor = function(floor){
+        self.socket.emit('onUpdateFloor', {
+            x: location.x(),
+            y: location.y(),
+            floor: location.floor()
+        })
+    }
+
+    /**
+     * Called on tile changes
+     */
+    this.onTileUpdate = function(){
+
+    }
 
     socket.on('login', function (data) {
         self.onLogin(data.user, data.pass);
@@ -49,22 +68,24 @@ Player.prototype = {
                     /**
                      * login success
                      */
+                    self.user = user[0];
 
-                    // collect userData
+                    // collect userData for message
+                    var userData = {};
                     _.each([
                         'id',
                         'name'
                     ], function (k) {
-                        self.user[k] = user[0][k];
+                        userData[k] = user[0][k];
                     });
 
                     // send success message with collected UserData
                     so.emit('login', {
                         success: true,
-                        user: self.user
+                        user: userData
                     });
                     dispatcher.player.login.trigger(self);
-                    self.init();
+                    self.initPlayer();
 
                 } else {
                     /**

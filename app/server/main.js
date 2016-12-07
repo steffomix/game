@@ -1,35 +1,26 @@
 #!/usr/bin/env node
 
-var server = require('./server'),
-    coreModules = {
-        config: require('./config.js'),
-        dispatcher: require('./event-dispatcher'),
-        http: server.http,
-        socket: server.socket,
-
-        /**
-         * preload modules to receive appInit event
-         */
-        socketManager: require('./socket-manager'),
-        Player: require('./player'),
-        worldManager: require('./world-manager'),
-        world: require('./world')
-    };
-
+var config = require('./config.js'),
+    dispatcher = require('./event-dispatcher'),
+    server = require('./server'),
+    http = server.http,
+    socket = server.socket;
 
 
 // load and sync sqlite database
-require('./db').connect(function (db){
-    coreModules.db = db;
+require('./db').connect(function (db) {
 
-    // dispatch appInit with all coreModules
-    coreModules.dispatcher.global.appInit.trigger(coreModules);
+    // preload modules
+    var socketManager = require('./socket-manager'),
+        Player = require('./player'),
+        worldManager = require('./world-manager'),
+        World = require('./world'),
+        floorManager = require('./floor-manager'),
+        Floor = require('./floor'),
+        Tile = require('./tile');
 
-    var so = coreModules.socket,
-        dsp = coreModules.dispatcher.io;
-
-    so.on('connect', function (so) {
-        dsp.connect.trigger(so);
+    socket.on('connect', function (so) {
+        dispatcher.io.connect.trigger(so);
     });
 
 });
