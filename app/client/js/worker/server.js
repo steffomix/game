@@ -96,7 +96,11 @@ define('server', ['config', 'logger', 'io', 'workerSlaveSocket', 'workerRouter',
                         context: cmd,
                         name: data.name
                     });
+                });
 
+                connection.on('onUpdateFloor', function(data){
+                    logger.info('Servdr: onUpdateFloor', data);
+                    socket.send('game.onUpdateFloor', data);
                 });
 
                 connection.on('command', function (data) {
