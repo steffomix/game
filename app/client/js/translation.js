@@ -34,7 +34,11 @@ define('translation', [], function () {
             'login.password': 'Password',
             'login.dataIncomplete': 'Login Data incomplete.',
             'login.fail': 'Login failed. Please check your Data.',
-            'login.success': 'Login success'
+            'login.success': 'Login success',
+
+            'chat.chat': 'Chat',
+            'chat.context_userLogin': 'Player {{=user }} enter Game.',
+            'chat.context_userDisconnect': 'Player {{=user }} disconnected.'
         },
         de: {}
     };

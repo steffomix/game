@@ -62,6 +62,7 @@ define(['config', 'logger', 'backbone', 'underscore', 'jquery', 'interfaceApp', 
                     this.router.addModule('interfaceConnect', this, {
                         connect: function () {
                             dispatcher.server.connect.trigger();
+
                         },
                         disconnect: function () {
                             setTimeout(function () {
@@ -88,7 +89,7 @@ define(['config', 'logger', 'backbone', 'underscore', 'jquery', 'interfaceApp', 
                         logger.error('Useless Connect data', host, port);
                     }
                 },
-                onShow: function (id) {
+                onShow: function () {
                     this.render();
                     this.centerWindow();
                     $(this.el_host).val(localStorage['server.host']);

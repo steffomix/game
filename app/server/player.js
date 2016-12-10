@@ -53,6 +53,12 @@ function Player(socket) {
         this.removeAllListeners();
         dispatcher.player.disconnect.trigger(self);
     });
+    socket.on('chatMessage', function(data){
+        dispatcher.player.chatMessage.trigger({
+            player: self,
+            msg: data
+        });
+    })
 }
 
 

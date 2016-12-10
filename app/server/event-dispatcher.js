@@ -34,7 +34,8 @@ exports = module.exports = {
     player: {
         disconnect: e,
         login: e,
-        logout: e
+        logout: e,
+        chatMessage: e
     },
     world: {
 

@@ -54,6 +54,24 @@ function SocketManager() {
         });
     });
 
+    dispatcher.player.chatMessage(function(data){
+        chatMessage({
+            cmd: 'chatMessage',
+            name: data.player.user.name,
+            msg: data.msg
+        })
+    });
+
+    function chatMessage(data){
+        _.each(connections, function (player) {
+            try {
+                player.socket.emit('chatMessage', data);
+            } catch (e) {
+                console.warn('Emit chatMessage failed. user may be disconnected.', e);
+            }
+        })
+    }
+
     /**
      * broadcast message
      *
@@ -64,7 +82,7 @@ function SocketManager() {
             try {
                 player.socket.emit('broadcastMessage', data);
             } catch (e) {
-                console.warn('Emit broadcastMessage userDisconnected', e);
+                console.warn('Emit broadcastMessage failed. user may be disconnected.', e);
             }
         })
     }

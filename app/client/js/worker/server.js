@@ -50,6 +50,9 @@ define('server', ['config', 'logger', 'io', 'workerSlaveSocket', 'workerRouter',
                 },
                 login: function (job) {
                     send('login', job.data);
+                },
+                chatMessage: function(job){
+                    send('chatMessage', job.data);
                 }
             });
 
@@ -94,9 +97,15 @@ define('server', ['config', 'logger', 'io', 'workerSlaveSocket', 'workerRouter',
                     logger.info('Server: broadcastMessage', data);
                     socket.send('interfaceChat.broadcastMessage', {
                         context: cmd,
-                        name: data.name
+                        name: data.name,
+                        msg: data.msg || ''
                     });
                 });
+
+                connection.on('chatMessage', function(data){
+                    logger.info('Server: chatMessage', data);
+                    socket.send('interfaceChat.chatMessage', data);
+                })
 
                 connection.on('onUpdateFloor', function(data){
                     logger.info('Servdr: onUpdateFloor', data);

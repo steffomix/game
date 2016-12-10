@@ -19,7 +19,7 @@ body {
 }
 
 input, button{
-    background-color: rgba(255,255,255,.5);
+    background-color: rgba(255,255,255,.2);
     border-radius: 5px;
     border: none;
     padding: 2px 7px 2px 7px;
@@ -48,22 +48,31 @@ button{
 
 .window-container{
     display:none;
+    position: absolute;
 }
 .window{
     border: 1px solid;
     border-radius: 10px;
-    background-color: rgba(0,0,0,.5);
+    background-color: rgba(180,180,180,.3);
 }
 
-#window-login{
-    position: absolute;
-    left: 40%;
-    top: 40%;
+
+#window-chat-body {
+    padding: 3px 5px 3px 10px;
+    max-height: 5em;
+    min-height: 3em;
+    min-width: 10em;
+    max-width: 30em;
+    overflow-y: scroll;
+    overflow-x: initial;
+
 }
 
-#window-connect{
-    position: absolute;
-    left: 0;
-    top: 0;
+#inp-chat-message{
+    width: auto;
+    margin: 2px 5px 2px 5px;
 }
 
+#dsp-chat-messages tr td{
+    white-space: nowrap;
+}

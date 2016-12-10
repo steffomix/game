@@ -18,7 +18,8 @@
 define(['config', 'logger', 'gameSocket', 'gameRouter', 'i18n', 'backbone', 'underscore', 'jquery', 'util'],
     function (config, Logger, socket, router, i18n, Backbone, _, $, util) {
 
-        var interfaces = {},
+        var user = {},
+            interfaces = {},
             templates = {},
             $body = $('body'),
             logger = Logger.getLogger('interfaceApp');
@@ -37,6 +38,10 @@ define(['config', 'logger', 'gameSocket', 'gameRouter', 'i18n', 'backbone', 'und
             escape: /\{\{-([\s\S]+?)\}\}/g
         };
 
+        function escapeHtml(text){
+            return $('<div/>').text(text).html();
+        }
+
         function getInterface(name){
             if(!interfaces[name]){
                 logger.error('InterfaceApp::getInterface "'+name+'" not found');
@@ -47,7 +52,7 @@ define(['config', 'logger', 'gameSocket', 'gameRouter', 'i18n', 'backbone', 'und
 
         function render (data, templ) {
             data = data || this.viewData || {};
-            templ = templ || this.template;
+            templ = templ || this.template || '<div>No Template found</div>';
 
             try {
                 this.$el.html(_.template(templ)(data));
@@ -91,15 +96,35 @@ define(['config', 'logger', 'gameSocket', 'gameRouter', 'i18n', 'backbone', 'und
             this.$el.fadeOut();
         }
 
-        function centerWindow(args){
-            this.util.centerWindowAsync(this.$body, this.$el);
+        function centerWindow(){
+            // resizeWindow();
+            this.$el.css(this.util.centerWindow(this.$body, this.$el));
         }
+
+        function bottomWindow(distance){
+            // resizeWindow();
+            this.$el.css(this.util.bottomWindow(this.$body, this.$el, distance));
+        }
+
+        function rightWindow(distance){
+            // resizeWindow();
+            this.$el.css(this.util.rightWindow(this.$body, this.$el, distance));
+        }
+
+        function resizeWindow(){
+            // resizeWindow();
+            window.dispatchEvent(new Event('resize'));
+        }
+
 
         function InterfaceApp () {
             this.$body = $body;
             this.getInterface = getInterface;
             this.getTemplate = getTemplate;
             this.centerWindow = centerWindow;
+            this.bottomWindow = bottomWindow;
+            this.rightWindow = rightWindow;
+            this.resizeWindow = resizeWindow;
             this.hide = hide;
             this.grabTemplate = grabTemplate;
             this.render = render;
@@ -108,6 +133,7 @@ define(['config', 'logger', 'gameSocket', 'gameRouter', 'i18n', 'backbone', 'und
             this.translate = i18n.translate;
             this.translateKeys = i18n.translateKeys;
             this.util = util;
+            this.escapeHtml = escapeHtml;
 
         }
 

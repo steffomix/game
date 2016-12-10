@@ -34,37 +34,50 @@ define('util', ['config', 'logger', 'underscore'], function (config, Logger, _) 
     function Util () {
 
         /**
-         * center window in frame async
-         * @param frame {$} outer frame, usually frame
-         * @param win {$} the window to center in frame
-         */
-        this.centerWindowAsync = function (frame, win) {
-            setTimeout(_centerWindow, 0, frame, win);
-        };
-        /**
-         * center window in frame sync. If this function has no effect, try centerWindowAsync
+         * center window in frame sync.
          * @param frame
          * @param win
-         * @returns {{left, top}|{int}}
+         * @returns {{left: number, top: number}}
          */
         this.centerWindow = function (frame, win) {
-            return _centerWindow(frame, win);
-        };
-        function _centerWindow (frame, win) {
             var bx = parseInt(frame.css('width')),
                 by = parseInt(frame.css('height')),
                 wx = parseInt(win.css('width')),
                 wy = parseInt(win.css('height')),
                 wTop = by / 2 - wy / 2,
                 wLeft = bx / 2 - wx / 2;
-
-            win.css({
-                position: 'absolute',
-                left: wLeft + 'px',
-                top: wTop + 'px'
-            });
             return {left: wLeft, top: wTop}
-        }
+        };
+
+        /**
+         *
+         * @param frame
+         * @param win
+         * @param distance
+         * @returns {{top: number}}
+         */
+        this.bottomWindow = function(frame, win, distance){
+            var fh = parseInt(frame.css('height')),
+                wh = parseInt(win.css('height')),
+                top = fh - wh - distance;
+
+            return {top: top};
+        };
+
+        /**
+         *
+         * @param frame
+         * @param win
+         * @param distance
+         * @returns {{right: number}}
+         */
+        this.rightWindow = function(frame, win, distance){
+            var fw = parseInt(frame.css('width')),
+                ww = parseInt(win.css('width')),
+                right = fw - ww - distance;
+
+            return {right: right};
+        };
 
 
         /**
