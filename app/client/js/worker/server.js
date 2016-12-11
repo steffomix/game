@@ -54,6 +54,9 @@ define('server', ['config', 'logger', 'io', 'workerSlaveSocket', 'workerRouter',
                 logout: function(job){
                     send('logout');
                 },
+                register: function(job){
+                    send('register', job.data);
+                },
                 chatMessage: function(job){
                     send('chatMessage', job.data);
                 }
@@ -93,6 +96,11 @@ define('server', ['config', 'logger', 'io', 'workerSlaveSocket', 'workerRouter',
                 connection.on('login', function (data) {
                     logger.info('Server: onLogin', data);
                     socket.send('interfaceLogin.login', data);
+                });
+
+                connection.on('register', function(data){
+                    logger.info('Server: onRegister', data);
+                    socket.send('interfaceLogin.register', data);
                 });
 
                 connection.on('logout', function(data){

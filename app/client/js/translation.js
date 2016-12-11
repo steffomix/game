@@ -30,11 +30,17 @@ define('translation', [], function () {
             'connect.fail': 'Connection failed. Please check your Data.',
 
             'login.login': 'Login',
+            'login.register': 'Register',
             'login.username': 'Username',
             'login.password': 'Password',
-            'login.dataIncomplete': 'Login Data incomplete.',
-            'login.fail': 'Login failed. Please check your Data.',
-            'login.success': 'Login success',
+            'login.passwords not same': 'Passwords must be same',
+            'login.loginDataIncomplete': 'Login Data incomplete.',
+            'login.registerDataIncomplete': 'Registration Data incomplete.',
+            'login.login failed': 'Login failed. Please check your Data.',
+            'login.register failed': 'Registration failed. Please check your Data.',
+            'login.login success': 'Login success',
+            'login.register success': 'Registration success',
+
 
             'chat.chat': 'Chat',
             'chat.context_userLogin': 'Player {{=user }} enter Game.',

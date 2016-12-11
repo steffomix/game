@@ -57,12 +57,21 @@
                     </tr>
                     <tr>
                         <td>{{= password }}:</td>
-                        <td><input id="input-game-login-pass" value="4343" class="text-input"></td>
+                        <td><input id="input-game-login-pass" class="text-input"></td>
                     </tr>
+                    <tr id="row-login-pass2">
+                        <td>{{= password }}:</td>
+                        <td><input id="input-game-login-pass2" class="text-input"></td>
+                    </tr>
+
                     <tr>
                         <td colspan="2" style="text-align: center; padding-top: 5px">
                             <button id="button-game-login">{{= login }}</button>
+                            <button id="button-game-register">{{= register }}</button>
                         </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2"><input type="checkbox" id="ck-game-register" /> {{= register}}</td>
                     </tr>
                     <tr>
                         <td id="game-login-message" colspan="2" style="text-align: center; padding-top: 5px">&nbsp;</td>

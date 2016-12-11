@@ -48,7 +48,7 @@ define(['config', 'logger', 'gameSocket', 'gameRouter', 'i18n', 'backbone', 'und
                 host: 'localhost',
                 port: 3000
             });
-        })();
+        })//;();
 
 
 

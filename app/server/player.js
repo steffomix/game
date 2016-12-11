@@ -19,6 +19,9 @@ function Player(socket) {
     socket.on('login', function (data) {
         self.onLogin(data.user, data.pass);
     });
+    socket.on('register', function(data){
+        self.onRegister(data.user, data.pass);
+    });
     socket.on('disconnect', function () {
         this.removeAllListeners();
         dispatcher.player.disconnect.trigger(self);
@@ -69,6 +72,19 @@ function Player(socket) {
 
 
 Player.prototype = {
+    onRegister: function(name, pass){
+        var self = this;
+        db.Users.find({name: name}, function(err, users){
+            if(err || !users.length){
+                db.Users.create({name: name, pass: pass}, function(err, user){
+                    self.socket.emit('register', {success: !err});
+                });
+            }else{
+                self.socket.emit('register', {success: false, msg: 'Username already exists'});
+            }
+        })
+
+    },
 
     onLogin: function (name, pass) {
         var self = this,
