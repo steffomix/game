@@ -77,13 +77,19 @@ define(['config', 'logger', 'jquery', 'underscore', 'backbone', 'interfaceApp', 
                                     this.user = job.data.user;
 
                                     dispatcher.server.login.trigger();
+                                    dispatcher.global.windowResize.trigger();
                                     $(this.el_msg).html(this.translate('login.success'));
                                 } else {
-                                    $(this.el_msg).html(job.data.success || this.translate('login.fail'));
+                                    $(this.el_msg).html(job.data.msg || this.translate('login.fail'));
                                 }
                             } catch (e) {
                                 logger.error(e, job);
                             }
+                        },
+                        logout: function (job){
+                            dispatcher.interface.hideAll.trigger();
+                            dispatcher.server.logout.trigger();
+                            $(this.el_msg).html(job.data.message);
                         }
                     });
                 },

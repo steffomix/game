@@ -12,57 +12,64 @@ exports = module.exports = Player;
 
 
 function Player(socket) {
+    var self = this;
     this.socket = socket;
     this.user = {};
-    this.location = _.extend(this, new Location());
-    var self = this;
-
-    /**
-     * Init Player onLogin
-     */
-    this.initPlayer = function(){
-        this.location.initLocation();
-    };
-
-    /**
-     * called on floor changes or first game enter
-     */
-    this.onUpdateFloor = function(floor){
-        self.socket.emit('onUpdateFloor', {
-            x: location.x(),
-            y: location.y(),
-            floor: location.floor()
-        })
-    }
-
-    /**
-     * Called on tile changes
-     */
-    this.onTileUpdate = function(){
-
-    }
 
     socket.on('login', function (data) {
         self.onLogin(data.user, data.pass);
-    });
-    socket.on('logout', function () {
-        dispatcher.player.logout.trigger(self);
-        self.playerData = {};
     });
     socket.on('disconnect', function () {
         this.removeAllListeners();
         dispatcher.player.disconnect.trigger(self);
     });
-    socket.on('chatMessage', function(data){
-        dispatcher.player.chatMessage.trigger({
-            player: self,
-            msg: data
+
+    /**
+     * setup Player onLogin
+     */
+    this.setup = function(){
+        this.location = new Location(this);
+
+        /**
+         * called on floor changes or first game enter
+         */
+        this.onUpdateFloor = function(floor){
+            self.socket.emit('onUpdateFloor', {
+                x: location.x(),
+                y: location.y(),
+                floor: location.floor()
+            })
+        };
+
+        /**
+         * Called on tile changes
+         */
+        this.onTileUpdate = function(){
+
+        };
+
+        socket.on('chatMessage', function(data){
+            dispatcher.player.chatMessage.trigger({
+                player: self,
+                msg: data
+            });
         });
-    })
+        socket.on('logout', function () {
+            dispatcher.player.logout.trigger(self);
+        });
+
+    };
+
+    this.setDown = function(){
+        socket.removeAllListeners('chatMessage');
+        socket.removeAllListeners('logout');
+        self.user = {};
+    }
 }
 
 
 Player.prototype = {
+
     onLogin: function (name, pass) {
         var self = this,
             so = this.socket;
@@ -72,7 +79,7 @@ Player.prototype = {
             try {
                 if (user.length && user[0].pass == pass) {
                     /**
-                     * login success
+                     * attach player to connection
                      */
                     self.user = user[0];
 
@@ -85,13 +92,8 @@ Player.prototype = {
                         userData[k] = user[0][k];
                     });
 
-                    // send success message with collected UserData
-                    so.emit('login', {
-                        success: true,
-                        user: userData
-                    });
+
                     dispatcher.player.login.trigger(self);
-                    self.initPlayer();
 
                 } else {
                     /**

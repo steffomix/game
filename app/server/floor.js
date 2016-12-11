@@ -75,22 +75,28 @@ Floor.prototype = {
             self.onUpdateFloor();
         });
     },
-    onUpdateFloor: function(){
+    onUpdateFloor: function(player){
         var self = this;
-        _.each(this.players, function(player){
+        player ? notify(player) : _.each(this.players, notify);
+        function notify(player){
             player.socket.emit('onUpdateFloor', {
                 world_id: self.world_id,
                 area_id: self.area_id,
                 z: self.z,
                 tiles: self.rawTiles
             });
-        });
+        }
     },
 
     addPlayer: function (player) {
-        var id = player.socket.id;
-        this.players[id] && this.players[id].floor.removePlayer(id);
+        var id = player.user.name;
+        try{
+            this.players[id] && this.players[id].floor.removePlayer(id);
+        }catch(e){
+            console.warn('Cant remove player from floor');
+        }
         this.players[id] = player;
+        this.onUpdateFloor(player);
     },
 
     removePlayer: function (id) {

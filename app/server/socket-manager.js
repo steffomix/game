@@ -11,47 +11,91 @@ exports = module.exports = new SocketManager();
 
 function SocketManager() {
     var self = this,
-        connections = {};
+        connections = {},
+        logins = {};
 
     /**
      * connect
      */
     dispatcher.io.connect(function (socket) {
-        connections[socket.id] = new Player(socket);
+        try{
+            connections[socket.id] = new Player(socket);
+        }catch(e){
+            console.warn('Connect Player failed', socket);
+        }
     });
     /**
      * disconnect
      */
     dispatcher.player.disconnect(function (player) {
         try {
-            var pName = player.user.name;
+            var name = player.user.name;
+            player.socket.removeAllListeners();
             delete connections[player.socket.id];
-            // broadcast only when user has logged in
-            pName && broadcastMessage({
-                cmd: 'userDisconnect',
-                name: pName
-            });
+            if(name){
+                delete logins[name];
+                // broadcast only when user has logged in
+                name && broadcastMessage({
+                    cmd: 'userDisconnect',
+                    name: name
+                });
+            }
+            player.socket.disconnect();
         } catch (e) {
-            console.warn('Delete Connection: ', e);
+            console.warn('Delete Connection failed: ', e);
         }
     });
     /**
      * logout
      */
     dispatcher.player.logout(function(player){
-        broadcastMessage({
-            cmd: 'userLogout',
-            name: player.user.name
-        });
+        try{
+            var name = player.user.name;
+            delete logins[name];
+            name && broadcastMessage({
+                cmd: 'userLogout',
+                name: name
+            });
+            player.setDown();
+            player.socket.emit('logout');
+        }catch(e){
+            console.warn('Player logout failed ', player);
+        }
     });
     /**
-     * login
+     * check if user is already logged in
+     * setup player on success
      */
     dispatcher.player.login(function(player){
-        broadcastMessage({
-            cmd: 'userLogin',
-            name: player.user.name
-        });
+        try{
+            var name = player.user.name;
+            if(!logins[name]){
+                logins[name] = player;
+                setTimeout(function(){
+                    player.setup();
+                }, 0);
+                broadcastMessage({
+                    cmd: 'userLogin',
+                    name: name
+                });
+                // send success message with collected UserData
+                player.socket.emit('login', {
+                    success: true,
+                    user: player.user
+                });
+            }else{
+                player.socket.emit('login', {
+                    success: false,
+                    user: player.user,
+                    msg: 'User "' + name + '" already logged in.'
+                });
+                // remove user from socket
+                player.user = {};
+            }
+        }catch(e){
+            console.warn('Player login failed ', player);
+        }
+
     });
 
     dispatcher.player.chatMessage(function(data){

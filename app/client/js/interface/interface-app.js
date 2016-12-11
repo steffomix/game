@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'gameSocket', 'gameRouter', 'i18n', 'backbone', 'underscore', 'jquery', 'util'],
-    function (config, Logger, socket, router, i18n, Backbone, _, $, util) {
+define(['config', 'logger', 'gameSocket', 'gameRouter', 'i18n', 'backbone', 'underscore', 'jquery', 'util', 'eventDispatcher'],
+    function (config, Logger, socket, router, i18n, Backbone, _, $, util, dispatcher) {
 
         var user = {},
             interfaces = {},
@@ -37,6 +37,20 @@ define(['config', 'logger', 'gameSocket', 'gameRouter', 'i18n', 'backbone', 'und
             interpolate: /\{\{=([\s\S]+?)\}\}/g,
             escape: /\{\{-([\s\S]+?)\}\}/g
         };
+
+        (function(){
+            var login = interfaces['interface/login'],
+                connect = interfaces['interface/connect'];
+            dispatcher.server.connect(_.extend({}, Backbone.Events), function(){
+                socket.send('server.login', {user: 'user', pass: '4343'});
+            });
+            socket.send('server.connect', {
+                host: 'localhost',
+                port: 3000
+            });
+        })();
+
+
 
         function escapeHtml(text){
             return $('<div/>').text(text).html();

@@ -65,6 +65,7 @@
         ['interfaceApp', 'interface/interface-app', 0],
         ['interfaceConnect', 'interface/interface-connect', 0],
         ['interfaceLogin', 'interface/interface-login', 0],
+        ['interfaceTopnav', 'interface/interface-topnav', 0],
         ['interfaceChat', 'interface/interface-chat', 0],
         ['interfaceGame', 'interface/interface-game', 0],
 

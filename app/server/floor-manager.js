@@ -15,9 +15,10 @@ function FloorManager() {
     this.floor = function (player) {
         var id = this.createFloorId(player);
         if (floors[id]) {
+            player.floor = floors[id];
             floors[id].addPlayer(player);
         } else {
-            floors[id] = new Floor(player)
+            player.floor = floors[id] = new Floor(player);
         }
     };
 

@@ -48,9 +48,8 @@ define(['config', 'logger', 'backbone', 'underscore', 'gameSocket', 'interfaceAp
                     el: $('#game-container'),
                     initialize: function () {
                         window.addEventListener('resize', function () {
-                            //$('body').css('height', '100%');
-                            setTimeout(dispatcher.global.windowResize.trigger,5);
-                            //dispatcher.global.windowResize.trigger();
+                            dispatcher.global.windowResize.trigger();
+                            setTimeout(dispatcher.global.windowResize.trigger,20);
                         });
 
                         dispatcher.server.disconnect.trigger();

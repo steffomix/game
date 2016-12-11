@@ -73,7 +73,7 @@ define(['config', 'logger', 'backbone', 'underscore', 'jquery', 'interfaceApp', 
                     });
                     this.onShow();
                 },
-                connect: function (e) {
+                connect: function () {
                     var host = (/[0-9a-z\.\/]+/.exec($(this.el_host).val()) || [''])[0],
                         port = parseInt((/[0-9]+/.exec($(this.el_port).val()) || [NaN])[0]);
                     if ( host && port && !isNaN(port) ) {
@@ -81,8 +81,7 @@ define(['config', 'logger', 'backbone', 'underscore', 'jquery', 'interfaceApp', 
                         localStorage['server.port'] = port;
                         this.socket.send('server.connect', {
                             host: host,
-                            port: port,
-                            callback: 'interfaceConnect.connect'
+                            port: port
                         });
                     } else {
                         $(this.el_msg).html('Please check Host and Port Data')

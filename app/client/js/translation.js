@@ -38,7 +38,9 @@ define('translation', [], function () {
 
             'chat.chat': 'Chat',
             'chat.context_userLogin': 'Player {{=user }} enter Game.',
-            'chat.context_userDisconnect': 'Player {{=user }} disconnected.'
+            'chat.context_userDisconnect': 'Player {{=user }} disconnected.',
+
+            'topnav.logout': 'Logout'
         },
         de: {}
     };

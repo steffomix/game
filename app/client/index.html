@@ -2,6 +2,7 @@
 <html>
 <head>
 </head>
+<meta name="viewport" content="initial-scale=1.0,user-scalable=no,maximum-scale=1">
 <title>Game</title>
 <link rel="stylesheet" href="/css/normalize.css">
 <link rel="stylesheet" href="/css/main.css">
@@ -71,6 +72,7 @@
         </div>
     </section>
 
+    <!-- window chat -->
     <section id="window-chat" class="window-container">
         <div class="window">
             <div class="window-header">
@@ -85,6 +87,16 @@
         </div>
     </section>
 
+    <!-- window topnav -->
+    <section id="window-topnav" class="window-container">
+        <ul class="topnav" id="topnav">
+            <li><a>Gamestats</a></li>
+            <li class="right"><div id="topnav-logout">{{= logout}}</div></li>
+            <li class="icon">
+                <a id="topnav-icon-responsive">&#9776;</a>
+            </li>
+        </ul>
+    </section>
 
 
 

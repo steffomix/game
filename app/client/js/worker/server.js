@@ -51,6 +51,9 @@ define('server', ['config', 'logger', 'io', 'workerSlaveSocket', 'workerRouter',
                 login: function (job) {
                     send('login', job.data);
                 },
+                logout: function(job){
+                    send('logout');
+                },
                 chatMessage: function(job){
                     send('chatMessage', job.data);
                 }
@@ -92,6 +95,11 @@ define('server', ['config', 'logger', 'io', 'workerSlaveSocket', 'workerRouter',
                     socket.send('interfaceLogin.login', data);
                 });
 
+                connection.on('logout', function(data){
+                    logger.info('Server: Logout by Server', data);
+                    socket.send('interfaceLogin.logout', data || {});
+                });
+
                 connection.on('broadcastMessage', function (data) {
                     var cmd = data.cmd;
                     logger.info('Server: broadcastMessage', data);
@@ -108,7 +116,7 @@ define('server', ['config', 'logger', 'io', 'workerSlaveSocket', 'workerRouter',
                 })
 
                 connection.on('onUpdateFloor', function(data){
-                    logger.info('Servdr: onUpdateFloor', data);
+                    logger.info('Server: onUpdateFloor', data);
                     socket.send('game.onUpdateFloor', data);
                 });
 
