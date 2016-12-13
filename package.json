@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./app/server/main.js"
+    "start": "./app/server/main.js"
   },
   "dependencies": {
     "javascript-state-machine": "^2.4.0",
@@ -18,8 +18,5 @@
     "socket.io-client": "^1.5.1",
     "sqlite3": "^3.1.8",
     "underscore": "^1.8.3"
-  },
-  "devDependencies": {
-    "gulp": "^3.9.1"
   }
 }
