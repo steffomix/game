@@ -6,6 +6,7 @@ var config = require('./config'),
     io = require('socket.io'),
     fs = require('fs'),
     path = require('path'),
+
     server = http.createServer(function (request, response) {
         console.log('request ', request.url);
 
@@ -57,9 +58,11 @@ var config = require('./config'),
 
     });
 
+// required for openshift server
+io.set("transports", ["websocket"]);
+
 server.listen(config.server.port, config.server.ip);
 console.log('Server running ' + config.server.ip + ':' + config.server.port);
-
 exports = module.exports = {
     http: server,
     socket: io(server)
