@@ -74,8 +74,8 @@ define(['config', 'logger', 'backbone', 'underscore', 'jquery', 'interfaceApp', 
                     this.onShow();
                 },
                 connect: function () {
-                    var host = (/[0-9a-z\.\/]+/.exec($(this.el_host).val()) || [''])[0],
-                        port = parseInt((/[0-9]+/.exec($(this.el_port).val()) || [NaN])[0]);
+                    var host = $(this.el_host).val() || '',
+                        port = $(this.el_port).val() || 8080;
                     if ( host && port && !isNaN(port) ) {
                         localStorage['server.host'] = host;
                         localStorage['server.port'] = port;
@@ -91,8 +91,8 @@ define(['config', 'logger', 'backbone', 'underscore', 'jquery', 'interfaceApp', 
                 onShow: function () {
                     this.render();
                     this.centerWindow();
-                    $(this.el_host).val(localStorage['server.host']);
-                    $(this.el_port).val(localStorage['server.port']);
+                    $(this.el_host).val(localStorage['server.host'] || document.location.host);
+                    $(this.el_port).val(localStorage['server.port'] || 8080);
                     this.$el.fadeIn();
                 }
             })))();
