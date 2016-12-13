@@ -92,7 +92,7 @@ define(['config', 'logger', 'backbone', 'underscore', 'jquery', 'interfaceApp', 
                     this.render();
                     this.centerWindow();
                     $(this.el_host).val(localStorage['server.host'] || document.location.host);
-                    $(this.el_port).val(localStorage['server.port'] || 8080);
+                    $(this.el_port).val(localStorage['server.port'] || 8000);
                     this.$el.fadeIn();
                 }
             })))();

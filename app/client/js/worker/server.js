@@ -35,6 +35,7 @@ define('server', ['config', 'logger', 'io', 'workerSlaveSocket', 'workerRouter',
         function ServerSocket() {
             var connection;
 
+
             workerRouter.addModule('server', this, {
                 send: function (job) {
                     var cmd = job.data.cmd,
@@ -83,6 +84,7 @@ define('server', ['config', 'logger', 'io', 'workerSlaveSocket', 'workerRouter',
 
                 logger.info('connect: ', uri);
                 connection = io.connect(uri);
+                // connection.set("transports", ["websocket"]);
 
                 connection.on('connect', function () {
                     logger.info('Server: onConnect');
