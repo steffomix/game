@@ -18,10 +18,12 @@
 /**
  * Server config
  */
+
 exports.server = {
     name: 'Rotting Planet',
     publicHtml: '../client',
-    port: 3000,
+    ip: process.env.IP   || process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0',
+    port: process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8000,
     db: 'sqlite://db/db.sqlite3',
     path: {
 

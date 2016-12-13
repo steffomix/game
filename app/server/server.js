@@ -10,7 +10,7 @@ var config = require('./config'),
         console.log('request ', request.url);
 
         var filePath = request.url;
-        if ( filePath == '/' ) filePath = '/index.html';
+        if (filePath == '/') filePath = '/index.html';
         filePath = config.server.publicHtml + filePath;
 
         var extname = String(path.extname(filePath)).toLowerCase();
@@ -37,8 +37,8 @@ var config = require('./config'),
         contentType = mimeTypes[extname] || 'application/octect-stream';
 
         fs.readFile(filePath, function (error, content) {
-            if ( error ) {
-                if ( error.code == 'ENOENT' ) {
+            if (error) {
+                if (error.code == 'ENOENT') {
                     response.writeHead(200);
                     response.end('File not found: ' + error.code + '\n');
                     response.end();
@@ -56,10 +56,11 @@ var config = require('./config'),
         });
 
     });
-server.listen(config.server.port);
-console.log('Server running at http://127.0.0.1:' + config.server.port);
+
+server.listen(config.server.port, config.server.ip);
+console.log('Server running ' + config.server.ip + ':' + config.server.port);
 
 exports = module.exports = {
     http: server,
     socket: io(server)
-}
+};
