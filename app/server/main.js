@@ -1,5 +1,4 @@
 
-var debug = require('debug');
 
 try{
     var config = require('./config.js'),
@@ -27,7 +26,6 @@ try{
     });
 }catch(e){
     console.log(e);
-    debug.log(e);
 }
 
 
