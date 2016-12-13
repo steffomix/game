@@ -83,7 +83,7 @@ define('server', ['config', 'logger', 'io', 'workerSlaveSocket', 'workerRouter',
                 var uri = (host || config.server.host) + ':' + (port || config.server.port);
 
                 logger.info('connect: ', uri);
-                connection = io.connect(uri);
+                connection = io.connect(uri, {'forceNew':true });
                 // connection.set("transports", ["websocket"]);
 
                 connection.on('connect', function () {

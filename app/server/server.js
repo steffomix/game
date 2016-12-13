@@ -60,11 +60,11 @@ var config = require('./config'),
 server.listen(config.server.port, config.server.ip);
 console.log('Server running ' + config.server.ip + ':' + config.server.port);
 
-var ioServer = http.createServer(function(){});
-ioServer.listen(8000);
-//io.set("transports", ["websocket"]);
+// var ioServer = http.createServer(function(){});
+// ioServer.listen(8000);
 
+//io2.set("transports", ["websocket"]);
 exports = module.exports = {
     http: server,
-    socket: io(ioServer)
+    socket: io(server)
 };
