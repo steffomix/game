@@ -88,7 +88,7 @@ define('server', ['config', 'logger', 'io', 'workerSlaveSocket', 'workerRouter',
                 }catch(e){
                     logger.info('disconnect failed: ', e, connection);
                 }
-                connection = io.connect(uri);
+                connection = io();//connect(uri);
                 // connection.set("transports", ["websocket"]);
 
                 connection.on('connect', function () {
