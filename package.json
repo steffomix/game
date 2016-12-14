@@ -2,8 +2,16 @@
   "name": "game",
   "version": "0.0.0",
   "private": true,
+  "engines": {
+    "node": "5.9.1"
+  },
   "scripts": {
     "start": "cd app/server; node main.js"
+  },
+  "main": "main.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/steffomix/game"
   },
   "dependencies": {
     "debug": "^2.3.3",
