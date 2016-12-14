@@ -57,7 +57,7 @@ var config = require('./config'),
 
     });
 
-server.listen(config.server.port, config.server.ip);
+server.listen(config.server.port);
 console.log('Server running ' + config.server.ip + ':' + config.server.port);
 
 // var ioServer = http.createServer(function(){});
