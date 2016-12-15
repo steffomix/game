@@ -19,13 +19,30 @@
  * Server config
  */
 
-exports.server = {
-    name: 'Rotting Planet',
-    publicHtml: '../client',
-    ip: process.env.IP   || process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0',
-    port: process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080,
-    db: 'sqlite://db/db.sqlite3',
-    path: {
+var path = require('path');
 
-    }
-}
+exports = module.exports = {
+    server: {
+        name: 'Rotting Universe',
+        publicHtml: path.join(__dirname, '../client'),
+        ip: process.env.IP || process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0',
+        port: process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080,
+        db: 'sqlite://db/db.sqlite3'
+
+    },
+    modules: {
+        'server': './server',
+        'eventDispatcher': './event-dispatcher',
+        'db': './db',
+        'connectionManager': './connection-manager',
+        'player': './player',
+        'playerLocation': './player-location',
+        'socketManager': './socket-manager',
+        'world': './world',
+        'floorManager': './floor-manager',
+        'floor': './floor',
+        'worldManager': './world-manager',
+        'tile': './tile'
+    },
+    loadedModules: {}
+};

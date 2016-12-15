@@ -19,8 +19,8 @@
 
 
 define('gameManager',
-    ['config', 'logger', 'gameSocket', 'underscore', 'interface'],
-    function (config, Logger, socket, _) {
+    ['config', 'logger', 'gameSocket', 'underscore', 'interfaceApp'],
+    function (config, Logger, socket, _, interfaceApp) {
 
         var instance,
             logger = Logger.getLogger('gameManager');

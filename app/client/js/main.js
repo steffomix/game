@@ -18,13 +18,8 @@
 (function () {
 
     var conf = {
-        server: {
-            host: 'game.com',
-            port: '4343'
-        },
         baseUrl: '/js/',
         paths: {
-
             // third party libs
             'logger': 'lib/loglevel.min', // https://github.com/pimterry/loglevel
             'underscore': 'lib/underscore.min', // http://underscorejs.org/
@@ -61,7 +56,7 @@
         ['commandRouter', 'command-router', 0],
 
         // interface
-        ['interface', 'interface/interface', 0],
+        // ['interface', 'interface/interface', 0],
         ['interfaceApp', 'interface/interface-app', 0],
         ['interfaceConnect', 'interface/interface-connect', 0],
         ['interfaceLogin', 'interface/interface-login', 0],
@@ -96,7 +91,10 @@
     });
 
     // setup requirejs
-    requirejs.config({paths: conf.paths, baseUrl: conf.baseUrl});
+    requirejs.config({
+        paths: conf.paths,
+        baseUrl: conf.baseUrl
+    });
 
     // create config module to be loadable
     define('config', [], function () {
@@ -106,8 +104,8 @@
     define('gameRouter', ['commandRouter'], function (commandRouter) {
         var instance;
         return getInstance();
-        function getInstance () {
-            if ( !instance ) {
+        function getInstance() {
+            if (!instance) {
                 try {
                     instance = commandRouter.getRouter('GameRouter');
                 } catch (e) {
@@ -118,13 +116,11 @@
         }
     });
 
-
-    console.log('Start Game...');
-
-    require(['backbone', 'jquery'], function(backbone, $){
+    require(['backbone', 'jquery'], function (backbone, $) {
         backbone.$ = $;
     });
 
+    console.log('Start Game...');
     require(['gameManager'], function (gameManager) {
     });
 

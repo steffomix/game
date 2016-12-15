@@ -43,7 +43,7 @@ define('server', ['config', 'logger', 'io', 'workerSlaveSocket', 'workerRouter',
                     send(cmd, data);
                 },
                 connect: function (job) {
-                    connect(job.data.host, job.data.port);
+                    connect();
                 },
                 disconnect: function () {
                     connection.disconnect();
@@ -70,26 +70,28 @@ define('server', ['config', 'logger', 'io', 'workerSlaveSocket', 'workerRouter',
             }
 
             function disconnect() {
+                try{
+                    send('logout');
+                }catch(e){
+                    // ignore
+                }
                 try {
+                    logger.warn('Server disconnected by client.');
                     connection.disconnect();
                     connection = null;
-                    logger.warn('Server disconnected by client.');
+                    socket.send('interfaceConnect.disconnect');
                 } catch (e) {
-                    logger.warn('Server connection disconnect failed: ' + e);
+                    // ignore
                 }
             }
 
-            function connect(host, port) {
-                var uri = (host || config.server.host) + ':' + (port || config.server.port);
+            function connect() {
+                disconnect();
+                connection = io();
+                setupListener();
+            }
 
-                logger.info('connect: ', uri);
-                try{
-                    connection.disconnect();
-                }catch(e){
-                    logger.info('disconnect failed: ', e, connection);
-                }
-                connection = io();//connect(uri);
-                // connection.set("transports", ["websocket"]);
+            function setupListener(){
 
                 connection.on('connect', function () {
                     logger.info('Server: onConnect');
@@ -128,7 +130,7 @@ define('server', ['config', 'logger', 'io', 'workerSlaveSocket', 'workerRouter',
                 connection.on('chatMessage', function(data){
                     logger.info('Server: chatMessage', data);
                     socket.send('interfaceChat.chatMessage', data);
-                })
+                });
 
                 connection.on('onUpdateFloor', function(data){
                     logger.info('Server: onUpdateFloor', data);
@@ -138,8 +140,7 @@ define('server', ['config', 'logger', 'io', 'workerSlaveSocket', 'workerRouter',
                 connection.on('command', function (data) {
                     logger.info('onCommand', data);
                     serverRouter.command(data.cmd, data.data);
-                })
+                });
             }
-
         }
     });

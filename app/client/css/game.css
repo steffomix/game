@@ -42,7 +42,8 @@ button{
 }
 
 .window-header-content{
-    padding: 1px 5px 1px 10px;
+    padding: 1px 10px 1px 10px;
+    white-space: nowrap;
 }
 
 .window-body{

@@ -23,6 +23,7 @@ define('translation', [], function () {
      */
     return {
         en: {
+            'connect.connectToGame': 'Connect to Rotting Universe',
             'connect.connect': 'Connect',
             'connect.host': 'Host',
             'connect.port': 'Port',

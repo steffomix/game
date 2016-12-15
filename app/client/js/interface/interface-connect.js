@@ -37,9 +37,8 @@ define(['config', 'logger', 'backbone', 'underscore', 'jquery', 'interfaceApp', 
             return new (Backbone.View.extend(_.extend(new App(), {
 
                 el: $('#window-game-connect'),
-                el_host: '#input-game-connect-host',
-                el_port: '#input-game-connect-port',
                 el_msg: '#game-connect-message',
+                el_btn: '#button-game-connect',
                 events: {
                     'click #button-game-connect': 'connect'
                 },
@@ -47,7 +46,7 @@ define(['config', 'logger', 'backbone', 'underscore', 'jquery', 'interfaceApp', 
                     // grap template
                     this.grabTemplate();
                     this.viewData = this.translateKeys('connect', [
-                        'connect', 'host', 'port'
+                        'connect', 'connectToGame'
                     ]);
 
                     dispatcher.global.windowResize(this, this.centerWindow);
@@ -55,9 +54,6 @@ define(['config', 'logger', 'backbone', 'underscore', 'jquery', 'interfaceApp', 
 
                     dispatcher.server.disconnect(this, this.onShow);
                     dispatcher.server.connect(this, this.hide);
-
-                    $(this.el_host).val(localStorage['server.host'] || 'game.com');
-                    $(this.el_port).val(localStorage['server.port'] || 4343);
 
                     this.router.addModule('interfaceConnect', this, {
                         connect: function () {
@@ -74,26 +70,21 @@ define(['config', 'logger', 'backbone', 'underscore', 'jquery', 'interfaceApp', 
                     this.onShow();
                 },
                 connect: function () {
-                    var host = $(this.el_host).val() || '',
-                        port = $(this.el_port).val() || 8080;
-                    if ( host && port && !isNaN(port) ) {
-                        localStorage['server.host'] = host;
-                        localStorage['server.port'] = port;
-                        this.socket.send('server.connect', {
-                            host: host,
-                            port: port
-                        });
-                    } else {
-                        $(this.el_msg).html('Please check Host and Port Data')
-                        logger.error('Useless Connect data', host, port);
-                    }
+                    this.socket.send('server.connect');
+                    this.hideButton();
                 },
                 onShow: function () {
                     this.render();
+                    this.hideButton();
                     this.centerWindow();
-                    $(this.el_host).val(localStorage['server.host'] || document.location.host);
-                    $(this.el_port).val(localStorage['server.port'] || 8000);
                     this.$el.fadeIn();
+                },
+                hideButton: function(){
+                    var btn = $(this.el_btn);
+                    btn.hide();
+                    setTimeout(function(){
+                        btn.show();
+                    }, 3000);
                 }
             })))();
 

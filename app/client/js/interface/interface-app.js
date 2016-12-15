@@ -25,30 +25,42 @@ define(['config', 'logger', 'gameSocket', 'gameRouter', 'i18n', 'backbone', 'und
             logger = Logger.getLogger('interfaceApp');
         logger.setLevel(config.logger.interfaceApp || 0);
 
-        _.each(config.paths, function (v, k) {
-            if ( v.indexOf('interface/') != -1 ) {
-                interfaces[k] = require([k], function () {
-                });
-            }
-        });
-
-        _.templateSettings = {
-            evaluate: /\{\{([\s\S]+?)\}\}/g,
-            interpolate: /\{\{=([\s\S]+?)\}\}/g,
-            escape: /\{\{-([\s\S]+?)\}\}/g
-        };
 
         (function(){
-            var login = interfaces['interface/login'],
-                connect = interfaces['interface/connect'];
+            logger.info('Load Interfaces');
+            _.each(config.paths, function (v, k) {
+                if ( v.indexOf('interface/') != -1 ) {
+                    interfaces[k] = require([k], function () {
+                    });
+                }
+            });
+
+            _.templateSettings = {
+                evaluate: /\{\{([\s\S]+?)\}\}/g,
+                interpolate: /\{\{=([\s\S]+?)\}\}/g,
+                escape: /\{\{-([\s\S]+?)\}\}/g
+            };
+
+            window.addEventListener('resize', function () {
+                dispatcher.global.windowResize.trigger();
+                setTimeout(dispatcher.global.windowResize.trigger,20);
+            });
+
+            dispatcher.server.disconnect.trigger();
+            $('#game-container').show();
+            dispatcher.global.windowResize.trigger();
+
+            _autoLogin();
+        })();
+
+        function _autoLogin(){
+            logger.info('Autologin user:user');
             dispatcher.server.connect(_.extend({}, Backbone.Events), function(){
                 socket.send('server.login', {user: 'user', pass: '4343'});
             });
-            socket.send('server.connect', {
-                host: 'localhost',
-                port: 3000
-            });
-        })//;();
+
+            socket.send('server.connect');
+        }
 
 
 
