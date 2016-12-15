@@ -3,7 +3,7 @@ var config = require('./config'),
 
 exports = module.exports = {
     connect: connect
-}
+};
 
 function connect(callback) {
     var tbl = {
@@ -116,16 +116,16 @@ function connect(callback) {
 
 
         db.sync(function (err) {
-            err && console.log('sync...' + err);
+            err && console.error('sync...' + err);
             Users.get(1, function (err, user) {
-                err && console.log('create user... ' + err);
                 if (!user) {
+                    console.log('Create default User name:user, pass:user');
                     Users.create({
                             name: 'user',
                             pass: 'user'
                         },
                         function (err, user) {
-
+                            err && console.error('Create default user failed: ' + err);
                         }
                     )
                 }
