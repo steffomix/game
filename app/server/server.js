@@ -1,14 +1,14 @@
 //
 
 
-var config = require('./config.js'),
-    app = require('express')(),
-    server = require('http').Server(app),
-    express = require('express'),
-    io = require('socket.io')(server);
+    var config = require('./config.js'),
+        express = require('express'),
+        app = express(),
+        server = require('http').Server(app),
+        io = require('socket.io')(server);
 
-app.use(express.static(config.server.publicHtml));
-server.listen(config.server.port, config.server.host);
+    app.use(express.static(config.server.publicHtml));
+    server.listen(config.server.port);
 
 exports = module.exports = {
     app: app,

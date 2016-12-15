@@ -25,8 +25,8 @@ exports = module.exports = {
     server: {
         name: 'Rotting Universe',
         publicHtml: path.join(__dirname, '../client'),
-        ip: process.env.IP || process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0',
-        port: process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080,
+        ip: process.env.HEROKU_NODEJS_IP || process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0',
+        port: process.env.HEROKU_NODEJS_PORT || process.env.OPENSHIFT_NODEJS_PORT || 3000,
         db: 'sqlite://db/db.sqlite3'
 
     },
