@@ -1,0 +1,23 @@
+{
+  "name": "game",
+  "scripts": {
+  },
+  "env": {
+    "HEROKU_NODEJS_IP": {
+      "required": true
+    },
+    "HEROKU_NODEJS_PORT": {
+      "required": true
+    }
+  },
+  "formation": {
+  },
+  "addons": [
+
+  ],
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ]
+}
