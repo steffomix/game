@@ -134,7 +134,7 @@ define('server', ['config', 'logger', 'io', 'workerSlaveSocket', 'workerRouter',
 
                 connection.on('onUpdateFloor', function(data){
                     logger.info('Server: onUpdateFloor', data);
-                    socket.send('game.onUpdateFloor', data);
+                    serverRouter.command('cache.onUpdateFloor', data);
                 });
 
                 connection.on('command', function (data) {

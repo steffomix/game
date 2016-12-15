@@ -19,8 +19,8 @@ define('workerRouter', ['commandRouter'], function (commandRouter) {
 
     var instance;
     return getInstance();
-    function getInstance () {
-        if ( !instance ) {
+    function getInstance() {
+        if (!instance) {
             try {
                 instance = commandRouter.getRouter('WorkerRouter');
             } catch (e) {
@@ -37,8 +37,8 @@ define('serverRouter', ['commandRouter'], function (commandRouter) {
 
     var instance;
     return getInstance();
-    function getInstance () {
-        if ( !instance ) {
+    function getInstance() {
+        if (!instance) {
             try {
                 instance = commandRouter.getRouter('ServerRouter');
             } catch (e) {
@@ -50,29 +50,38 @@ define('serverRouter', ['commandRouter'], function (commandRouter) {
 
 });
 
-define('gameCache', ['config', 'logger', 'workerSocket', 'workerRouter', 'server', 'serverRouter', 'underscore'],
-    function (config, Logger, workerSocket, workerRouter, server, serverRouter, _) {
+define('cache', ['config', 'logger', 'underscore', 'workerSocket', 'workerRouter', 'server', 'serverRouter', 'floorManager'],
+    function (config, Logger, _, workerSocket, workerRouter, server, serverRouter, floorManager) {
 
         var instance,
             logger = Logger.getLogger('gameCache');
         logger.setLevel(config.logger.gameCache || 0);
 
+        logger.info('Load Interfaces');
+
+
         return getInstance();
 
-        function getInstance () {
-            if ( !instance ) {
+        function getInstance() {
+            if (!instance) {
                 instance = new GameCache();
             }
             return instance;
         }
 
 
-        function GameCache () {
+        function GameCache() {
             // register at game-websocket to receive commands
             workerRouter.addModule('cache', this);
             // register at server socket to receive commands
-            serverRouter.addModule('cache', this);
+            serverRouter.addModule('cache', this, {
+                onUpdateFloor: function (job) {
+                    id = job.data
+                    floorManager.updateFloor()
+                }
+            });
 
         }
 
     });
+

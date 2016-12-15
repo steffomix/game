@@ -43,7 +43,7 @@ define('gameSocket', ['config', 'logger', 'workerMaster', 'commandRouter'],
                 router = commandRouter.getRouter('GameRouter'),
                 socketMaster = new WorkerMaster(
                     // initial script
-                    'gameCache',
+                    'cache',
                     // human readable name
                     'WorkerManager',
                     // worker ready to rumble callback

@@ -58,7 +58,10 @@
  *
  */
 
+define(['config', 'logger'], function(){
 
+    return {};
+});
 
 (function () {
 
@@ -114,5 +117,5 @@
         }
 
     }, false);
-})();
+});
 

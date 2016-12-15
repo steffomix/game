@@ -52,7 +52,6 @@
         ['gameRouter', 'game-router', 0],
         ['workerMaster', 'worker-master', 4],
         ['gameSocket', 'game-socket', 4],
-        ['workerSocket', 'worker/worker-socket', 4],
         ['commandRouter', 'command-router', 0],
 
         // interface
@@ -65,10 +64,19 @@
         ['interfaceGame', 'interface/interface-game', 0],
 
         // worker: Server - Client Middleware
-        ['gameCache', 'worker/game-cache', 0],
-        ['pathfinder', 'worker/pathfinder', 0], // used by gamecache
+        ['workerSlave', '/js/worker/worker-slave.js', 3], // must be full path
         ['server', 'worker/server', 0],
-        ['workerSlave', '/js/worker/worker-slave.js', 3] // must be full path
+        ['workerSocket', 'worker/worker-socket', 4],
+
+        // cache and matrix renderer
+        ['cache', 'worker/cache/cache', 0],
+        //['pathfinder', 'worker/cache/pathfinder', 0], // used by gamecache
+        ['world-manager', 'worker/cache/world-manager', 0],
+        ['world', 'worker/cache/world', 0],
+        ['floorManager', 'worker/cache/floor-manager', 0],
+        ['floor', 'worker/cache/floor', 0],
+        ['tile', 'worker/cache/tile', 0]
+
     ];
 
     // setup config for paths and logger
