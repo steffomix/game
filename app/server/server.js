@@ -8,7 +8,8 @@
         io = require('socket.io')(server);
 
     app.use(express.static(config.server.publicHtml));
-    server.listen(config.server.port);
+    console.log('Server running on ' + config.server.ip + ':' + config.server.port);
+    server.listen(config.server.port, config.server.ip);
 
 exports = module.exports = {
     app: app,
