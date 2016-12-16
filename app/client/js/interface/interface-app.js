@@ -56,7 +56,7 @@ define(['config', 'logger', 'gameSocket', 'gameRouter', 'i18n', 'backbone', 'und
         function _autoLogin(){
             logger.info('Autologin user:user');
             dispatcher.server.connect(_.extend({}, Backbone.Events), function(){
-                socket.send('server.login', {user: 'user', pass: '4343'});
+                socket.send('server.login', {user: 'user', pass: 'user'});
             });
 
             socket.send('server.connect');

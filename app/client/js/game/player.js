@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 15.12.16 Stefan Brinkmann <steffomix@gmail.com>
+ * Copyright (C) 16.12.16 Stefan Brinkmann <steffomix@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,21 +18,16 @@
 define(['config', 'logger'],
     function (config, Logger) {
 
-        var instance,
-            logger = Logger.getLogger('floorManager');
-        logger.setLevel(config.logger.floorManager || 0);
+        var logger = Logger.getLogger('player');
+        logger.setLevel(config.logger.player || 0);
 
-        return getInstance();
 
-        function getInstance() {
-            if (!instance) {
-                instance = new FloorManager();
-            }
-            return instance;
-        }
-
-        function FloorManager() {
+        function Player() {
 
         }
+
+        Player.prototype = {};
+
+        return Player;
 
     });

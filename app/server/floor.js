@@ -9,7 +9,7 @@ var _ = require('underscore'),
 
 exports = module.exports = Floor;
 
-function Floor(player) {
+function Floor(location) {
     // floor bounds
     this.bounds = {
         minX: 0,
@@ -19,9 +19,9 @@ function Floor(player) {
     };
 
     // get location from first entering player or unit
-    this.world_id = player.location.world_id;
-    this.area_id = player.location.area_id;
-    this.z = player.location.z;
+    this.world_id = location.world_id;
+    this.area_id = location.area_id;
+    this.z = location.z;
     // players on floor
     this.players = {};
     // tiles Tile
@@ -29,18 +29,31 @@ function Floor(player) {
     //tiles as json string
     this.rawTiles = {};
 
-    this.addPlayer(player);
-    this.loadFloor(player);
+    this.loadFloor(location);
 }
 
 Floor.prototype = {
     onInsertTile: function (tile) {
-        var id = tile.x + '_' + tile.y;
+        var self = this,
+            id = tile.x + '_' + tile.y;
+
         this.tiles[id] = tile;
         this.rawTiles[id] = tile.data;
+
         if (tile.x < this.bounds.minX || tile.x > this.bounds.maxX || tile.y < this.bounds.minY || tile.y > this.bounds.maxY) {
             this.updateBounds();
         }
+
+        _.each(this.players, function(p){
+            p.socket.emit('onUpdateTile', {
+                world_id: self.world_id,
+                area_id: self.area_id,
+                z: self.z,
+                x: tile.x,
+                Y: tile.y,
+                data: tile.data
+            })
+        })
     },
 
     updateBounds: function () {
@@ -52,29 +65,31 @@ Floor.prototype = {
             tile.y > b.maxY && (b.maxY = tile.y);
         });
     },
-    loadFloor: function (player) {
+
+    loadFloor: function (location) {
         var self = this,
-            area = db.areas[player.location.area_id];
+            area = db.areas[location.area_id];
         area.find({
-            world_id: player.location.world_id,
-            z: player.location.z
+            world_id: location.world_id,
+            z: location.z
         }, function (err, tiles) {
             var t = self.tiles,
                 rt = self.rawTiles;
             if (!err && tiles.length) {
                 _.each(tiles, function (tile) {
                     var id = tile.x + '_' + tile.y;
-                    t[id] = new Tile(this).fromDb(tile);
+                    t[id] = new Tile(self).fromDb(tile);
                     rt[id] = tile.data || {};
                 });
             } else {
-                var id = player.location.x + '_' + player.location.y;
-                t[id] = new Tile(this).fromPlayer(player);
+                var id = location.x + '_' + location.y;
+                t[id] = new Tile(self).fromLocation(location);
                 rt[id] = {};
             }
             self.onUpdateFloor();
         });
     },
+
     onUpdateFloor: function(player){
         var self = this;
         player ? notify(player) : _.each(this.players, notify);

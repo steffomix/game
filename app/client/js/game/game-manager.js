@@ -19,8 +19,8 @@
 
 
 define('gameManager',
-    ['config', 'logger', 'gameSocket', 'underscore', 'interfaceApp'],
-    function (config, Logger, socket, _, interfaceApp) {
+    ['config', 'logger', 'gameSocket', 'gameRouter', 'underscore', 'interfaceApp', 'gameFloor'],
+    function (config, Logger, socket, router, _, interfaceApp, Floor) {
 
         var instance,
             logger = Logger.getLogger('gameManager');
@@ -40,6 +40,26 @@ define('gameManager',
          * @constructor
          */
         function GameManager () {
+            var floors = {};
+
+            router.addModule('game', this, {
+                updateFloor: function(job){
+                    var tiles = job.data;
+                }
+            });
+
+            function updateFloor(data){
+                var area =  data.area_id,
+                    world = data.world_id,
+                    z = data.z,
+                    id = world + '_' + area + '_' + z;
+
+                if(!floors[id]){
+                    floors[id] = new Floor(data);
+                }else{
+                    floor[id].updateAllTiles(data.tiles);
+                }
+            }
 
         }
 

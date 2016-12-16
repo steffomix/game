@@ -47,8 +47,6 @@
         ['i18n', 'i18n', 4],
         ['translation', 'translation', 0],
         ['eventDispatcher', 'event-dispatcher', 0],
-        ['dictCommands', 'dict-commands', 0],
-        ['gameManager', 'game-manager', 0],
         ['gameRouter', 'game-router', 0],
         ['workerMaster', 'worker-master', 4],
         ['gameSocket', 'game-socket', 4],
@@ -71,11 +69,18 @@
         // cache and matrix renderer
         ['cache', 'worker/cache/cache', 0],
         //['pathfinder', 'worker/cache/pathfinder', 0], // used by gamecache
-        ['world-manager', 'worker/cache/world-manager', 0],
-        ['world', 'worker/cache/world', 0],
-        ['floorManager', 'worker/cache/floor-manager', 0],
-        ['floor', 'worker/cache/floor', 0],
-        ['tile', 'worker/cache/tile', 0]
+        ['world-manager', 'worker/cache/cache-world-manager', 0],
+        ['world', 'worker/cache/cache-world', 0],
+        ['cacheFloorManager', 'worker/cache/cache-floor-manager', 0],
+        ['cacheFloor', 'worker/cache/cache-floor', 0],
+        ['tile', 'worker/cache/cache-tile', 0],
+
+        // game
+        ['gameManager', 'game/game-manager', 0],
+        ['gameFloorManager', 'game/game-floor-manager', 0],
+        ['gameFloor', 'game/game-floor', 0],
+        ['gameTile', 'game/game-tile', 0]
+
 
     ];
 

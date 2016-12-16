@@ -33,23 +33,9 @@ function Player(socket) {
     this.setup = function(){
         this.location = new Location(this);
 
-        /**
-         * called on floor changes or first game enter
-         */
-        this.onUpdateFloor = function(floor){
-            self.socket.emit('onUpdateFloor', {
-                x: location.x(),
-                y: location.y(),
-                floor: location.floor()
-            })
-        };
+        socket.on('getFloor', function(data){
 
-        /**
-         * Called on tile changes
-         */
-        this.onTileUpdate = function(){
-
-        };
+        });
 
         socket.on('chatMessage', function(data){
             dispatcher.player.chatMessage.trigger({

@@ -13,16 +13,27 @@ function FloorManager() {
     var floors = {};
 
     this.floor = function (player) {
-        var id = this.createFloorId(player);
+
+        var location = player.location,
+            id = this.id(location);
         if (floors[id]) {
             player.floor = floors[id];
             floors[id].addPlayer(player);
         } else {
-            player.floor = floors[id] = new Floor(player);
+            player.floor = floors[id] = new Floor(location);
+            floors[id].addPlayer(player);
         }
+
     };
 
-    this.createFloorId = function (player) {
-        return player.location.world_id + '_' + player.location.area_id + '_' + player.location.z;
+    this.id = function (location) {
+        return location.world_id + '_' + location.area_id + '_' + location.z;
+    };
+
+    this.emitFloor = function(player, data){
+        var id = this.id(data);
+        if(!floors[id]){
+            floors[id] = new Floor(player);
+        }
     }
 }

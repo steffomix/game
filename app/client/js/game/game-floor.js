@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 24.11.16 Stefan Brinkmann <steffomix@gmail.com>
+ * Copyright (C) 16.12.16 Stefan Brinkmann <steffomix@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,25 +15,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define('worldManager', ['config', 'logger'],
+define(['config', 'logger'],
     function (config, Logger) {
 
-        var instance,
-            logger = Logger.getLogger('worldManager');
-        logger.setLevel(config.logger.worldManager || 0);
+        var logger = Logger.getLogger('gameFloor');
+        logger.setLevel(config.logger.gameFloor || 0);
 
-        return getInstance();
+        return GameFloor;
 
-        function getInstance() {
-            if (!instance) {
-                instance = new WorldManager();
-            }
-            return instance;
+        function GameFloor(data) {
+            this.world = data.world_id;
+            this.area = data.area_id;
+            this.z = data.z;
+            this.tiles = data.tiles;
         }
-
-        function WorldManager() {
-
-        }
-
 
     });

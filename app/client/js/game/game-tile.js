@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 15.12.16 Stefan Brinkmann <steffomix@gmail.com>
+ * Copyright (C) 16.12.16 Stefan Brinkmann <steffomix@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,13 +18,20 @@
 define(['config', 'logger'],
     function (config, Logger) {
 
-        var logger = Logger.getLogger('world');
-        logger.setLevel(config.logger.world || 0);
+        var logger = Logger.getLogger('gameTile');
+        logger.setLevel(config.logger.gameTile || 0);
 
-        return World;
 
-        function World() {
-
+        function GameTile(x, y, data) {
+            this.x = x;
+            this.y = y;
+            this.data = data;
         }
+
+        GameTile.prototype = {
+
+        };
+
+        return GameTile;
 
     });

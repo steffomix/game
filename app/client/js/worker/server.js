@@ -137,6 +137,11 @@ define('server', ['config', 'logger', 'io', 'workerSlaveSocket', 'workerRouter',
                     serverRouter.command('cache.onUpdateFloor', data);
                 });
 
+                connection.on('onUpdateTile', function(data){
+                    logger.info('Server: onUpdateTile', data);
+                    serverRouter.command('cache.onUpdateTile', data);
+                });
+
                 connection.on('command', function (data) {
                     logger.info('onCommand', data);
                     serverRouter.command(data.cmd, data.data);

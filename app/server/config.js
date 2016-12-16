@@ -25,7 +25,7 @@ exports = module.exports = {
     server: {
         staticHtml: process.env.HEROKU_NODEJS_STATIC_HTML || process.env.OPENSHIFT_NODEJS_STATIC_HTML || path.join(__dirname, '../client'),
         ip: process.env.HEROKU_NODEJS_IP || process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0',
-        port: process.env.HEROKU_NODEJS_PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080
+        port: process.env.PORT || process.env.HEROKU_NODEJS_PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080
     },
     db: {
         driver: 'sqlite://',

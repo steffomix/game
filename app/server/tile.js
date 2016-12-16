@@ -18,17 +18,16 @@ Tile.prototype = {
         this.data = tile.data || {};
         return this;
     },
-    fromPlayer: function(player){
+    fromLocation: function(location){
         // init with defaults
-        this.x = player.location.x;
-        this.y = player.location.y;
+        this.x = location.x;
+        this.y = location.y;
         this.data = {};
 
         var self = this,
-            l = player.location,
+            l = location,
             area = db.areas[l.area_id],
             newTile = {
-                user_id: player.user.id,
                 world_id: l.world_id,
                 x: l.x,
                 y: l.y,
@@ -41,22 +40,23 @@ Tile.prototype = {
                 self.x = t.x;
                 self.y = t.y;
                 self.data = t.data;
-                self.floor.onInsertTile(this);
+                self.floor.onInsertTile(self);
             }else{
                 console.error('Create Tile failed.', newTile);
-                self.floor.onInsertTile(this);
+                self.floor.onInsertTile(self);
             }
+
         });
         return this;
     },
-    getBlank: function(player){
+    getBlank: function(location){
 
         return {
-            world_id: player.location.world_id,
-            area_id: player.location.area_id,
-            x: player.location.x,
-            y: player.location.y,
-            z: player.location.z,
+            world_id: location.world_id,
+            area_id: location.area_id,
+            x: location.x,
+            y: location.y,
+            z: location.z,
             data: {}
         }
     }

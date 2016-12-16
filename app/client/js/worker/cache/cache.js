@@ -50,7 +50,7 @@ define('serverRouter', ['commandRouter'], function (commandRouter) {
 
 });
 
-define('cache', ['config', 'logger', 'underscore', 'workerSocket', 'workerRouter', 'server', 'serverRouter', 'floorManager'],
+define('cache', ['config', 'logger', 'underscore', 'workerSocket', 'workerRouter', 'server', 'serverRouter', 'cacheFloorManager'],
     function (config, Logger, _, workerSocket, workerRouter, server, serverRouter, floorManager) {
 
         var instance,
@@ -76,8 +76,10 @@ define('cache', ['config', 'logger', 'underscore', 'workerSocket', 'workerRouter
             // register at server socket to receive commands
             serverRouter.addModule('cache', this, {
                 onUpdateFloor: function (job) {
-                    id = job.data
-                    floorManager.updateFloor()
+                    floorManager.updateFloor(job.data);
+                },
+                onUpdateTile: function(job){
+                    floorManager.updateTile(job.data);
                 }
             });
 
