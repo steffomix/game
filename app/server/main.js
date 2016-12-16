@@ -1,6 +1,10 @@
 var config = require('./config.js'),
     _ = require('underscore');
 
+console.log('Start Server with computed Config: ', {
+    server: config.server,
+    db: config.db
+});
 // load modules and sync sqlite database
 require('./db').connect(function (db) {
     var lm = config.loadedModules = {};

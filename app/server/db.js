@@ -21,7 +21,13 @@ function connect(callback) {
 
     orm.settings.set('connection.reconnect', false);
 
-    orm.connect(config.server.db, function (err, db) {
+    var dbUri = config.db.driver + config.db.url;
+    console.log('ORM::connect: ' + dbUri);
+
+    orm.connect(dbUri, function (err, db) {
+        if(err){
+            return console.error('Connection failed. Please check Uri and make sure that required directories exists and are writeable', err);
+        }
 
         var HomeTiles = exports.HomeTiles = db.define(tbl.hometiles,
             {
