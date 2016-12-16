@@ -364,6 +364,14 @@
   // Backbone events have 3 arguments).
   var triggerEvents = function(events, args) {
     var ev, i = -1, l = events.length, a1 = args[0], a2 = args[1], a3 = args[2];
+    while (++i < l) {
+      try{
+        (ev = events[i]).callback.call(ev.ctx);
+      }catch(e){
+        console.error('Trigger Event failed: ', e);
+      }
+    }
+    return;
     switch (args.length) {
       case 0: while (++i < l) (ev = events[i]).callback.call(ev.ctx); return;
       case 1: while (++i < l) (ev = events[i]).callback.call(ev.ctx, a1); return;

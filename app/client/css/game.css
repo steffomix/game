@@ -60,6 +60,12 @@ button{
     background-color: rgba(180,180,180,.3);
 }
 
+#game-stage{
+    width: 100%;
+    heigth: 100%;
+}
+
+
 /*
 ################## chat
 */

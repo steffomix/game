@@ -44,10 +44,10 @@ define(['config', 'logger', 'underscore', 'workerSocket', 'workerRouter', 'serve
                     z: this.z,
                     tiles: this.rawTiles
                 };
-                workerSocket.send('game.updateFloor', data);
+                workerSocket.send('interfaceGame.updateFloor', data);
             },
             computeTile: function(tile){
-                
+
             }
         };
 

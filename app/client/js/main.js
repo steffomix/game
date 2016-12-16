@@ -76,10 +76,10 @@
         ['tile', 'worker/cache/cache-tile', 0],
 
         // game
-        ['gameManager', 'game/game-manager', 0],
         ['gameFloorManager', 'game/game-floor-manager', 0],
         ['gameFloor', 'game/game-floor', 0],
-        ['gameTile', 'game/game-tile', 0]
+        ['gameTile', 'game/game-tile', 0],
+        ['player', 'game/player', 0]
 
 
     ];
@@ -134,7 +134,7 @@
     });
 
     console.log('Start Game...');
-    require(['gameManager'], function (gameManager) {
+    require(['interfaceApp'], function (gameManager) {
     });
 
 

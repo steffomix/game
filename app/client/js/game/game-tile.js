@@ -22,10 +22,12 @@ define(['config', 'logger'],
         logger.setLevel(config.logger.gameTile || 0);
 
 
-        function GameTile(x, y, data) {
-            this.x = x;
-            this.y = y;
-            this.data = data;
+        function GameTile(data) {
+            this.world_id = data.world_id;
+            this.area_id = data.area_id;
+            this.z = data.z;
+            this.tileData = data.data || {};
+            this.tileImage = 'assets/tiles/' + (this.tileData.image || 'blank.png');
         }
 
         GameTile.prototype = {
