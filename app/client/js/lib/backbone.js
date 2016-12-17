@@ -366,9 +366,9 @@
     var ev, i = -1, l = events.length, a1 = args[0], a2 = args[1], a3 = args[2];
     while (++i < l) {
       try{
-        (ev = events[i]).callback.call(ev.ctx);
+        (ev = events[i]).callback.apply(ev.ctx, args);
       }catch(e){
-        console.error('Trigger Event failed: ', e);
+        console.error('Trigger Event failed: ', e, args, ev.ctx);
       }
     }
     return;

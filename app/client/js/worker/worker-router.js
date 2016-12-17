@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 16.12.16 Stefan Brinkmann <steffomix@gmail.com>
+ * Copyright (C) 18.11.16 Stefan Brinkmann <steffomix@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,19 +15,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger'],
-    function (config, Logger) {
+define(['commandRouter'], function (router) {
 
-        var logger = Logger.getLogger('player');
-        logger.setLevel(config.logger.player || 0);
-
-
-        function Player() {
+    var instance;
+    return getInstance();
+    function getInstance() {
+        if (!instance) {
+            try {
+                instance = router.getRouter('WorkerRouter');
+            } catch (e) {
+                console.error('Module workerRouter create Instance failed: ', e);
+            }
 
         }
+        return instance;
+    }
 
-        Player.prototype = {};
-
-        return Player;
-
-    });
+});

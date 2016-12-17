@@ -16,8 +16,8 @@
  */
 
 
-define('server', ['config', 'logger', 'io', 'workerSlaveSocket', 'workerRouter', 'serverRouter'],
-    function (config, Logger, io, socket, workerRouter, serverRouter) {
+define('server', ['config', 'logger', 'io', 'workerSlaveSocket', 'workerRouter'],
+    function (config, Logger, io, socket, router) {
 
         var instance,
             logger = Logger.getLogger('server');
@@ -35,8 +35,7 @@ define('server', ['config', 'logger', 'io', 'workerSlaveSocket', 'workerRouter',
         function ServerSocket() {
             var connection;
 
-
-            workerRouter.addModule('server', this, {
+            router.addModule('server', this, {
                 send: function (job) {
                     var cmd = job.data.cmd,
                         data = job.data;
@@ -134,17 +133,22 @@ define('server', ['config', 'logger', 'io', 'workerSlaveSocket', 'workerRouter',
 
                 connection.on('onUpdateFloor', function(data){
                     logger.info('Server: onUpdateFloor', data);
-                    serverRouter.command('cache.onUpdateFloor', data);
+                    router.command('cache.onUpdateFloor', data);
                 });
 
                 connection.on('onUpdateTile', function(data){
                     logger.info('Server: onUpdateTile', data);
-                    serverRouter.command('cache.onUpdateTile', data);
+                    router.command('cache.onUpdateTile', data);
+                });
+
+                connection.on('userLocation', function(data){
+                    logger.info('Server: userLocation', data);
+                    socket.send('game.userLocation', data);
                 });
 
                 connection.on('command', function (data) {
-                    logger.info('onCommand', data);
-                    serverRouter.command(data.cmd, data.data);
+                    logger.info('Server: onCommand ' + data.cmd, data.data);
+                    router.command(data.cmd, data.data);
                 });
             }
         }

@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'underscore', 'workerSocket', 'workerRouter', 'server', 'serverRouter'],
-    function (config, Logger, _, workerSocket, workerRouter, server, serverRouter) {
+define(['config', 'logger', 'underscore', 'workerSocket', 'workerRouter', 'server'],
+    function (config, Logger, _, workerSocket, router, server) {
 
         var logger = Logger.getLogger('floor');
         logger.setLevel(config.logger.floor || 0);
@@ -29,7 +29,6 @@ define(['config', 'logger', 'underscore', 'workerSocket', 'workerRouter', 'serve
             this.rawTiles = data.tiles;
             this.tiles = {};
             this.updateAllTiles(data.tiles);
-
         }
 
         Floor.prototype = {
@@ -44,7 +43,7 @@ define(['config', 'logger', 'underscore', 'workerSocket', 'workerRouter', 'serve
                     z: this.z,
                     tiles: this.rawTiles
                 };
-                workerSocket.send('interfaceGame.updateFloor', data);
+                workerSocket.send('game.updateFloor', data);
             },
             computeTile: function(tile){
 

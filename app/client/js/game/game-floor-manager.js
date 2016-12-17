@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'gameFloor'],
-    function (config, Logger, Floor) {
+define(['config', 'logger', 'gameRouter', 'backbone', 'underscore', 'eventDispatcher', 'gameFloor'],
+    function (config, Logger, router, Backbone, _, dispatcher, Floor) {
 
         var instance,
             logger = Logger.getLogger('gameFloorManager');
@@ -40,7 +40,7 @@ define(['config', 'logger', 'gameFloor'],
              * @param data
              * @returns {*}
              */
-            this.updateFloor = function(data){
+            this.updateFloor = function (data){
                 var id = locationId(data);
                 if(!floors[id]){
                     floors[id] = new Floor(data);
@@ -49,7 +49,6 @@ define(['config', 'logger', 'gameFloor'],
                 }
                 return floors[id];
             };
-
 
             function locationId(data){
                 return data.world_id + '_' + data.area_id + '_' + data.z;

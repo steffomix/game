@@ -15,24 +15,43 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger'],
-    function (config, Logger) {
+define(['config', 'logger', 'pixi', 'gamePixi'],
+    function (config, Logger, Pixi, px) {
 
         var logger = Logger.getLogger('gameTile');
         logger.setLevel(config.logger.gameTile || 0);
 
 
+
+
         function GameTile(data) {
             this.world_id = data.world_id;
             this.area_id = data.area_id;
+            this.x = data.x;
+            this.y = data.y;
+
             this.z = data.z;
             this.tileData = data.data || {};
             this.tileImage = 'assets/tiles/' + (this.tileData.image || 'blank.png');
+            logger.info('Add tile image: ', this.tileImage);
+                var img = Pixi.Texture.fromImage('assets/tiles/blank.png');
+                var sprite = new Pixi.Sprite(img);
+                sprite.position.x = 100;
+                sprite.position.y = 100;
+                px.addTile(sprite);
+
+
+
+            /*
+             var img = Pixi.Texture.fromImage('assets/tiles/blank.png');
+             var sprite = new Pixi.Sprite(img);
+             sprite.position.x = 100;
+             sprite.position.y = 100;
+             tilesContainer.addChild(sprite);
+             renderer.render(rootContainer);
+             */
+
         }
-
-        GameTile.prototype = {
-
-        };
 
         return GameTile;
 

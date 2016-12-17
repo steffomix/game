@@ -76,10 +76,7 @@ define(['config', 'logger', 'jquery', 'underscore', 'backbone', 'interfaceApp', 
                             try {
                                 if (job.data.success) {
                                     logger.info('Login success');
-
-                                    this.user = job.data.user;
-
-                                    dispatcher.server.login.trigger();
+                                    dispatcher.server.login.trigger(job.data.user);
                                     dispatcher.global.windowResize.trigger();
                                     $(this.el_msg).html(this.translate('login.login success'));
                                 } else {

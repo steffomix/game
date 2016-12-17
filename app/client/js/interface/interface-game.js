@@ -16,8 +16,8 @@
  */
 
 
-define(['config', 'logger', 'underscore', 'backbone', 'interfaceApp', 'eventDispatcher', 'pixi', 'gameFloorManager'],
-    function (config, Logger, _, Backbone, interfaceApp, dispatcher, Pixi, floorManager) {
+define(['config', 'logger', 'underscore', 'backbone', 'interfaceApp', 'gameApp', 'eventDispatcher'],
+    function (config, Logger, _, Backbone, InterfaceApp, GameApp, dispatcher) {
 
         var instance,
             logger = Logger.getLogger('interfaceLogin');
@@ -34,19 +34,15 @@ define(['config', 'logger', 'underscore', 'backbone', 'interfaceApp', 'eventDisp
 
         function createLogin() {
 
-            return new (Backbone.View.extend(_.extend(new interfaceApp(), {
+            return new (Backbone.View.extend(_.extend(new InterfaceApp(), new GameApp(), {
                 /**
                  * backbone
                  */
                 el: $('#game-stage'),
                 events: {},
-                renderer: null,
-                stage: null,
-                floor: {},
                 initialize: function () {
-
+                    var self = this;
                     // custom events
-                    dispatcher.global.windowResize(this, this.resize);
                     dispatcher.server.disconnect(this, this.hide);
                     dispatcher.server.logout(this, this.hide);
                     dispatcher.server.login(this, this.show);
@@ -57,31 +53,17 @@ define(['config', 'logger', 'underscore', 'backbone', 'interfaceApp', 'eventDisp
                     this.router.addModule('interfaceGame', this, {
                         updateFloor: function(job){
                             this.floor = floorManager.updateFloor(job.data);
+                        },
+                        userLocation: function(job){
+
                         }
                     });
-                    this.initPixi();
                 },
                 show: function () {
                     this.$el.fadeIn();
                 },
                 hide: function(){
                     this.$el.fadeOut();
-                },
-                resize: function(){
-                    var w = this.$body.width(),
-                        h = this.$body.height();
-                    this.renderer.resize(w, h);
-                    this.stage.position.x = parseInt(w/2);
-                    this.stage.position.y = parseInt(h/2);
-                },
-                initPixi: function(){
-                    logger.info('Init Pixi...');
-                    this.renderer = Pixi.autoDetectRenderer(this.$body.width(), this.$body.height(), {
-                        'transparent':1
-                    });
-                    this.$el.append(this.renderer.view);
-                    this.stage = new Pixi.Container();
-                    this.resize();
                 }
 
             })))();

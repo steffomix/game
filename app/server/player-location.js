@@ -16,6 +16,7 @@ function PlayerLocation(player) {
         if (!err && locations.length) {
             self.__proto__ =  locations[0];
             floorManager.floor(player);
+            player.sendUserLocation();
         } else {
             db.PlayerLocations.create({
                 user_id: player.user.id,
@@ -28,6 +29,7 @@ function PlayerLocation(player) {
                 if (!err) {
                     self.__proto__ = loc;
                     floorManager.floor(player);
+                    player.sendUserLocation();
                 }else{
                     console.error('Cant create floor for player', location);
                 }

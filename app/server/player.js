@@ -58,6 +58,23 @@ function Player(socket) {
 
 
 Player.prototype = {
+    sendUserLocation: function(){
+        var lc = this.location;
+        this.socket.emit('userLocation', {
+            user: {
+                id: this.user.id,
+                name: this.user.name
+            },
+            location: {
+                area_id: lc.area_id,
+                world_id: lc.world_id,
+                x: lc.x,
+                y: lc.y,
+                z: lc.z
+            }
+
+        });
+    },
     onRegister: function(name, pass){
         var self = this;
         db.Users.find({name: name}, function(err, users){

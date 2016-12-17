@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'underscore', 'gameTile'],
-    function (config, Logger, _, Tile) {
+define(['config', 'logger', 'underscore', 'gameTile', 'gamePixi'],
+    function (config, Logger, _, Tile, pixi) {
 
         var logger = Logger.getLogger('gameFloor');
         logger.setLevel(config.logger.gameFloor || 0);
@@ -34,7 +34,7 @@ define(['config', 'logger', 'underscore', 'gameTile'],
             updateFloor: function(data){
                 this.tiles = {};
                 var self = this;
-                _.each(data.tiles, function(v, k){
+                _.each(data, function(v, k){
                     self.tiles[k] = new Tile(v);
                 })
             },

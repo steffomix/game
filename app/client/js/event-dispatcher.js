@@ -60,6 +60,11 @@
                     },
                     interface: {
                         hideAll: e
+                    },
+                    game: {
+                        location: e,
+                        updateFloor: e,
+                        updateTile: e
                     }
                 };
 

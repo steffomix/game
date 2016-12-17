@@ -68,7 +68,13 @@ function SocketManager() {
      */
     dispatcher.player.login(function(player){
         try{
-            var name = player.user.name;
+            var user = player.user,
+                userData = {
+                    id: user.id,
+                    name: user.name
+                },
+                name = user.name;
+
             if(!logins[name]){
                 logins[name] = player;
                 setTimeout(function(){
@@ -79,14 +85,15 @@ function SocketManager() {
                     name: name
                 });
                 // send success message with collected UserData
+                var u = player.user;
                 player.socket.emit('login', {
                     success: true,
-                    user: player.user
+                    user: userData
                 });
             }else{
                 player.socket.emit('login', {
                     success: false,
-                    user: player.user,
+                    user: userData,
                     msg: 'User "' + name + '" already logged in.'
                 });
                 // remove user from socket

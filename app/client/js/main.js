@@ -65,22 +65,22 @@
         ['workerSlave', '/js/worker/worker-slave.js', 3], // must be full path
         ['server', 'worker/server', 0],
         ['workerSocket', 'worker/worker-socket', 4],
+        ['workerRouter', 'worker/worker-router', 4],
 
         // cache and matrix renderer
         ['cache', 'worker/cache/cache', 0],
         //['pathfinder', 'worker/cache/pathfinder', 0], // used by gamecache
-        ['world-manager', 'worker/cache/cache-world-manager', 0],
-        ['world', 'worker/cache/cache-world', 0],
         ['cacheFloorManager', 'worker/cache/cache-floor-manager', 0],
         ['cacheFloor', 'worker/cache/cache-floor', 0],
-        ['tile', 'worker/cache/cache-tile', 0],
 
         // game
+        ['gameApp', 'game/game-app', 0],
+        ['gamePixi', 'game/game-pixi', 0],
         ['gameFloorManager', 'game/game-floor-manager', 0],
         ['gameFloor', 'game/game-floor', 0],
         ['gameTile', 'game/game-tile', 0],
-        ['player', 'game/player', 0]
-
+        ['gamePlayer', 'game/game-player', 0],
+        ['gamePlayerManager', 'game/game-player-manager', 0]
 
     ];
 
