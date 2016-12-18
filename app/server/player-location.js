@@ -14,9 +14,13 @@ function PlayerLocation(player) {
 
     db.PlayerLocations.find({user_id: player.user.id}, function (err, locations) {
         if (!err && locations.length) {
-            self.__proto__ =  locations[0];
+            var l = locations[0]
+            self.x = l.x;
+            self.y = l.y;
+            self.z = l.z;
+            self.world_id = l.world_id;
+            self.area_id = l.area_id;
             floorManager.floor(player);
-            player.sendUserLocation();
         } else {
             db.PlayerLocations.create({
                 user_id: player.user.id,
@@ -29,7 +33,6 @@ function PlayerLocation(player) {
                 if (!err) {
                     self.__proto__ = loc;
                     floorManager.floor(player);
-                    player.sendUserLocation();
                 }else{
                     console.error('Cant create floor for player', location);
                 }

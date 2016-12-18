@@ -24,6 +24,8 @@ var e = function(key, fn){};
 exports = module.exports = {
 
     global: {
+        emitGameState: e
+
     },
     db: {
         connect: e

@@ -6,6 +6,7 @@ body {
     height: 100%;
     margin: 0;
     width: 100%;
+    overflow: hidden;
     background-repeat: no-repeat;
     background-attachment: fixed;
     background: linear-gradient(to bottom, blue, white 80%, orange);

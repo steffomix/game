@@ -22,6 +22,9 @@
 var path = require('path');
 
 exports = module.exports = {
+    tick: {
+        sendGameState: 2 // ticks per second
+    },
     server: {
         staticHtml: process.env.HEROKU_NODEJS_STATIC_HTML || process.env.OPENSHIFT_NODEJS_STATIC_HTML || path.join(__dirname, '../client'),
         ip: process.env.HEROKU_NODEJS_IP || process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0',

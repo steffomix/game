@@ -15,20 +15,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'eventDispatcher'],
-    function (config, Logger, Backbone, _, Pixi, $, dispatcher) {
+define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'eventDispatcher', 'gameTick', 'gamePlayerManager'],
+    function (config, Logger, Backbone, _, Pixi, $, dispatcher, GameTicker, playerManager) {
 
-        var $gameStage = $('#game-stage'),
-            $body = $('body'),
-            instance,
-            autoRender = true;
-            logger = Logger.getLogger('gamePixi');
+        var $gameStage = $('#game-stage'), // attach renderer view
+            $body = $('body'), // resize window
+            gameTicker = new GameTicker(tick), // high frequency ticker for render and animation transitions
+            tileSize = config.game.tiles.size,
+            instance;
+        logger = Logger.getLogger('gamePixi');
         logger.setLevel(config.logger.gamePixi || 0);
+
 
         /**
          * init pixi container
          */
-        var renderer = Pixi.autoDetectRenderer(1,1,{transparent : true}),
+        var renderer = Pixi.autoDetectRenderer(100, 100, {transparent: 0}),
             rootContainer = new Pixi.Container(),
             tilesContainer = new Pixi.Container(),
             playerContainer = new Pixi.Container();
@@ -36,39 +38,67 @@ define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'eventDi
         rootContainer.addChild(tilesContainer);
         rootContainer.addChild(playerContainer);
 
-        function render(){
-            renderer.render(rootContainer);
-            if(autoRender){
-                setTimeout(render, 100);
-            }
-        }
         /**
          * init listener and dispatcher
          */
-        _.extend(Backbone.Events, {
-            init: function () {
+        dispatcher.server.connect(function () {
+            $gameStage.html(renderer.view);
+            gameTicker.start();
+        });
 
-                dispatcher.server.login(this, render);
+        // resize stage
+        dispatcher.global.windowResize(function () {
+            renderer.resize($body.width(), $body.height());
+        });
 
-                // attach pixi renderer to view
-                dispatcher.server.connect(this, function () {
-                    $gameStage.html(renderer.view);
+        /**
+         * 20fps ticker
+         */
+        function tick(){
+            dispatcher.game.tick.trigger();
+            centerContainer();
+            renderer.render(rootContainer);
+        }
 
-                });
+        function centerContainer(){
+            try{
 
-                // resize stage
-                dispatcher.global.windowResize(this, function () {
-                    renderer.resize($body.width(), $body.height());
-                });
+                var pos = playerManager.player.position,
+                    px = pos.x,
+                    py = pos.y,
+                    wx = $body.width() / -2,
+                    wy = $body.height() / -2;
 
+                rootContainer.x = wx - px;
+                rootContainer.y = wy - py;
+
+            }catch(e){
+                //logger.warn('Center container failed ', e);
             }
-        }).init();
+        }
 
+        /**
+         *
+         * @param x
+         * @param y
+         * @param img
+         * @returns {Sprite|*}
+         */
+        function createTile(x, y, img){
+            var spr = new Pixi.Sprite(Pixi.Texture.fromImage(img));
+            spr.position.x = x * tileSize;
+            spr.position.y = y * tileSize;
+            spr.anchor.set(.5);
+            return spr;
+        }
 
         function GamePixi() {
-            this.addTile = function(sprite) {
+            this.createTile = createTile;
+            this.addTile = function (sprite) {
                 tilesContainer.addChild(sprite);
-
+            };
+            this.addPlayer = function(sprite){
+                playerContainer.addChild(sprite);
             }
         }
 

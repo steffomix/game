@@ -59,6 +59,10 @@ define('server', ['config', 'logger', 'io', 'workerSlaveSocket', 'workerRouter']
                 },
                 chatMessage: function(job){
                     send('chatMessage', job.data);
+                },
+                sendGameState: function(job){
+                    send('gameState', job.data);
+
                 }
             });
 
@@ -141,9 +145,9 @@ define('server', ['config', 'logger', 'io', 'workerSlaveSocket', 'workerRouter']
                     router.command('cache.onUpdateTile', data);
                 });
 
-                connection.on('userLocation', function(data){
-                    logger.info('Server: userLocation', data);
-                    socket.send('game.userLocation', data);
+                connection.on('playerLocations', function(data){
+                    // logger.info('Server: userLocation', data);
+                    socket.send('game.playerLocations', data);
                 });
 
                 connection.on('command', function (data) {

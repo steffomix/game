@@ -33,18 +33,33 @@ function Floor(location) {
 }
 
 Floor.prototype = {
+    emitGameState: function(self, manager){
+        var locations = {};
+        _.each(self.players, function(player){
+            locations[player.user.name] = player.location;
+        });
+        _.each(self.players, function(player){
+            player.socket.emit('playerLocations', locations);
+        })
+    },
+
     onInsertTile: function (tile) {
         var self = this,
             id = tile.x + '_' + tile.y;
 
         this.tiles[id] = tile;
-        this.rawTiles[id] = tile.data;
+        this.rawTiles[id] = {
+            x: tile.x,
+            y: tile.y,
+            z: tile.z,
+            data: tile.data || {}
+        };
 
         if (tile.x < this.bounds.minX || tile.x > this.bounds.maxX || tile.y < this.bounds.minY || tile.y > this.bounds.maxY) {
             this.updateBounds();
         }
 
-        _.each(this.players, function(p){
+        _.each(this.players, function (p) {
             p.socket.emit('onUpdateTile', {
                 world_id: self.world_id,
                 area_id: self.area_id,
@@ -76,24 +91,30 @@ Floor.prototype = {
             var t = self.tiles,
                 rt = self.rawTiles;
             if (!err && tiles.length) {
+                // process tiles of loaded floor
                 _.each(tiles, function (tile) {
                     var id = tile.x + '_' + tile.y;
+                    // active tiles
                     t[id] = new Tile(self).fromDb(tile);
-                    rt[id] = tile.data || {};
+                    // tiles to send to client
+                    rt[id] = {
+                        x: tile.x,
+                        y: tile.y,
+                        data: tile.data
+                    };
                 });
             } else {
                 var id = location.x + '_' + location.y;
                 t[id] = new Tile(self).fromLocation(location);
                 rt[id] = {};
             }
-            self.onUpdateFloor();
         });
     },
 
-    onUpdateFloor: function(player){
+    onUpdateFloor: function (player) {
         var self = this;
         player ? notify(player) : _.each(this.players, notify);
-        function notify(player){
+        function notify(player) {
             player.socket.emit('onUpdateFloor', {
                 world_id: self.world_id,
                 area_id: self.area_id,
@@ -105,9 +126,9 @@ Floor.prototype = {
 
     addPlayer: function (player) {
         var id = player.user.name;
-        try{
+        try {
             this.players[id] && this.players[id].floor.removePlayer(id);
-        }catch(e){
+        } catch (e) {
             console.warn('Cant remove player from floor');
         }
         this.players[id] = player;

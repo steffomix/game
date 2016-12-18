@@ -3,14 +3,25 @@
  */
 
 
-var Floor = require('./floor');
+var _ = require('underscore'),
+    Floor = require('./floor'),
+    dispatcher = require('./event-dispatcher');
 
 
 exports = module.exports = new FloorManager();
 
 function FloorManager() {
 
-    var floors = {};
+    var self = this,
+        floors = {};
+
+    dispatcher.global.emitGameState(emitGameState);
+
+    function emitGameState(){
+        _.each(floors, function(f){
+            f.emitGameState(f, this);
+        }, self)
+    }
 
     this.floor = function (player) {
 

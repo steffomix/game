@@ -15,32 +15,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'gameSocket', 'gameRouter', 'backbone', 'underscore', 'gamePixi', 'eventDispatcher', 'gameFloorManager', 'gamePlayerManager'],
-    function (config, Logger, socket, router, Backbone, _, pixi, dispatcher, floorManager, playerManager) {
+define(['config', 'logger', 'gameSocket', 'gameRouter', 'backbone', 'underscore', 'gameTick', 'eventDispatcher', 'gameFloorManager', 'gamePlayerManager'],
+    function (config, Logger, socket, router, Backbone, _, GameTick, dispatcher, floorManager, playerManager) {
 
         var logger = Logger.getLogger('gameApp');
         logger.setLevel(config.logger.gameApp || 0);
 
-        var player,
-            gameConfig = {
-                tileSize: 100,
-                baseSpeed: 1000
-            };
-
+        var gameState = {},
+            serverTicker = new GameTick(collectGameState); // low frequency ticker for network only
 
         /**
          * init listener and dispatcher
          */
-        _.extend(Backbone.Events, {
-            init: function () {
+        dispatcher.server.login(function (user) {
+            playerManager.addMainPlayer(user);
+            serverTicker.fps = config.server.fps;
+            serverTicker.start();
+        });
+        dispatcher.server.logout(function(){
+            serverTicker.stop();
+            playerManager.reset();
+        });
 
-                // create main player
-                dispatcher.server.login(this, function (user) {
-                    player = playerManager.addPlayer(user);
-                });
-
-            }
-        }).init();
 
         /**
          * link to router
@@ -49,21 +45,22 @@ define(['config', 'logger', 'gameSocket', 'gameRouter', 'backbone', 'underscore'
             updateFloor: function (job) {
                 floorManager.updateFloor(job.data);
             },
-            userLocation: function (job) {
-                var player = playerManager.userLocation(job.data);
-                if (player) {
-                    var location = job.data.location;
-                }
+            // receive locations from all players on current floor
+            playerLocations: function (job) {
+                playerManager.playerLocations(job.data);
             }
         });
+
+        function collectGameState() {
+            dispatcher.game.collectGameState.trigger(gameState);
+            socket.send('server.sendGameState', gameState);
+        }
 
         /**
          * public
          */
         function GameApp() {
-
         }
-
 
         return GameApp;
 

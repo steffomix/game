@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'gamePlayer'],
-    function (config, Logger, Player) {
+define(['config', 'logger', 'underscore', 'gamePlayer'],
+    function (config, Logger, _, Player) {
 
         var instance,
             logger = Logger.getLogger('gamePlayerManager');
@@ -33,7 +33,22 @@ define(['config', 'logger', 'gamePlayer'],
 
         function GamePlayerManager() {
 
-            players = {};
+            var players = {},
+                mainPlayer = null;
+
+            this.player = mainPlayer;
+
+            this.reset = function(){
+                players = {};
+                mainPlayer = null;
+            };
+
+            this.addMainPlayer = function(user){
+                mainPlayer = this.addPlayer(user);
+                return mainPlayer;
+            };
+
+
 
             this.addPlayer = function(user){
                 var name = user.name;
@@ -46,17 +61,19 @@ define(['config', 'logger', 'gamePlayer'],
                 }
             };
 
-            this.userLocation =  function(data){
-                var user = data.user,
-                    location = data.location,
-                    name = user.name;
-                if(players[name]){
-                    players[name].updateLocation(location);
-                    return players[name];
-                }else{
-                    logger.warn('Update location of not existing user: ', user);
-                    return false;
-                }
+            this.playerLocations =  function(locations){
+                _.each(locations, function(loc, name){
+                    try{
+                        if(players[name]){
+                            players[name].updateLocation(loc);
+                        }else{
+                            logger.warn('Update location of not existing user: ', name, loc);
+                        }
+                    }catch(e){
+                        logger.error('Update Playerlocation failed: ', e);
+                    }
+
+                })
             }
 
         }

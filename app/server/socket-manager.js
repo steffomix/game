@@ -2,12 +2,17 @@
  * Created by stefan on 04.12.16.
  */
 
-var _ = require('underscore'),
+var config = require('./config'),
+    _ = require('underscore'),
     db = require('./db'),
     dispatcher = require('./event-dispatcher'),
+    Tick = require('./tick'),
     Player = require('./player');
 
 exports = module.exports = new SocketManager();
+
+var ticker = new Tick(dispatcher.global.emitGameState.trigger);
+ticker.start();
 
 function SocketManager() {
     var self = this,
@@ -32,13 +37,15 @@ function SocketManager() {
             var name = player.user.name;
             player.socket.removeAllListeners();
             delete connections[player.socket.id];
-            if(name){
+            if(logins[name]){
                 delete logins[name];
                 // broadcast only when user has logged in
                 name && broadcastMessage({
                     cmd: 'userDisconnect',
                     name: name
                 });
+            }else{
+                console.log('Disconnect non logged in user');
             }
             player.socket.disconnect();
         } catch (e) {

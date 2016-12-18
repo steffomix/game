@@ -30,7 +30,17 @@
             'pixi': 'lib/pixi.min', // http://www.pixijs.com/
             'pathfinding': 'lib/pathfinding' // https://github.com/qiao/PathFinding.js
         },
-        logger: {}
+        logger: {},
+        game: {
+            fps: 10, // game calculations and pixi render per second
+            tiles: {
+                size: 100 // tile size in px
+            }
+        },
+        server: {
+            fps: 2 // send game updates per second
+        }
+
     };
 
     // format:
@@ -43,14 +53,14 @@
     var modules = [
 
         // game/shared
-        ['util', 'util', 4],
-        ['i18n', 'i18n', 4],
-        ['translation', 'translation', 0],
-        ['eventDispatcher', 'event-dispatcher', 0],
-        ['gameRouter', 'game-router', 0],
-        ['workerMaster', 'worker-master', 4],
-        ['gameSocket', 'game-socket', 4],
-        ['commandRouter', 'command-router', 0],
+        ['util', 'util', 3],
+        ['i18n', 'i18n', 3],
+        ['translation', 'translation', 3],
+        ['eventDispatcher', 'event-dispatcher', 3],
+        ['gameRouter', 'game-router', 3],
+        ['workerMaster', 'worker-master', 3],
+        ['gameSocket', 'game-socket', 3],
+        ['commandRouter', 'command-router', 3],
 
         // interface
         // ['interface', 'interface/interface', 0],
@@ -75,6 +85,7 @@
 
         // game
         ['gameApp', 'game/game-app', 0],
+        ['gameTick', 'game/game-tick', 0],
         ['gamePixi', 'game/game-pixi', 0],
         ['gameFloorManager', 'game/game-floor-manager', 0],
         ['gameFloor', 'game/game-floor', 0],

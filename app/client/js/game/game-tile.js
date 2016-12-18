@@ -16,41 +16,23 @@
  */
 
 define(['config', 'logger', 'pixi', 'gamePixi'],
-    function (config, Logger, Pixi, px) {
+    function (config, Logger, Pixi, gamePixi) {
 
         var logger = Logger.getLogger('gameTile');
         logger.setLevel(config.logger.gameTile || 0);
 
-
-
+        var tileSize = config.game.tiles.size;
 
         function GameTile(data) {
             this.world_id = data.world_id;
             this.area_id = data.area_id;
             this.x = data.x;
             this.y = data.y;
-
             this.z = data.z;
             this.tileData = data.data || {};
-            this.tileImage = 'assets/tiles/' + (this.tileData.image || 'blank.png');
-            logger.info('Add tile image: ', this.tileImage);
-                var img = Pixi.Texture.fromImage('assets/tiles/blank.png');
-                var sprite = new Pixi.Sprite(img);
-                sprite.position.x = 100;
-                sprite.position.y = 100;
-                px.addTile(sprite);
 
-
-
-            /*
-             var img = Pixi.Texture.fromImage('assets/tiles/blank.png');
-             var sprite = new Pixi.Sprite(img);
-             sprite.position.x = 100;
-             sprite.position.y = 100;
-             tilesContainer.addChild(sprite);
-             renderer.render(rootContainer);
-             */
-
+            this.__proto__ = gamePixi.createTile(data.x, data.y, 'assets/tiles/' + (this.tileData.image || 'blank.png'));
+            gamePixi.addTile(this);
         }
 
         return GameTile;

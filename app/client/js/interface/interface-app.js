@@ -41,14 +41,24 @@ define(['config', 'logger', 'gameSocket', 'gameRouter', 'i18n', 'backbone', 'und
                 escape: /\{\{-([\s\S]+?)\}\}/g
             };
 
-            window.addEventListener('resize', function () {
+            window.addEventListener('resize', function (e) {
+                var w = $body.width(),
+                    h = $body.height();
                 dispatcher.global.windowResize.trigger();
-                setTimeout(dispatcher.global.windowResize.trigger,20);
+                // elements may need a second resize after rearranging all interface elements
+                setTimeout(function(){
+                    var w2 = $body.width(),
+                        h2 = $body.height();
+                    if(w != w2 || h != h2){
+                        // logger.warn('window postresized: ', w - w2, h - h2);
+                        dispatcher.global.windowResize.trigger();
+                    }
+                }, 10);
             });
 
             dispatcher.server.disconnect.trigger();
             $('#game-container').show();
-            dispatcher.global.windowResize.trigger();
+            //setTimeout(dispatcher.global.windowResize.trigger);
 
             _autoLogin();
         })();

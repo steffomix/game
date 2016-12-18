@@ -15,12 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'gameSocket', 'gameRouter'],
-    function (config, Logger, socket, router) {
+define(['config', 'logger', 'gamePixi'],
+    function (config, Logger, gamePixi) {
 
-        var logger = Logger.getLogger('player');
-        logger.setLevel(config.logger.player || 0);
+        var logger = Logger.getLogger('gamePlayer');
 
+        logger.setLevel(config.logger.gamePlayer || 0);
+
+        var tileSize = config.game.tiles.size;
 
         function Player(user) {
             this.id = user.id;
@@ -33,11 +35,17 @@ define(['config', 'logger', 'gameSocket', 'gameRouter'],
                 z: 0
             };
 
+            this.__proto__.__proto__ = gamePixi.createTile(
+                parseInt(this.location.x),
+                parseInt(this.location.y),
+                'assets/avatars/' + (user.image || 'devil.png'));
+            gamePixi.addPlayer(this);
         }
 
         Player.prototype = {
             updateLocation: function(loc){
-                this.location = loc;
+                this.position.x = loc.x * tileSize;
+                this.position.y = loc.y * tileSize;
             }
 
         };

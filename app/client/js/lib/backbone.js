@@ -371,7 +371,8 @@
         console.error('Trigger Event failed: ', e, args, ev.ctx);
       }
     }
-    return;
+    //return;
+    /*
     switch (args.length) {
       case 0: while (++i < l) (ev = events[i]).callback.call(ev.ctx); return;
       case 1: while (++i < l) (ev = events[i]).callback.call(ev.ctx, a1); return;
@@ -379,6 +380,7 @@
       case 3: while (++i < l) (ev = events[i]).callback.call(ev.ctx, a1, a2, a3); return;
       default: while (++i < l) (ev = events[i]).callback.apply(ev.ctx, args); return;
     }
+    */
   };
 
   // Aliases for backwards compatibility.

@@ -133,7 +133,24 @@ function connect(callback) {
                         function (err, user) {
                             err && console.error('Create default user failed: ' + err);
                         }
-                    )
+                    );
+                    Worlds.create({user_id: 1, name: '1' + Math.random().toString(36).substring(3, 10)}, function(err, world){
+                        if(err){
+                            console.log('Create initial World failed: ', err);
+                        }
+                    });
+                    PlayerLocations.create({
+                        user_id: 1,
+                        world_id: 1,
+                        area_id: 1,
+                        x: 0,
+                        y: 0,
+                        z: 0
+                    }, function(err, location){
+                        if(err){
+                            condole.log('Create initial Location failed: ', err);
+                        }
+                    });
                 }
             });
 

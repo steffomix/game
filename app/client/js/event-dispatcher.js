@@ -51,25 +51,24 @@
                         connect: e,
                         disconnect: e,
                         login: e,
-                        logout: e
+                        logout: e,
+                        receiveGameState: e
                     },
                     global: {
-                        windowResize: e,
-                        windowBeforeUnload: e,
-                        gameStart: e
+                        windowResize: e
                     },
                     interface: {
                         hideAll: e
                     },
                     game: {
-                        location: e,
-                        updateFloor: e,
-                        updateTile: e
+                        collectGameState: e,
+                        tick: e
                     }
                 };
 
             _.each(template, function (events, category) {
                 var handler = eventHandler[category] = _.extend({}, Backbone.Events);
+                handler.name = category;
                 var categoryEvents = {
                     // turn off listener from <category>.<**all events**> with given _this or callback or both:
                     // off() complete purge of category and all its events.
@@ -91,21 +90,21 @@
                     // create new Listener <event> in <category>
                     // e.g.: template.global.onSomething(this, fn);
                     categoryEvents[event] = function (_this, callback) {
-                        if(!_.isFunction(callback)){
+                        if(!_.isFunction(callback ? callback : _this)){
                             return logger.error('Event callback must be a function: ', category, event, _this, callback);
                         }
-                        _this.listenTo(handler, event, callback);
+                        callback ? _this.listenTo(handler, event, callback) : handler.listenTo(handler, event, _this);
                     };
                     // create new Listener <event> in <category> for only one trigger
                     // e.g.: template.global.onSomething(this, fn);
                     categoryEvents[event].once = function (_this, callback) {
-                        _this.listenToOnce(handler, event, callback);
+                        callback ? _this.listenToOnce(handler, event, callback) : handler.listenToOnce(handler, event, _this);
                     };
                     // trigger listener
                     // e.g.: template.global.onSomething.trigger();
                     categoryEvents[event].trigger = function () {
                         var args = Array.prototype.slice.call(arguments);
-                        logger.info('**Event** ' + category + '.' + event, args);
+                        //logger.info('**Event** ' + category + '.' + event, args);
                         handler.trigger.apply(handler, [event].concat(args));
                     };
                     // turn off listener from <category>.<event> with given _this or callback or both:
