@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'pixi', 'gamePixi'],
-    function (config, Logger, Pixi, gamePixi) {
+define(['config', 'logger', 'gamePixi'],
+    function (config, Logger, gamePixi) {
 
         var logger = Logger.getLogger('gameTile');
         logger.setLevel(config.logger.gameTile || 0);
@@ -31,8 +31,12 @@ define(['config', 'logger', 'pixi', 'gamePixi'],
             this.z = data.z;
             this.tileData = data.data || {};
 
-            this.__proto__ = gamePixi.createTile(data.x, data.y, 'assets/tiles/' + (this.tileData.image || 'blank.png'));
-            gamePixi.addTile(this);
+            try{
+                this.__proto__ = gamePixi.createTile(data.x, data.y, 'assets/tiles/' + (this.tileData.image || 'blank.png'));
+                gamePixi.addTile(this);
+            }catch(e){
+                logger.error(e);
+            }
         }
 
         return GameTile;

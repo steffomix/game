@@ -15,28 +15,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'gameSocket', 'gameRouter', 'backbone', 'underscore', 'gameTick', 'eventDispatcher', 'gameFloorManager', 'gamePlayerManager'],
-    function (config, Logger, socket, router, Backbone, _, GameTick, dispatcher, floorManager, playerManager) {
+define(['config', 'logger', 'gameSocket', 'gameRouter', 'gameState', 'backbone', 'underscore', 'tick', 'eventDispatcher', 'interfaceApp', 'gamePixi', 'gameFloorManager', 'gamePlayerManager'],
+    function (config, Logger, socket, router, gameState, Backbone, _, Tick, dispatcher, App, gamePixi, floorManager, playerManager) {
 
         var logger = Logger.getLogger('gameApp');
         logger.setLevel(config.logger.gameApp || 0);
 
-        var gameState = {},
-            serverTicker = new GameTick(collectGameState); // low frequency ticker for network only
+        var serverTicker = new Tick(tick); // low frequency ticker for network only
+        serverTicker.fps = config.server.fps;
 
         /**
          * init listener and dispatcher
          */
         dispatcher.server.login(function (user) {
             playerManager.addMainPlayer(user);
-            serverTicker.fps = config.server.fps;
             serverTicker.start();
         });
         dispatcher.server.logout(function(){
             serverTicker.stop();
             playerManager.reset();
         });
-
 
         /**
          * link to router
@@ -48,20 +46,30 @@ define(['config', 'logger', 'gameSocket', 'gameRouter', 'backbone', 'underscore'
             // receive locations from all players on current floor
             playerLocations: function (job) {
                 playerManager.playerLocations(job.data);
+                gamePixi.setPlayerPosition(playerManager.mainPlayer.location)
             }
         });
 
-        function collectGameState() {
-            dispatcher.game.collectGameState.trigger(gameState);
+        function tick(){
+            dispatcher.server.tick.trigger(gameState);
             socket.send('server.sendGameState', gameState);
         }
 
-        /**
-         * public
-         */
-        function GameApp() {
-        }
+        return new (Backbone.View.extend(_.extend(new App(), {
 
-        return GameApp;
+            el: $('#game-stage'),
+            events: {
+                'mousemove #game-stage': 'onMouseMove'
+            },
+            initialize: function(){
+
+            },
+            onMouseMove: function(e){
+
+            }
+
+        })))();
+
+
 
     });

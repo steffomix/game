@@ -33,19 +33,18 @@ define(['config', 'logger', 'underscore', 'gamePlayer'],
 
         function GamePlayerManager() {
 
-            var players = {},
-                mainPlayer = null;
+            var players = {};
 
-            this.player = mainPlayer;
+            this.mainPlayer = null;
 
             this.reset = function(){
                 players = {};
-                mainPlayer = null;
+                this.mainPlayer = null;
             };
 
             this.addMainPlayer = function(user){
-                mainPlayer = this.addPlayer(user);
-                return mainPlayer;
+                this.mainPlayer = this.addPlayer(user);
+                return this.mainPlayer;
             };
 
 

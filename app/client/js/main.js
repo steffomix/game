@@ -32,7 +32,7 @@
         },
         logger: {},
         game: {
-            fps: 10, // game calculations and pixi render per second
+            fps: 60, // game calculations and pixi render per second
             tiles: {
                 size: 100 // tile size in px
             }
@@ -57,6 +57,8 @@
         ['i18n', 'i18n', 3],
         ['translation', 'translation', 3],
         ['eventDispatcher', 'event-dispatcher', 3],
+        ['tick', 'tick', 4],
+        ['gameState', 'game-state', 0],
         ['gameRouter', 'game-router', 3],
         ['workerMaster', 'worker-master', 3],
         ['gameSocket', 'game-socket', 3],
@@ -69,7 +71,6 @@
         ['interfaceLogin', 'interface/interface-login', 0],
         ['interfaceTopnav', 'interface/interface-topnav', 0],
         ['interfaceChat', 'interface/interface-chat', 0],
-        ['interfaceGame', 'interface/interface-game', 0],
 
         // worker: Server - Client Middleware
         ['workerSlave', '/js/worker/worker-slave.js', 3], // must be full path
@@ -85,7 +86,6 @@
 
         // game
         ['gameApp', 'game/game-app', 0],
-        ['gameTick', 'game/game-tick', 0],
         ['gamePixi', 'game/game-pixi', 0],
         ['gameFloorManager', 'game/game-floor-manager', 0],
         ['gameFloor', 'game/game-floor', 0],
@@ -145,7 +145,7 @@
     });
 
     console.log('Start Game...');
-    require(['interfaceApp'], function (gameManager) {
+    require(['interfaceApp', 'gameApp'], function () {
     });
 
 

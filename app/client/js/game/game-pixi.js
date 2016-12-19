@@ -15,17 +15,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'eventDispatcher', 'gameTick', 'gamePlayerManager'],
-    function (config, Logger, Backbone, _, Pixi, $, dispatcher, GameTicker, playerManager) {
+define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'eventDispatcher', 'tick'],
+    function (config, Logger, Backbone, _, Pixi, $, dispatcher, Tick) {
 
         var $gameStage = $('#game-stage'), // attach renderer view
             $body = $('body'), // resize window
-            gameTicker = new GameTicker(tick), // high frequency ticker for render and animation transitions
             tileSize = config.game.tiles.size,
+            gameTicker = new Tick(tick), // high frequency ticker for render and animation transitions
             instance;
         logger = Logger.getLogger('gamePixi');
         logger.setLevel(config.logger.gamePixi || 0);
 
+        gameTicker.fps = config.game.fps;
+
+        var transitions = {
+            rootContainer: {
+                x: 0,
+                y: 0,
+                tick: function(){
+                    var dx = (this.x - rootContainer.x),
+                        dy = (this.y - rootContainer.y);
+                    (rootContainer.x += dx / 20);
+                    (rootContainer.y += dy / 20);
+                }
+            }
+        };
 
         /**
          * init pixi container
@@ -33,10 +47,16 @@ define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'eventDi
         var renderer = Pixi.autoDetectRenderer(100, 100, {transparent: 0}),
             rootContainer = new Pixi.Container(),
             tilesContainer = new Pixi.Container(),
-            playerContainer = new Pixi.Container();
+            playerContainer = new Pixi.Container(),
+            mobilesContainer = new Pixi.Container(),
+            mainPlayerContainer = new Pixi.Container();
 
+        rootContainer.x = $body.width()/ 2;
+        rootContainer.y = $body.height()/2;
         rootContainer.addChild(tilesContainer);
         rootContainer.addChild(playerContainer);
+        rootContainer.addChild(mobilesContainer);
+        rootContainer.addChild(mainPlayerContainer);
 
         /**
          * init listener and dispatcher
@@ -51,30 +71,19 @@ define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'eventDi
             renderer.resize($body.width(), $body.height());
         });
 
-        /**
-         * 20fps ticker
-         */
-        function tick(){
+
+        function tick(load){
+            _.each(transitions, function(tr){
+                tr.tick();
+            });
             dispatcher.game.tick.trigger();
-            centerContainer();
             renderer.render(rootContainer);
         }
 
-        function centerContainer(){
-            try{
+        function setPlayerPosition(pos){
 
-                var pos = playerManager.player.position,
-                    px = pos.x,
-                    py = pos.y,
-                    wx = $body.width() / -2,
-                    wy = $body.height() / -2;
-
-                rootContainer.x = wx - px;
-                rootContainer.y = wy - py;
-
-            }catch(e){
-                //logger.warn('Center container failed ', e);
-            }
+            transitions.rootContainer.x = $body.width() / 2 - pos.x;
+            transitions.rootContainer.y = $body.height() / 2 - pos.y;
         }
 
         /**
@@ -99,7 +108,9 @@ define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'eventDi
             };
             this.addPlayer = function(sprite){
                 playerContainer.addChild(sprite);
-            }
+            };
+
+            this.setPlayerPosition = setPlayerPosition;
         }
 
         function getInstance() {

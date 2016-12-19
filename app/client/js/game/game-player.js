@@ -15,8 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
 define(['config', 'logger', 'gamePixi'],
-    function (config, Logger, gamePixi) {
+    function (config, Logger, px) {
 
         var logger = Logger.getLogger('gamePlayer');
 
@@ -35,11 +36,16 @@ define(['config', 'logger', 'gamePixi'],
                 z: 0
             };
 
-            this.__proto__.__proto__ = gamePixi.createTile(
-                parseInt(this.location.x),
-                parseInt(this.location.y),
-                'assets/avatars/' + (user.image || 'devil.png'));
-            gamePixi.addPlayer(this);
+            try{
+                this.__proto__.__proto__ = px.createTile(
+                    parseInt(this.location.x),
+                    parseInt(this.location.y),
+                    'assets/avatars/' + (user.image || 'devil.png'));
+                px.addPlayer(this);
+            }catch(e){
+                //logger.error(e);
+            }
+
         }
 
         Player.prototype = {
@@ -53,3 +59,4 @@ define(['config', 'logger', 'gamePixi'],
         return Player;
 
     });
+

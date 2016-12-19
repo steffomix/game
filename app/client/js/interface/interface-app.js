@@ -50,7 +50,7 @@ define(['config', 'logger', 'gameSocket', 'gameRouter', 'i18n', 'backbone', 'und
                     var w2 = $body.width(),
                         h2 = $body.height();
                     if(w != w2 || h != h2){
-                        // logger.warn('window postresized: ', w - w2, h - h2);
+                        logger.warn('window postresized: ', w - w2, h - h2);
                         dispatcher.global.windowResize.trigger();
                     }
                 }, 10);

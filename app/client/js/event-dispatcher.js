@@ -52,7 +52,7 @@
                         disconnect: e,
                         login: e,
                         logout: e,
-                        receiveGameState: e
+                        tick: e
                     },
                     global: {
                         windowResize: e
