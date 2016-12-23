@@ -15,6 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+
 (function () {
 
     var conf = {
@@ -22,7 +25,7 @@
         paths: {
             // third party libs
             'logger': 'lib/loglevel.min', // https://github.com/pimterry/loglevel
-            'underscore': 'lib/underscore.min', // http://underscorejs.org/
+            'underscore': 'lib/underscore', // http://underscorejs.org/
             'backbone': 'lib/backbone', // http://backbonejs.org/
             'jquery': 'lib/jquery.min', // http://jquery.com/
             'io': 'lib/socket.io.min', // http://socket.io/
@@ -90,8 +93,13 @@
         ['gameFloorManager', 'game/game-floor-manager', 0],
         ['gameFloor', 'game/game-floor', 0],
         ['gameTile', 'game/game-tile', 0],
+        ['gameMobile', 'game/game-mobile', 0],
         ['gamePlayer', 'game/game-player', 0],
-        ['gamePlayerManager', 'game/game-player-manager', 0]
+        ['gamePlayerManager', 'game/game-player-manager', 0],
+
+        // pixi
+        ['pixiMobile', 'pixi/pixi-mobile', 0],
+        ['pixiContainer', 'pixi/pixi-container', 0]
 
     ];
 
@@ -142,6 +150,18 @@
 
     require(['backbone', 'jquery'], function (backbone, $) {
         backbone.$ = $;
+        // extend objects
+        _.expand = function () {
+            var self = arguments[0],
+                p = self;
+            for (var i = arguments.length; i > 0; i--) {
+                while (p.__proto__.__proto__) {
+                    p = p.__proto__;
+                }
+                p.__proto__ = arguments[i];
+            }
+            return self;
+        };
     });
 
     console.log('Start Game...');

@@ -15,18 +15,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'eventDispatcher', 'tick'],
-    function (config, Logger, Backbone, _, Pixi, $, dispatcher, Tick) {
+define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'eventDispatcher', 'tick', 'pixiContainer'],
+    function (config, Logger, Backbone, _, Pixi, $, dispatcher, Tick, container) {
 
         var $gameStage = $('#game-stage'), // attach renderer view
             $body = $('body'), // resize window
             tileSize = config.game.tiles.size,
-            gameTicker = new Tick(tick), // high frequency ticker for render and animation transitions
+
             instance;
         logger = Logger.getLogger('gamePixi');
         logger.setLevel(config.logger.gamePixi || 0);
-
-        gameTicker.fps = config.game.fps;
 
         var transitions = {
             rootContainer: {
@@ -45,11 +43,11 @@ define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'eventDi
          * init pixi container
          */
         var renderer = Pixi.autoDetectRenderer(100, 100, {transparent: 0}),
-            rootContainer = new Pixi.Container(),
-            tilesContainer = new Pixi.Container(),
-            playerContainer = new Pixi.Container(),
-            mobilesContainer = new Pixi.Container(),
-            mainPlayerContainer = new Pixi.Container();
+            rootContainer = container.factory(),
+            tilesContainer = container.factory(),
+            playerContainer = container.factory(),
+            mobilesContainer = container.factory(),
+            mainPlayerContainer = container.factory();
 
         rootContainer.x = $body.width()/ 2;
         rootContainer.y = $body.height()/2;
@@ -63,7 +61,6 @@ define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'eventDi
          */
         dispatcher.server.connect(function () {
             $gameStage.html(renderer.view);
-            gameTicker.start();
         });
 
         // resize stage

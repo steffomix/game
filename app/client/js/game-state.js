@@ -15,19 +15,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'gameSocket'],
-    function (config, Logger, socket) {
+define(['config', 'logger', 'gameSocket', 'gameRouter'],
+    function (config, Logger, socket, router) {
 
         var instance,
             data = {},
             logger = Logger.getLogger('gameState');
         logger.setLevel(config.logger.gameState || 0);
 
-        return getInstance();
 
         function getInstance() {
             if (!instance) {
-                instance = new GameState();
+                instance = gameState();
             }
             return instance;
         }
@@ -36,8 +35,54 @@ define(['config', 'logger', 'gameSocket'],
             socket.send('server.sendGameState', data);
         }
 
-        function GameState() {
 
+
+        function gameState() {
+            var _state = {},
+                _received = received(),
+                _response = response();
+
+            function received(){
+                return {
+                    floors: {},
+                    locations: {}
+                }
+            }
+
+            function response(){
+                return {
+
+                }
+            }
+            router.addModule('game', this, {
+                updateFloor: function (job) {
+                    _received.floors = job.data;
+                },
+                // receive locations from all players on current floor
+                playerLocations: function (job) {
+                    _received.locations = job.data;
+                }
+            });
+
+
+            return {
+                clearResponse: function(){
+                    _response = response();
+                },
+                clearReceived: function(){
+                    _received = received();
+                },
+                get state(){
+                    return _state;
+                },
+                get received(){
+                    return _received;
+                },
+                get response(){
+                    return _response;
+                }
+            }
         }
+        return getInstance();
 
     });

@@ -16,7 +16,7 @@
  */
 
 define(['config', 'logger', 'underscore', 'gamePlayer'],
-    function (config, Logger, _, Player) {
+    function (config, Logger, _, player) {
 
         var instance,
             logger = Logger.getLogger('gamePlayerManager');
@@ -35,26 +35,17 @@ define(['config', 'logger', 'underscore', 'gamePlayer'],
 
             var players = {};
 
-            this.mainPlayer = null;
-
             this.reset = function(){
                 players = {};
-                this.mainPlayer = null;
             };
-
-            this.addMainPlayer = function(user){
-                this.mainPlayer = this.addPlayer(user);
-                return this.mainPlayer;
-            };
-
 
 
             this.addPlayer = function(user){
                 var name = user.name;
                 if(!players[name]){
-                    var player = new Player(user);
-                    players[name] = player;
-                    return player;
+                    var pl = player.factory(user);
+                    players[name] = pl;
+                    return pl;
                 }else{
                     logger.warn('GamePlayerManager: Player ' + name + ' already in Game');
                 }
@@ -64,12 +55,12 @@ define(['config', 'logger', 'underscore', 'gamePlayer'],
                 _.each(locations, function(loc, name){
                     try{
                         if(players[name]){
-                            players[name].updateLocation(loc);
+                            players[name].location = loc;
                         }else{
-                            logger.warn('Update location of not existing user: ', name, loc);
+                            // logger.warn('Update location of not existing user: ', name, loc);
                         }
                     }catch(e){
-                        logger.error('Update Playerlocation failed: ', e);
+                        logger.error('Update Player location failed: ', e);
                     }
 
                 })

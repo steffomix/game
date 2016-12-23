@@ -16,47 +16,40 @@
  */
 
 
-define(['config', 'logger', 'gamePixi'],
-    function (config, Logger, px) {
+define(['config', 'logger', 'underscore', 'gameMobile', 'pixiMobile'],
+    function (config, Logger, _, gameMobile, pixiMobile) {
 
         var logger = Logger.getLogger('gamePlayer');
-
         logger.setLevel(config.logger.gamePlayer || 0);
 
-        var tileSize = config.game.tiles.size;
+        function factory(user) {
+            var mob = gameMobile.factory(),
+                pl = player(user),
+                px = pixiMobile.factory('devil.png');
 
-        function Player(user) {
-            this.id = user.id;
-            this.name = user.name;
-            this.location = {
-                world_id: 1,
-                area_id: 1,
-                x: 0,
-                y: 0,
-                z: 0
-            };
+            var o = _.expand(px, pl, mob);
+            return o;
+        }
 
-            try{
-                this.__proto__.__proto__ = px.createTile(
-                    parseInt(this.location.x),
-                    parseInt(this.location.y),
-                    'assets/avatars/' + (user.image || 'devil.png'));
-                px.addPlayer(this);
-            }catch(e){
-                //logger.error(e);
+        function player(user) {
+
+            return {
+                user: user,
+                get id() {
+                    return user.id;
+                },
+                get name() {
+                    return user.name;
+                }
+
             }
 
         }
 
-        Player.prototype = {
-            updateLocation: function(loc){
-                this.position.x = loc.x * tileSize;
-                this.position.y = loc.y * tileSize;
-            }
 
+        return {
+            factory: factory
         };
-
-        return Player;
 
     });
 
