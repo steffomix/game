@@ -29,6 +29,7 @@ function SocketManager() {
             console.warn('Connect Player failed', socket);
         }
     });
+
     /**
      * disconnect
      */
@@ -52,6 +53,7 @@ function SocketManager() {
             console.warn('Delete Connection failed: ', e);
         }
     });
+
     /**
      * logout
      */

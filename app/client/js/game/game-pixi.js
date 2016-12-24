@@ -19,13 +19,14 @@ define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'eventDi
     function (config, Logger, Backbone, _, Pixi, $, dispatcher, Tick, container) {
 
         var $gameStage = $('#game-stage'), // attach renderer view
+            gameTicker = new Tick(tick), // high frequency ticker for render and animation transitions
             $body = $('body'), // resize window
             tileSize = config.game.tiles.size,
-
             instance;
         logger = Logger.getLogger('gamePixi');
         logger.setLevel(config.logger.gamePixi || 0);
 
+        gameTicker.fps = config.game.fps;
         var transitions = {
             rootContainer: {
                 x: 0,
@@ -61,6 +62,7 @@ define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'eventDi
          */
         dispatcher.server.connect(function () {
             $gameStage.html(renderer.view);
+            gameTicker.start();
         });
 
         // resize stage
@@ -83,31 +85,14 @@ define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'eventDi
             transitions.rootContainer.y = $body.height() / 2 - pos.y;
         }
 
-        /**
-         *
-         * @param x
-         * @param y
-         * @param img
-         * @returns {Sprite|*}
-         */
-        function createTile(x, y, img){
-            var spr = new Pixi.Sprite(Pixi.Texture.fromImage(img));
-            spr.position.x = x * tileSize;
-            spr.position.y = y * tileSize;
-            spr.anchor.set(.5);
-            return spr;
-        }
 
         function GamePixi() {
-            this.createTile = createTile;
             this.addTile = function (sprite) {
                 tilesContainer.addChild(sprite);
             };
             this.addPlayer = function(sprite){
                 playerContainer.addChild(sprite);
             };
-
-            this.setPlayerPosition = setPlayerPosition;
         }
 
         function getInstance() {

@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'underscore', 'gamePlayer'],
-    function (config, Logger, _, player) {
+define(['config', 'logger', 'underscore', 'eventDispatcher', 'gamePlayer'],
+    function (config, Logger, _, dispatcher, Player) {
 
         var instance,
             logger = Logger.getLogger('gamePlayerManager');
@@ -33,17 +33,22 @@ define(['config', 'logger', 'underscore', 'gamePlayer'],
 
         function GamePlayerManager() {
 
+            var self = this;
             var players = {};
 
             this.reset = function(){
                 players = {};
             };
 
+            dispatcher.server.tick(function(gameState){
+                var locs = gameState.received.locations;
+                self.playerLocations(locs);
+            });
 
             this.addPlayer = function(user){
                 var name = user.name;
                 if(!players[name]){
-                    var pl = player.factory(user);
+                    var pl = new Player(user);
                     players[name] = pl;
                     return pl;
                 }else{
@@ -55,7 +60,7 @@ define(['config', 'logger', 'underscore', 'gamePlayer'],
                 _.each(locations, function(loc, name){
                     try{
                         if(players[name]){
-                            players[name].location = loc;
+                            players[name].updateLocation(loc);
                         }else{
                             // logger.warn('Update location of not existing user: ', name, loc);
                         }

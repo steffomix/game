@@ -15,76 +15,64 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'gameSocket', 'gameRouter', 'gameState', 'backbone', 'underscore', 'tick', 'eventDispatcher', 'interfaceApp', 'playerManager'],
-    function (config, Logger, socket, gameState, gameRouter, Backbone, _, Tick, dispatcher, App, playerManager) {
+define(['config', 'logger', 'gameSocket', 'gameRouter', 'backbone', 'underscore', 'tick', 'eventDispatcher', 'interfaceApp', 'gamePixi', 'gamePlayerManager'],
+    function (config, Logger, socket, router, Backbone, _, Tick, dispatcher, InterfaceApp, pixiApp, playerManager) {
 
-        var instance,
-            logger = Logger.getLogger('gameApp');
+        var gameState = new GameState();
+        logger = Logger.getLogger('gameApp');
         logger.setLevel(config.logger.gameApp || 0);
 
-        var serverTicker = new Tick(serverTick), // low frequency ticker for network only
-            gameTicker = new Tick(frameTick); // high frequency ticker for render and animation transitions
-        serverTicker.fps = config.server.fps;
-        gameTicker.fps = config.game.fps;
 
-        /**
-         * init listener and dispatcher
-         */
-        dispatcher.server.connect(function(){
-            gameTicker.start();
-        });
-        dispatcher.server.login(function (user) {
-            gameState.state.player = playerManager.addPlayer(user);
-            serverTicker.start();
-        });
-        dispatcher.server.logout(function(){
-            serverTicker.stop();
-            playerManager.reset();
-        });
-
-        new (Backbone.View.extend(_.extend(new App(), {
+        new (Backbone.View.extend(_.extend(new InterfaceApp(), {
 
             el: $('#game-stage'),
             events: {
                 'mousemove #game-stage': 'onMouseMove'
             },
-            initialize: function(){
+            initialize: function () {
 
             },
-            onMouseMove: function(e){
+            onMouseMove: function (e) {
 
             }
 
         })))();
 
-        function serverTick(){
-            gameState.clearResponse();
-            dispatcher.server.tick.trigger(gameState.received);
-            socket.send('server.sendGameState', gameState.response);
-        }
 
-        function frameTick(){
-            dispatcher.game.tick.trigger()
-        }
-
-
-        function gameState() {
+        function GameState() {
             var _state = {},
-                _received = received(),
-                _response = response();
+                _received = clearReceived(),
+                _response = clearResponse(),
+                gameState = {
+                    get state() {
+                        return _state;
+                    },
+                    get received() {
+                        return _received;
+                    },
+                    get response() {
+                        return _response;
+                    }
+                };
 
-            function received(){
-                return {
-                    floors: {},
-                    locations: {}
-                }
+
+            var serverTicker = new Tick(serverTick);
+            serverTicker.fps = config.server.fps;
+            dispatcher.server.login(function (user) {
+                serverTicker.start();
+                gameState.state.player = playerManager.addPlayer(user);
+            });
+            dispatcher.server.logout(function () {
+                playerManager.reset();
+            });
+
+            function serverTick() {
+                clearResponse();
+                dispatcher.server.tick.trigger(gameState);
+
+                //socket.send('server.sendGameState', _response);
             }
 
-            function response(){
-                return {
-
-                }
-            }
             router.addModule('game', this, {
                 updateFloor: function (job) {
                     _received.floors = job.data;
@@ -96,33 +84,19 @@ define(['config', 'logger', 'gameSocket', 'gameRouter', 'gameState', 'backbone',
             });
 
 
-            return {
-                clearResponse: function(){
-                    _response = response();
-                },
-                clearReceived: function(){
-                    _received = received();
-                },
-                get state(){
-                    return _state;
-                },
-                get received(){
-                    return _received;
-                },
-                get response(){
-                    return _response;
+            function clearReceived() {
+                return {
+                    floors: {},
+                    locations: {}
                 }
             }
-        }
 
-
-        function getInstance() {
-            if (!instance) {
-                instance = gameState();
+            function clearResponse() {
+                return {}
             }
-            return instance;
         }
-        return getInstance();
+
+        return {};
 
 
     });

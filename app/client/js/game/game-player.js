@@ -16,40 +16,40 @@
  */
 
 
-define(['config', 'logger', 'underscore', 'gameMobile', 'pixiMobile'],
-    function (config, Logger, _, gameMobile, pixiMobile) {
+define(['config', 'logger', 'pixi'],
+    function (config, Logger, pixi) {
 
         var logger = Logger.getLogger('gamePlayer');
         logger.setLevel(config.logger.gamePlayer || 0);
 
-        function factory(user) {
-            var mob = gameMobile.factory(),
-                pl = player(user),
-                px = pixiMobile.factory('devil.png');
 
-            var o = _.expand(px, pl, mob);
-            return o;
+        var tileSize = config.game.tiles.size;
+
+        function Player(user) {
+            this.user = user;
+            pixi.Sprite.fromImage.call(this, 'assets/avatars/' + (user.avatar || 'devil.png'));
         }
 
-        function player(user) {
+        var p = Player.prototype = Object.create(pixi.Sprite.prototype);
 
-            return {
-                user: user,
-                get id() {
-                    return user.id;
-                },
-                get name() {
-                    return user.name;
-                }
-
-            }
-
-        }
-
-
-        return {
-            factory: factory
+        p.location = {};
+        p.updateLocation = function(loc){
+            this.location = loc;
         };
+        p.tick = function (gameState) {
+            try{
+                var px = this.location.x * tileSize,
+                    py = this.location.y * tileSize,
+                    dx = (px - this.position.x) / 20,
+                    dy = (py - this.position.y) / 20;
+                this.position.x += dx;
+                this.position.y += dy;
+            }catch(e){
+                logger.error('GamePlayer::updateLocation ', e);
+            }
+        };
+
+        return Player;
 
     });
 

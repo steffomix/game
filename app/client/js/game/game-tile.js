@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'gamePixi'],
-    function (config, Logger, gamePixi) {
+define(['config', 'logger', 'pixi', 'gamePixi'],
+    function (config, Logger, pixi, pixiApp) {
 
         var logger = Logger.getLogger('gameTile');
         logger.setLevel(config.logger.gameTile || 0);
@@ -30,14 +30,14 @@ define(['config', 'logger', 'gamePixi'],
             this.y = data.y;
             this.z = data.z;
             this.tileData = data.data || {};
+            pixi.Sprite.fromImage.call(this, 'assets/tiles/blank.png');
 
-            try{
-                this.__proto__ = gamePixi.createTile(data.x, data.y, 'assets/tiles/' + (this.tileData.image || 'blank.png'));
-                gamePixi.addTile(this);
-            }catch(e){
-                logger.error(e);
-            }
+            this.position.x = this.x * tileSize;
+            this.position.y = this.y * tileSize;
+            pixiApp.addTile(this);
         }
+
+        GameTile.prototype = object.create(pixi.Sprite.prototype)
 
         return GameTile;
 
