@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 23.12.16 Stefan Brinkmann <steffomix@gmail.com>
+ * Copyright (C) 25.12.16 Stefan Brinkmann <steffomix@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,23 +18,23 @@
 define(['config', 'logger', 'pixi'],
     function (config, Logger, pixi) {
 
-        var logger = Logger.getLogger('pixiMobile');
-        logger.setLevel(config.logger.pixiMobile || 0);
+        var instance,
+            logger = Logger.getLogger('pixiTilesMouseContainer');
+        logger.setLevel(config.logger.pixiTilesMouseContainer || 0);
 
-        var tileSize = config.game.tiles.size;
 
-        function factory(img){
-            var spr = new pixi.Sprite(pixi.Texture.fromImage('assets/avatars/' + img || 'devil.png'));
-            spr.position.x = -1000 * tileSize;
-            spr.position.y = -1000 * tileSize;
-            spr.anchor.set(.5);
-            return spr;
+        function getInstance() {
+            if (!instance) {
+                instance = new PixiTilesMouseContainer();
+            }
+            return instance;
         }
 
-        return {
-            factory: factory
-        };
+        function PixiTilesMouseContainer() {
+            pixi.Container.call(this);
+        }
 
+        PixiTilesMouseContainer.prototype = Object.create(pixi.Container.prototype);
+
+        return getInstance();
     });
-
-

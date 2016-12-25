@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'underscore', 'eventDispatcher', 'gamePlayer'],
-    function (config, Logger, _, dispatcher, Player) {
+define(['config', 'logger', 'underscore', 'eventDispatcher', 'gamePlayer', 'pixiPlayerContainer'],
+    function (config, Logger, _, dispatcher, Player, playerContainer) {
 
         var instance,
             logger = Logger.getLogger('gamePlayerManager');
@@ -33,43 +33,96 @@ define(['config', 'logger', 'underscore', 'eventDispatcher', 'gamePlayer'],
 
         function GamePlayerManager() {
 
-            var self = this;
-            var players = {};
-
-            this.reset = function(){
+            var mainPlayer = '',
                 players = {};
-            };
 
-            dispatcher.server.tick(function(gameState){
-                var locs = gameState.received.locations;
-                self.playerLocations(locs);
+            dispatcher.server.login(function (user) {
+                reset();
+                var player = new Player(user);
+                playerContainer.setMainPlayer(player);
+                players[user.name] = player;
+                mainPlayer = user.name;
             });
 
-            this.addPlayer = function(user){
-                var name = user.name;
-                if(!players[name]){
-                    var pl = new Player(user);
-                    players[name] = pl;
-                    return pl;
-                }else{
-                    logger.warn('GamePlayerManager: Player ' + name + ' already in Game');
-                }
-            };
+            dispatcher.server.logout(function(){
+                reset();
+                mainPlayer = '';
+            });
 
-            this.playerLocations =  function(locations){
-                _.each(locations, function(loc, name){
-                    try{
-                        if(players[name]){
-                            players[name].updateLocation(loc);
-                        }else{
-                            // logger.warn('Update location of not existing user: ', name, loc);
-                        }
-                    }catch(e){
-                        logger.error('Update Player location failed: ', e);
-                    }
-
+            dispatcher.game.tick(function(frameData){
+                _.each(players, function(p){
+                    p.frameTick(frameData);
                 })
+            });
+
+            dispatcher.server.tick(function (gameState) {
+
+                var locations = gameState.received.locations;
+
+                // set mainPlayer to gameState
+                players[mainPlayer] && (gameState.state.mainPlayer = players[mainPlayer]);
+
+
+                // create not existing Players
+                if (locations) {
+                    _.each(locations, function (location, name) {
+                        if(!players[name]){
+                            location.name = name
+                            addPlayer(location);
+                        }
+                    });
+                }
+                // remove players without location except mainPlayer and update with serverData
+                _.each(players, function (player) {
+                    try {
+                        if (!locations[player.name] && player.name != mainPlayer) {
+                            removePlayer(player.name);
+                        }else{
+                            // locations may not have been send yet
+                            locations[player.name] && player.updateLocation(locations[player.name], gameState);
+                            player.serverTick(gameState);
+                        }
+                    } catch (e) {
+                        logger.error('PlayerManager.serverTick: ', e, gameState);
+                    }
+                });
+            });
+
+            function reset() {
+                _.each(players, function (player) {
+                    try {
+                        removePlayer(player.name);
+                    } catch (e) {
+                        logger.error('PlayerManager::reset: ', e, player);
+                    }
+                });
+                players = {};
             }
+
+            function addPlayer(user) {
+                try{
+                    if (!players[user.name]) {
+                        var player = new Player(user);
+                        players[user.name] = player;
+                        playerContainer.addPlayer(player);
+                    } else {
+                        logger.warn('GamePlayerManager: Player ' + name + ' already in Game');
+                    }
+                }catch(e){
+                    logger.error('PlayerManager::addPlayer ', e, user);
+                }
+
+            }
+
+            function removePlayer(name) {
+                if (players[name]) {
+                    var player = players[name];
+                    player.destroy();
+                    delete players[player.name];
+                    logger.info('Player ' + player.name + ' left the Game');
+                }
+            }
+
 
         }
 

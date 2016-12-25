@@ -16,8 +16,8 @@
  */
 
 
-define(['config', 'logger', 'pixi'],
-    function (config, Logger, pixi) {
+define(['config', 'logger', 'pixi', 'pixiPlayerContainer'],
+    function (config, Logger, pixi, playerContainer) {
 
         var logger = Logger.getLogger('gamePlayer');
         logger.setLevel(config.logger.gamePlayer || 0);
@@ -26,27 +26,52 @@ define(['config', 'logger', 'pixi'],
         var tileSize = config.game.tiles.size;
 
         function Player(user) {
-            this.user = user;
-            pixi.Sprite.fromImage.call(this, 'assets/avatars/' + (user.avatar || 'devil.png'));
+            var self = this;
+            pixi.Sprite.call(this, pixi.Texture.fromImage('assets/avatars/' + (user.avatar || 'devil.png')));
+            this.anchor.set(.5);
+
+            playerContainer.setMainPlayer(this);
+            this.name = user.name;
+            this.id = user.id;
+            this.interactive = true;
+
+            this.on('click', function(){
+                logger.warn('player clicket');
+            });
+
+            this.frameTick = function(frameData){
+                try{
+                    self.x += (self.location.x * tileSize - self.x) / 20;
+                    self.y += (self.location.y * tileSize - self.y) / 20;
+                }catch(e){
+                    logger.error('GamePlayer::updateLocation ', e);
+                }
+            };
+
+            function mv(){
+                self.location.x = Math.round(Math.random() * 10 - 5);
+                self.location.y = Math.round(Math.random() * 10 - 5);
+                setTimeout(mv, 3000);
+            }
+            mv();
+
+            this.serverTick = function(gameState){
+
+            };
+
+            this.updateLocation = function(loc){
+                //self.location = loc;
+            }
         }
 
-        var p = Player.prototype = Object.create(pixi.Sprite.prototype);
+        var o = Player.prototype = Object.create(pixi.Sprite.prototype);
 
-        p.location = {};
-        p.updateLocation = function(loc){
-            this.location = loc;
-        };
-        p.tick = function (gameState) {
-            try{
-                var px = this.location.x * tileSize,
-                    py = this.location.y * tileSize,
-                    dx = (px - this.position.x) / 20,
-                    dy = (py - this.position.y) / 20;
-                this.position.x += dx;
-                this.position.y += dy;
-            }catch(e){
-                logger.error('GamePlayer::updateLocation ', e);
-            }
+        o.location = {
+            area_id: 0,
+            world_id: 0,
+            x: 0,
+            y: 0,
+            z: 0
         };
 
         return Player;

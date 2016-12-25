@@ -15,61 +15,55 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'gameSocket', 'gameRouter', 'backbone', 'underscore', 'tick', 'eventDispatcher', 'interfaceApp', 'gamePixi', 'gamePlayerManager'],
-    function (config, Logger, socket, router, Backbone, _, Tick, dispatcher, InterfaceApp, pixiApp, playerManager) {
+define(['config', 'logger', 'gameSocket', 'gameRouter', 'tick', 'eventDispatcher', 'gamePlayerManager'],
+    function (config, Logger, socket, router, Tick, dispatcher, playerManager) {
 
-        var gameState = new GameState();
-        logger = Logger.getLogger('gameApp');
+        var instance,
+            logger = Logger.getLogger('gameApp');
         logger.setLevel(config.logger.gameApp || 0);
 
-
-        new (Backbone.View.extend(_.extend(new InterfaceApp(), {
-
-            el: $('#game-stage'),
-            events: {
-                'mousemove #game-stage': 'onMouseMove'
-            },
-            initialize: function () {
-
-            },
-            onMouseMove: function (e) {
-
+        function getInstance() {
+            if (!instance) {
+                instance = new GameApp().game;
             }
+            return instance;
+        }
 
-        })))();
-
-
-        function GameState() {
-            var _state = {},
+        /**
+         * Game Data Heartbeat
+         * Receive and send server data, update game data.
+         * Ticks every 0.5 second
+         */
+        function GameApp() {
+            var self = this,
+                _state = {},
                 _received = clearReceived(),
                 _response = clearResponse(),
-                gameState = {
-                    get state() {
-                        return _state;
-                    },
-                    get received() {
-                        return _received;
-                    },
-                    get response() {
-                        return _response;
-                    }
-                };
+                serverTicker = new Tick(serverTick);
 
+            window.game = this.game = {
+                get state() {
+                    return _state;
+                },
+                get received() {
+                    return _received;
+                },
+                get response() {
+                    return _response;
+                }
+            };
 
-            var serverTicker = new Tick(serverTick);
             serverTicker.fps = config.server.fps;
-            dispatcher.server.login(function (user) {
+            dispatcher.server.login(function () {
                 serverTicker.start();
-                gameState.state.player = playerManager.addPlayer(user);
             });
             dispatcher.server.logout(function () {
-                playerManager.reset();
+                serverTicker.stop();
             });
 
             function serverTick() {
                 clearResponse();
-                dispatcher.server.tick.trigger(gameState);
-
+                dispatcher.server.tick.trigger(self.game);
                 //socket.send('server.sendGameState', _response);
             }
 
@@ -96,7 +90,7 @@ define(['config', 'logger', 'gameSocket', 'gameRouter', 'backbone', 'underscore'
             }
         }
 
-        return {};
+        return getInstance();
 
 
     });

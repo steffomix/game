@@ -74,6 +74,7 @@
         ['interfaceLogin', 'interface/interface-login', 0],
         ['interfaceTopnav', 'interface/interface-topnav', 0],
         ['interfaceChat', 'interface/interface-chat', 0],
+        ['interfaceGame', 'interface/interface-game', 0],
 
         // worker: Server - Client Middleware
         ['workerSlave', '/js/worker/worker-slave.js', 3], // must be full path
@@ -89,17 +90,18 @@
 
         // game
         ['gameApp', 'game/game-app', 0],
-        ['gamePixi', 'game/game-pixi', 0],
         ['gameFloorManager', 'game/game-floor-manager', 0],
         ['gameFloor', 'game/game-floor', 0],
         ['gameTile', 'game/game-tile', 0],
-        ['gameMobile', 'game/game-mobile', 0],
         ['gamePlayer', 'game/game-player', 0],
         ['gamePlayerManager', 'game/game-player-manager', 0],
 
         // pixi
-        ['pixiMobile', 'pixi/pixi-mobile', 0],
-        ['pixiContainer', 'pixi/pixi-container', 0]
+        ['pixiApp', 'pixi/pixi-app', 0],
+        ['pixiRootContainer', 'pixi/container/pixi-root-container', 0],
+        ['pixiTilesContainer', 'pixi/container/pixi-tiles-container', 0],
+        ['pixiTilesMouseContainer', 'pixi/container/pixi-tiles-mouse-container', 0],
+        ['pixiPlayerContainer', 'pixi/container/pixi-player-container', 0],
 
     ];
 
@@ -165,7 +167,7 @@
     });
 
     console.log('Start Game...');
-    require(['interfaceApp', 'gameApp'], function () {
+    require(['interfaceApp', 'gameApp', 'pixiApp'], function () {
     });
 
 
