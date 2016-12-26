@@ -49,6 +49,7 @@ define(['config', 'logger', 'pixi'],
         }
 
         var o = PixiPlayerContainer.prototype = Object.create(pixi.Container.prototype);
+        PixiPlayerContainer.prototype.constructor = PixiPlayerContainer;
 
         return getInstance();
     });

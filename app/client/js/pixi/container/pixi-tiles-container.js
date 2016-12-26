@@ -34,7 +34,7 @@ define(['config', 'logger', 'pixi', 'eventDispatcher'],
         function renderGrid() {
 
             var gr = new pixi.Graphics(),
-                x = 10 * tileSize - tileSize / 2;
+                x = 30 * tileSize - tileSize / 2;
             gr.lineStyle(3, 0x808080, .1);
 
             gr.blendMode = pixi.BLEND_MODES.OVERLAY;
@@ -45,7 +45,7 @@ define(['config', 'logger', 'pixi', 'eventDispatcher'],
                 gr.moveTo(-x, i);
                 gr.lineTo(x, i);
             }
-
+            // gr.hitArea = new pixi.Rectangle(-x, -x, x * 2, x * 2);
             return gr;
 
         }
@@ -63,6 +63,7 @@ define(['config', 'logger', 'pixi', 'eventDispatcher'],
             gr.lineTo(-x, x);
             gr.lineTo(-x, -x);
 
+            gr.hitArea = new pixi.Rectangle(-x, -x, x * 2, x * 2);
 
             return gr;
         }
@@ -70,18 +71,22 @@ define(['config', 'logger', 'pixi', 'eventDispatcher'],
         function PixiTilesContainer() {
             pixi.Container.call(this);
 
-            var self = this,
+            var mousePos,
                 grid = renderGrid(),
                 mouseGrid = renderMouseGrid(),
-                tilesGrid = new pixi.Container(),
-                mousePos = {
-                    x: 0,
-                    y: 0
-                };
+                tilesGrid = new pixi.Container();
 
             this.addChild(grid);
             this.addChild(tilesGrid);
             this.addChild(mouseGrid);
+
+            this.interactive = true;
+            this.on('mousedown', btn);
+
+            function btn(){
+                logger.info(mousePos);
+                mousePos && dispatcher.game.clickGrid.trigger(mousePos);
+            }
 
             dispatcher.server.tick(function (game) {
                 // mainPlayer may not be loaded yet
@@ -93,15 +98,17 @@ define(['config', 'logger', 'pixi', 'eventDispatcher'],
             });
 
             dispatcher.game.tick(function(frameData){
-                var pos = frameData.mousePos.grid;
-                mouseGrid.x = pos.x;
-                mouseGrid.y = pos.y;
+                mousePos = frameData.mousePos;
+                var pos = mousePos.grid;
+                mouseGrid.x = pos.x * tileSize;
+                mouseGrid.y = pos.y * tileSize;
 
             });
 
         }
 
         var o = PixiTilesContainer.prototype = Object.create(pixi.Container.prototype);
+        PixiTilesContainer.prototype.constructor = PixiTilesContainer;
 
         return getInstance();
     });

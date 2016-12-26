@@ -30,7 +30,7 @@
             'jquery': 'lib/jquery.min', // http://jquery.com/
             'io': 'lib/socket.io.min', // http://socket.io/
             'stateMachine': 'lib/state-machine.min', // https://github.com/jakesgordon/javascript-state-machine
-            'pixi': 'lib/pixi.min', // http://www.pixijs.com/
+            'pixi': 'lib/pixi_v4.3.0', // http://www.pixijs.com/
             'pathfinding': 'lib/pathfinding' // https://github.com/qiao/PathFinding.js
         },
         logger: {},
@@ -100,7 +100,6 @@
         ['pixiApp', 'pixi/pixi-app', 0],
         ['pixiRootContainer', 'pixi/container/pixi-root-container', 0],
         ['pixiTilesContainer', 'pixi/container/pixi-tiles-container', 0],
-        ['pixiTilesMouseContainer', 'pixi/container/pixi-tiles-mouse-container', 0],
         ['pixiPlayerContainer', 'pixi/container/pixi-player-container', 0],
 
     ];

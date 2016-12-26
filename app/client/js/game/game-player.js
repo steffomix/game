@@ -16,8 +16,8 @@
  */
 
 
-define(['config', 'logger', 'pixi', 'pixiPlayerContainer'],
-    function (config, Logger, pixi, playerContainer) {
+define(['config', 'logger', 'pixi', 'pixiPlayerContainer', 'eventDispatcher'],
+    function (config, Logger, pixi, playerContainer, dispatcher) {
 
         var logger = Logger.getLogger('gamePlayer');
         logger.setLevel(config.logger.gamePlayer || 0);
@@ -27,17 +27,12 @@ define(['config', 'logger', 'pixi', 'pixiPlayerContainer'],
 
         function Player(user) {
             var self = this;
-            pixi.Sprite.call(this, pixi.Texture.fromImage('assets/avatars/' + (user.avatar || 'devil.png')));
+            var texture = pixi.Texture.fromImage('assets/avatars/' + (user.avatar || 'devil.png'));
+            pixi.Sprite.call(this, texture);
             this.anchor.set(.5);
 
-            playerContainer.setMainPlayer(this);
             this.name = user.name;
             this.id = user.id;
-            this.interactive = true;
-
-            this.on('click', function(){
-                logger.warn('player clicket');
-            });
 
             this.frameTick = function(frameData){
                 try{
@@ -48,12 +43,19 @@ define(['config', 'logger', 'pixi', 'pixiPlayerContainer'],
                 }
             };
 
-            function mv(){
-                self.location.x = Math.round(Math.random() * 10 - 5);
-                self.location.y = Math.round(Math.random() * 10 - 5);
-                setTimeout(mv, 3000);
-            }
-            mv();
+
+            this.interactive = true;
+            this.on('click', function(){
+                console.log('click');
+            });
+
+            dispatcher.game.clickGrid(function(mousePos){
+                var pos = mousePos.grid;
+                logger.info('click grid', pos);
+                self.location.x = pos.x;
+                self.location.y = pos.y;
+            });
+
 
             this.serverTick = function(gameState){
 
@@ -65,6 +67,7 @@ define(['config', 'logger', 'pixi', 'pixiPlayerContainer'],
         }
 
         var o = Player.prototype = Object.create(pixi.Sprite.prototype);
+        Player.prototype.constructor = Player;
 
         o.location = {
             area_id: 0,

@@ -61,8 +61,9 @@
                         hideAll: e
                     },
                     game: {
-                        mouseMove: e, // pixi game container
-                        tick: e // frame-tick (pixi-app.js)
+                        tick: e, // frame-tick (pixi-app.js)
+                        mouseMove: e, // pixi game container, provides mouse- and grid-position relative to grid
+                        clickGrid: e // pixi tiles container, provides copy of game.mouseMove event
                     }
                 };
 

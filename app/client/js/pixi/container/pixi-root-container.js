@@ -17,12 +17,10 @@
 
 define(['config', 'logger', 'jquery', 'pixi', 'eventDispatcher',
         'pixiTilesContainer',
-        'pixiTilesMouseContainer',
         'pixiPlayerContainer'
     ],
     function (config, Logger, $, pixi, dispatcher,
               tilesContainer,
-              tilesMouseContainer,
               playerContainer) {
 
         var instance,
@@ -51,7 +49,6 @@ define(['config', 'logger', 'jquery', 'pixi', 'eventDispatcher',
             this.y = $body.height() / 2;
 
             this.addChild(tilesContainer);
-            this.addChild(tilesMouseContainer);
             this.addChild(playerContainer);
 
             this.interactive = true;
@@ -69,6 +66,7 @@ define(['config', 'logger', 'jquery', 'pixi', 'eventDispatcher',
                 });
             });
 
+
             dispatcher.server.tick(function (gameState) {
                 var player = gameState.state.mainPlayer;
                 // player may not be loaded yet
@@ -80,8 +78,8 @@ define(['config', 'logger', 'jquery', 'pixi', 'eventDispatcher',
 
             dispatcher.game.tick(function (frameData) {
                 try {
-                    self.x += (moveTo.x - self.x) / 30;
-                    self.y += (moveTo.y - self.y) / 30;
+                    self.x += (moveTo.x - self.x) / 40;
+                    self.y += (moveTo.y - self.y) / 40;
                 } catch (e) {
                     logger.warn('PixiRootContainer::frameTick: ', e);
                 }
@@ -89,8 +87,8 @@ define(['config', 'logger', 'jquery', 'pixi', 'eventDispatcher',
                     x: mousePos.x - self.x,
                     y: mousePos.y - self.y,
                     grid: {
-                        x: Math.round((mousePos.x - self.x) / tileSize) * tileSize,
-                        y: Math.round((mousePos.y - self.y) / tileSize) * tileSize
+                        x: Math.round((mousePos.x - self.x) / tileSize),
+                        y: Math.round((mousePos.y - self.y) / tileSize)
                     }
                 }
             });
@@ -98,6 +96,7 @@ define(['config', 'logger', 'jquery', 'pixi', 'eventDispatcher',
         }
 
         PixiRootContainer.prototype = Object.create(pixi.Container.prototype);
+        PixiRootContainer.prototype.constructor = PixiRootContainer;
 
 
         function getInstance() {
