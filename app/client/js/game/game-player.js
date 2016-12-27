@@ -25,6 +25,15 @@ define(['config', 'logger', 'pixi', 'pixiPlayerContainer', 'eventDispatcher'],
 
         var tileSize = config.game.tiles.size;
 
+        function MainPlayer(user){
+            Player.call(this, user);
+            this.mainPlayer = true;
+        }
+        MainPlayer.prototype = Object.create(Player.prototype);
+        MainPlayer.prototype.constructor = MainPlayer;
+
+
+
         function Player(user) {
             var self = this;
             var texture = pixi.Texture.fromImage('assets/avatars/' + (user.avatar || 'devil.png'));
@@ -35,9 +44,10 @@ define(['config', 'logger', 'pixi', 'pixiPlayerContainer', 'eventDispatcher'],
             this.id = user.id;
 
             this.frameTick = function(frameData){
+
                 try{
-                    self.x += (self.location.x * tileSize - self.x) / 20;
-                    self.y += (self.location.y * tileSize - self.y) / 20;
+                    self.x += (self.location.x * tileSize - self.x) / 90 > 0 ? 1 : -1;
+                    self.y += (self.location.y * tileSize - self.y) / 90 > 0 ? 1 : -1;
                 }catch(e){
                     logger.error('GamePlayer::updateLocation ', e);
                 }
@@ -49,11 +59,11 @@ define(['config', 'logger', 'pixi', 'pixiPlayerContainer', 'eventDispatcher'],
                 console.log('click');
             });
 
-            dispatcher.game.clickGrid(function(mousePos){
-                var pos = mousePos.grid;
-                logger.info('click grid', pos);
-                self.location.x = pos.x;
-                self.location.y = pos.y;
+            dispatcher.game.clickGrid(function(mousePosition){
+                var grid = mousePosition.grid;
+                logger.info('click grid', grid);
+                self.location.x = grid.x;
+                self.location.y = grid.y;
             });
 
 

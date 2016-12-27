@@ -15,12 +15,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'eventDispatcher', 'tick', 'pixiRootContainer'],
-    function (config, Logger, Backbone, _, Pixi, $, dispatcher, Tick, rootContainer) {
+define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'dataTypes', 'eventDispatcher', 'tick', 'pixiRootContainer'],
+    function (config, Logger, Backbone, _, Pixi, $, dataTypes, dispatcher, Tick, rootContainer) {
 
         var instance,
             logger = Logger.getLogger('pixiApp');
         logger.setLevel(config.logger.pixiApp || 0);
+
+
+        function FrameData(){
+
+        }
+        FrameData.prototype = {
+            mousePosition: new dataTypes.MousePosition()
+        };
 
 
         function PixiApp() {
@@ -28,23 +36,15 @@ define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'eventDi
             var renderer = Pixi.autoDetectRenderer(100, 100, {transparent: 1}),
                 $gameStage = $('#game-stage'),
                 frameTicker = new Tick(tick),
+                frameTrigger = dispatcher.game.tick.claimTrigger(this),
                 $body = $('body'),
-                frameData = {
-                    mousePos: {
-                        x: 0,
-                        y: 0,
-                        grid: {
-                            x: 0,
-                            y: 0
-                        }
-                    }
-                };
+                frameData = new FrameData();
 
             frameTicker.fps = config.game.fps;
 
             function tick(load) {
                 frameData.gameLoad = load;
-                dispatcher.game.tick.trigger(frameData);
+                frameTrigger(frameData);
                 renderer.render(rootContainer);
             }
 

@@ -1,21 +1,5 @@
 
-/*
-// causes the error
-function AnyClass() {
-    PIXI.Sprite.call(this, PIXI.Sprite.fromImage('whatever-image'));
-}
-AnyClass.prototype = Object.create(PIXI.Sprite.prototype);
 
-// works
-function AnyClass() {
-    PIXI.Sprite.call(this, PIXI.Texture.fromImage('whatever-image'));
-}
-AnyClass.prototype = Object.create(PIXI.Sprite.prototype);
-
-// PIXI.Sprite.call(this, PIXI.Sprite.fromImage(...
-// must be
-// PIXI.Sprite.call(this, PIXI.Texture.fromImage(...
-*/
 
     function BaseClass(){
         // add your stuff
@@ -57,3 +41,11 @@ AnyClass.prototype = Object.create(PIXI.Sprite.prototype);
             // add getters, setters and any stuff you want
         }
     }
+
+    o.a = [];
+    var i = new TopClass();
+    i.a.push(1);
+
+    var i2 = new TopClass();
+
+    var x;

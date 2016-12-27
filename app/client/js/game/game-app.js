@@ -22,11 +22,21 @@ define(['config', 'logger', 'gameSocket', 'gameRouter', 'tick', 'eventDispatcher
             logger = Logger.getLogger('gameApp');
         logger.setLevel(config.logger.gameApp || 0);
 
-        function getInstance() {
-            if (!instance) {
-                instance = new GameApp().game;
-            }
-            return instance;
+        function GameState() {
+        }
+
+        GameState.prototype = {
+            mainPlayer: ''
+        };
+
+        function Received() {
+            this.floors = [];
+            this.mobiles = [];
+        }
+
+
+        function Response() {
+
         }
 
         /**
@@ -35,22 +45,30 @@ define(['config', 'logger', 'gameSocket', 'gameRouter', 'tick', 'eventDispatcher
          * Ticks every 0.5 second
          */
         function GameApp() {
-            var self = this,
-                _state = {},
-                _received = clearReceived(),
-                _response = clearResponse(),
-                serverTicker = new Tick(serverTick);
+            var _state = new GameState(),
+                _received = new Received(),
+                _response = new Response(),
+                serverTicker = new Tick(serverTick),
+                trigger = dispatcher.server.tick.claimTrigger(this),
+                game = {
+                    get state() {
+                        // current gameState
+                        return _state;
+                    },
+                    get received() {
+                        // data received from server
+                        // is cleared (recreated) after each serverTick
+                        return _received;
+                    },
+                    get response() {
+                        // data to be send to server
+                        // is leared after each serverTick
+                        return _response;
+                    }
+                };
 
-            window.game = this.game = {
-                get state() {
-                    return _state;
-                },
-                get received() {
-                    return _received;
-                },
-                get response() {
-                    return _response;
-                }
+            this.gameState = function(){
+                return game;
             };
 
             serverTicker.fps = config.server.fps;
@@ -62,35 +80,35 @@ define(['config', 'logger', 'gameSocket', 'gameRouter', 'tick', 'eventDispatcher
             });
 
             function serverTick() {
-                clearResponse();
-                dispatcher.server.tick.trigger(self.game);
-                //socket.send('server.sendGameState', _response);
+                // broadcast and collect server data
+                trigger(game);
+                _received = new Received();
+
+                socket.send('server.sendGameState', _response);
+                _response = new Response();
             }
 
             router.addModule('game', this, {
                 updateFloor: function (job) {
-                    _received.floors = job.data;
+                    _received.floors.push(job.data);
                 },
                 // receive locations from all players on current floor
                 playerLocations: function (job) {
-                    _received.locations = job.data;
+                    _.each(job.data, function (v, k) {
+                        _received.mobiles[k] = v;
+                    });
                 }
             });
-
-
-            function clearReceived() {
-                return {
-                    floors: {},
-                    locations: {}
-                }
-            }
-
-            function clearResponse() {
-                return {}
-            }
         }
 
         return getInstance();
+
+        function getInstance() {
+            if (!instance) {
+                instance = new GameApp();
+            }
+            return instance;
+        }
 
 
     });

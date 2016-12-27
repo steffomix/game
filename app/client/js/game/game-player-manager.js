@@ -57,15 +57,15 @@ define(['config', 'logger', 'underscore', 'eventDispatcher', 'gamePlayer', 'pixi
 
             dispatcher.server.tick(function (gameState) {
 
-                var locations = gameState.received.locations;
+                var mobiles = gameState.received.mobiles;
 
                 // set mainPlayer to gameState
                 players[mainPlayer] && (gameState.state.mainPlayer = players[mainPlayer]);
 
 
                 // create not existing Players
-                if (locations) {
-                    _.each(locations, function (location, name) {
+                if (mobiles) {
+                    _.each(mobiles, function (location, name) {
                         if(!players[name]){
                             location.name = name
                             addPlayer(location);
@@ -75,11 +75,11 @@ define(['config', 'logger', 'underscore', 'eventDispatcher', 'gamePlayer', 'pixi
                 // remove players without location except mainPlayer and update with serverData
                 _.each(players, function (player) {
                     try {
-                        if (!locations[player.name] && player.name != mainPlayer) {
+                        if (!mobiles[player.name] && player.name != mainPlayer) {
                             removePlayer(player.name);
                         }else{
-                            // locations may not have been send yet
-                            locations[player.name] && player.updateLocation(locations[player.name], gameState);
+                            // mobiles may not have been send yet
+                            mobiles[player.name] && player.updateLocation(mobiles[player.name], gameState);
                             player.serverTick(gameState);
                         }
                     } catch (e) {

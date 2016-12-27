@@ -15,11 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'jquery', 'pixi', 'eventDispatcher',
+define(['config', 'logger', 'jquery', 'dataTypes', 'pixi', 'eventDispatcher',
         'pixiTilesContainer',
         'pixiPlayerContainer'
     ],
-    function (config, Logger, $, pixi, dispatcher,
+    function (config, Logger, $, dataTypes, pixi, dispatcher,
               tilesContainer,
               playerContainer) {
 
@@ -32,18 +32,19 @@ define(['config', 'logger', 'jquery', 'pixi', 'eventDispatcher',
 
 
         function PixiRootContainer() {
+            pixi.Container.call(this);
             var self = this,
+                mouseMoveTrigger = dispatcher.game.mouseMove.claimTrigger(this),
                 // where this container has to move
                 moveTo = {
                     x: 0,
                     y: 0
                 },
                 // last raw mouse move position
-                mousePos = {
+                mouse = {
                     x: 0,
                     y: 0
                 };
-            pixi.Container.call(this);
 
             this.x = $body.width() / 2;
             this.y = $body.height() / 2;
@@ -56,15 +57,16 @@ define(['config', 'logger', 'jquery', 'pixi', 'eventDispatcher',
             // trigger relative position that fits to root container position
             this.on('mousemove', function (e) {
                 var g = e.data.global;
-                mousePos = {
-                    x: g.x,
-                    y: g.y
-                };
-                dispatcher.game.mouseMove.trigger({
-                    x: mousePos.x - self.x,
-                    y: mousePos.y - self.y
-                });
+                mouse.x = g.x;
+                mouse.y = g.y;
+                mouseMoveTrigger(getMousePosition());
             });
+
+
+
+            function getMousePosition(){
+                return new dataTypes.MousePosition(mouse.x - self.x, mouse.y - self.y);
+            }
 
 
             dispatcher.server.tick(function (gameState) {
@@ -78,19 +80,12 @@ define(['config', 'logger', 'jquery', 'pixi', 'eventDispatcher',
 
             dispatcher.game.tick(function (frameData) {
                 try {
-                    self.x += (moveTo.x - self.x) / 40;
-                    self.y += (moveTo.y - self.y) / 40;
+                    self.x += (moveTo.x - self.x) / 100;
+                    self.y += (moveTo.y - self.y) / 100;
                 } catch (e) {
                     logger.warn('PixiRootContainer::frameTick: ', e);
                 }
-                frameData.mousePos = {
-                    x: mousePos.x - self.x,
-                    y: mousePos.y - self.y,
-                    grid: {
-                        x: Math.round((mousePos.x - self.x) / tileSize),
-                        y: Math.round((mousePos.y - self.y) / tileSize)
-                    }
-                }
+                frameData.mousePosition = getMousePosition();
             });
 
         }

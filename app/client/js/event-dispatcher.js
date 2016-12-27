@@ -108,6 +108,15 @@
                         //logger.info('**Event** ' + category + '.' + event, args);
                         handler.trigger.apply(handler, [event].concat(args));
                     };
+                    // returns trigger and destroy orig Trigger to prevent abuse
+                    categoryEvents[event].claimTrigger = function(claimer){
+                        var fn = categoryEvents[event].trigger;
+                        delete categoryEvents[event].trigger; // cut reference to fn
+                        categoryEvents[event].trigger = function(){
+                            logger.error('Trigger ' + category + '.' + event + ' is claimed by :', claimer);
+                        };
+                        return fn;
+                    };
                     // turn off listener from <category>.<event> with given _this or callback or both:
                     // off() complete purge of category.event
                     // off(callback) turn off all with given callback, no matter what this is
@@ -116,7 +125,7 @@
                     // e.g.: template.global.onSomething.off(fn, this);
                     categoryEvents[event].off = function (callback, _this) {
                         handler.off(event, callback, _this);
-                    }
+                    };
 
                 });
                 template[category] = categoryEvents;

@@ -35,7 +35,7 @@
         },
         logger: {},
         game: {
-            fps: 60, // game calculations and pixi render per second
+            fps: 30, // game calculations and pixi render per second
             tiles: {
                 size: 100 // tile size in px
             }
@@ -61,7 +61,7 @@
         ['translation', 'translation', 3],
         ['eventDispatcher', 'event-dispatcher', 3],
         ['tick', 'tick', 4],
-        ['gameState', 'game-state', 0],
+        ['dataTypes', 'data-types', 0],
         ['gameRouter', 'game-router', 3],
         ['workerMaster', 'worker-master', 3],
         ['gameSocket', 'game-socket', 3],
@@ -151,18 +151,6 @@
 
     require(['backbone', 'jquery'], function (backbone, $) {
         backbone.$ = $;
-        // extend objects
-        _.expand = function () {
-            var self = arguments[0],
-                p = self;
-            for (var i = arguments.length; i > 0; i--) {
-                while (p.__proto__.__proto__) {
-                    p = p.__proto__;
-                }
-                p.__proto__ = arguments[i];
-            }
-            return self;
-        };
     });
 
     console.log('Start Game...');
