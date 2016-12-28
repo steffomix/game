@@ -15,11 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'jquery', 'dataTypes', 'pixi', 'eventDispatcher',
+define(['config', 'logger', 'jquery', 'dataTypes', 'debugInfo', 'pixi', 'eventDispatcher',
         'pixiTilesContainer',
         'pixiPlayerContainer'
     ],
-    function (config, Logger, $, dataTypes, pixi, dispatcher,
+    function (config, Logger, $, dataTypes, DebugInfo, pixi, dispatcher,
               tilesContainer,
               playerContainer) {
 
@@ -30,45 +30,57 @@ define(['config', 'logger', 'jquery', 'dataTypes', 'pixi', 'eventDispatcher',
 
         var tileSize = config.game.tiles.size;
 
+        function createInteractive() {
+            var ct = new pixi.Container(),
+                gr = new pixi.Graphics(),
+                x = 30 * tileSize - tileSize / 2;
+            gr.hitArea = new pixi.Rectangle(-x, -x, x * 2, x * 2);
+            ct.addChild(gr);
+            return gr;
+
+        }
 
         function PixiRootContainer() {
             pixi.Container.call(this);
             var self = this,
-                mouseMoveTrigger = dispatcher.game.mouseMove.claimTrigger(this),
+                debug = new DebugInfo(this).debug,
                 // where this container has to move
                 moveTo = {
                     x: 0,
                     y: 0
                 },
-                // last raw mouse move position
+                // last raw mousemove position
                 mouse = {
                     x: 0,
                     y: 0
-                };
+                },
+                // readonly obj
+                mousePosition = dataTypes.createPositionRelative(self, mouse);
 
+            // center container
             this.x = $body.width() / 2;
             this.y = $body.height() / 2;
 
             this.addChild(tilesContainer);
             this.addChild(playerContainer);
+            this.addChild(createInteractive());
 
-            this.interactive = true;
 
             // trigger relative position that fits to root container position
+            this.interactive = true;
             this.on('mousemove', function (e) {
                 var g = e.data.global;
                 mouse.x = g.x;
                 mouse.y = g.y;
-                mouseMoveTrigger(getMousePosition());
+            });
+
+            this.on('mousedown', function(e){
+                logger.info('rootcontainer.interactive: mousedown', mousePosition);
             });
 
 
 
-            function getMousePosition(){
-                return new dataTypes.MousePosition(mouse.x - self.x, mouse.y - self.y);
-            }
-
-
+            // get mainPlayer positione
             dispatcher.server.tick(function (gameState) {
                 var player = gameState.state.mainPlayer;
                 // player may not be loaded yet
@@ -78,14 +90,16 @@ define(['config', 'logger', 'jquery', 'dataTypes', 'pixi', 'eventDispatcher',
                 }
             });
 
+            // move container to center to mainPlayer
             dispatcher.game.tick(function (frameData) {
+                frameData.mousePosition = mousePosition;
+                debug(frameData.mousePosition);
                 try {
-                    self.x += (moveTo.x - self.x) / 100;
-                    self.y += (moveTo.y - self.y) / 100;
+                    self.x += (moveTo.x - self.x) / 30;
+                    self.y += (moveTo.y - self.y) / 30;
                 } catch (e) {
                     logger.warn('PixiRootContainer::frameTick: ', e);
                 }
-                frameData.mousePosition = getMousePosition();
             });
 
         }

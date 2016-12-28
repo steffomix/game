@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'underscore', 'eventDispatcher', 'gamePlayer', 'pixiPlayerContainer'],
-    function (config, Logger, _, dispatcher, Player, playerContainer) {
+define(['config', 'logger', 'underscore', 'eventDispatcher', 'gameMainPlayer', 'gamePlayer', 'pixiPlayerContainer'],
+    function (config, Logger, _, dispatcher, MainPlayer, Player, playerContainer) {
 
         var instance,
             logger = Logger.getLogger('gamePlayerManager');
@@ -38,7 +38,7 @@ define(['config', 'logger', 'underscore', 'eventDispatcher', 'gamePlayer', 'pixi
 
             dispatcher.server.login(function (user) {
                 reset();
-                var player = new Player(user);
+                var player = new MainPlayer(user);
                 playerContainer.setMainPlayer(player);
                 players[user.name] = player;
                 mainPlayer = user.name;

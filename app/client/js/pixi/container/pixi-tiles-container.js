@@ -50,7 +50,7 @@ define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher'],
 
         }
 
-        function MouseFrame() {
+        function CursorFrame() {
             pixi.Graphics.call(this);
             var x = tileSize / 2;
             this.blendMode = pixi.BLEND_MODES.OVERLAY;
@@ -63,10 +63,10 @@ define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher'],
             
 
         }
-        MouseFrame.prototype = Object.create(pixi.Graphics.prototype);
-        MouseFrame.prototype.constructor = MouseFrame;
+        CursorFrame.prototype = Object.create(pixi.Graphics.prototype);
+        CursorFrame.prototype.constructor = CursorFrame;
         
-        function PlayerFrame(){
+        function PointerFrame(){
 
             pixi.Graphics.call(this);
             var self = this,
@@ -110,59 +110,47 @@ define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher'],
                 this.alpha = alpha;
             }
         }
-        PlayerFrame.prototype = Object.create(pixi.Graphics.prototype);
-        PlayerFrame.prototype.constructor = PlayerFrame;
-        
+        PointerFrame.prototype = Object.create(pixi.Graphics.prototype);
+        PointerFrame.prototype.constructor = PointerFrame;
+
+
         function PixiTilesContainer() {
             pixi.Container.call(this);
 
-            var self = this,
-                mousePosition = new dataTypes.MousePosition(),
-                mouseDown = false,
-                playerAtTarget = true,
-
+            var mousePosition = dataTypes.createPosition(this),
+                mouseIsDown = false,
                 grid = drawGrid(),
-                mouseFrame = new MouseFrame(),
-                playerFrame = new PlayerFrame(),
+                cursorFrame = new CursorFrame(),
+                pointerFrame = new PointerFrame(),
                 tilesGrid = new pixi.Container();
 
 
             this.addChild(grid);
             this.addChild(tilesGrid);
-            this.addChild(playerFrame);
-            this.addChild(mouseFrame);
+            this.addChild(cursorFrame);
+            this.addChild(pointerFrame);
 
             this.interactive = true;
-            this.on('mousedown', function(){
-                mouseDown = true;
+
+            this.on('mousedown', function(e){
+                mouseIsDown = true;
                 logger.info(mousePosition);
                 playerGo();
             });
 
-            this.on('mouseup', function(){
-                mouseDown = false;
+            this.on('mouseup', function(e){
+                mouseIsDown = false;
             });
             
             function playerGo(){
-                playerFrame.show();
-                playerFrame.location.x = mousePosition.grid.x;
-                playerFrame.location.y = mousePosition.grid.y;
+                pointerFrame.show();
+                pointerFrame.location.x = mousePosition.grid.x;
+                pointerFrame.location.y = mousePosition.grid.y;
                 dispatcher.game.clickGrid.trigger(mousePosition);
             }
 
-            function playerLeaveTarget(game){
-                playerAtTarget = false;
-                logger.info('Player leave Target');
-            }
-
-            function playerReachTarget(game){
-                playerAtTarget = true;
-                logger.info('Player reach Target');
-            }
-
             dispatcher.server.tick(function (game) {
-                var x = self;
-                if(mouseDown){
+                if(mouseIsDown){
                     playerGo();
                 }
                 // mainPlayer may not be loaded yet
@@ -172,28 +160,15 @@ define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher'],
                     grid.x = loc.x * tileSize;
                     grid.y = loc.y * tileSize;
 
-                    logger.info(loc.x, pos.x, loc.y, pos.y);
-
-                    if(playerAtTarget && (loc.x != pos.x || loc.y != pos.y)){
-                        playerLeaveTarget(game);
-                    }
-                    if(!playerAtTarget && (loc.x == pos.x && loc.y == pos.y)){
-                        playerReachTarget(game);
-                    }
-                    if(loc.x == pos.x && loc.y == pos.y){
-                        playerAtTarget = true;
-                    }
-
                 }
-
             });
 
             dispatcher.game.tick(function(frameData){
                 mousePosition = frameData.mousePosition;
                 var pos = mousePosition.grid;
-                mouseFrame.x = pos.x * tileSize;
-                mouseFrame.y = pos.y * tileSize;
-                playerFrame.fadeOut();
+                cursorFrame.x = pos.x * tileSize;
+                cursorFrame.y = pos.y * tileSize;
+                pointerFrame.fadeOut();
             });
 
         }

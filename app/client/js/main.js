@@ -21,6 +21,7 @@
 (function () {
 
     var conf = {
+        debug: true, // show debug info on screen
         baseUrl: '/js/',
         paths: {
             // third party libs
@@ -62,6 +63,7 @@
         ['eventDispatcher', 'event-dispatcher', 3],
         ['tick', 'tick', 4],
         ['dataTypes', 'data-types', 0],
+        ['debugInfo', 'debug-info', 0],
         ['gameRouter', 'game-router', 3],
         ['workerMaster', 'worker-master', 3],
         ['gameSocket', 'game-socket', 3],
@@ -94,6 +96,7 @@
         ['gameFloor', 'game/game-floor', 0],
         ['gameTile', 'game/game-tile', 0],
         ['gamePlayer', 'game/game-player', 0],
+        ['gameMainPlayer', 'game/game-main-player', 0],
         ['gamePlayerManager', 'game/game-player-manager', 0],
 
         // pixi

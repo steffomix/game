@@ -37,6 +37,8 @@ define(['config', 'logger', 'pixi'],
             this.addChild(playerContainer);
             this.addChild(mainPlayerContainer);
 
+            mainPlayerContainer.interactive = false;
+
             this.setMainPlayer = function(player){
                 mainPlayerContainer.removeChildren();
                 mainPlayerContainer.addChild(player);

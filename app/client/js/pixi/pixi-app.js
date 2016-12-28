@@ -27,7 +27,7 @@ define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'dataTyp
 
         }
         FrameData.prototype = {
-            mousePosition: new dataTypes.MousePosition()
+            mousePosition: new dataTypes.createPosition({x: 0, y: 0})
         };
 
 

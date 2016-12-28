@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger'],
-    function (config, Logger) {
+define(['config', 'logger', 'underscore'],
+    function (config, Logger, _) {
 
         var tileSize = config.game.tiles.size,
             logger = Logger.getLogger('dataTypes');
@@ -27,8 +27,11 @@ define(['config', 'logger'],
             get Location(){
                 return Location;
             },
-            get MousePosition(){
-                return MousePosition;
+            get createPosition(){
+                return createPosition;
+            },
+            get createPositionRelative(){
+                return createPositionRelative;
             }
 
         };
@@ -58,22 +61,67 @@ define(['config', 'logger'],
         };
 
         /**
-         *
-         * @param x {float}
-         * @param y {float}
-         * @param gx {int}
-         * @param gy {int}
-         * @constructor
+         * calculate grid coordinates
+         * and integer mouse position in px of inside tile where 0,0 is center of
+         * @param self {{x, y}}
+         * @returns {{x, y, grid}}
          */
-        function MousePosition(x, y){
-            var self = this;
-            this.x = x || 0;
-            this.y = y || 0;
-            this.grid = {
-                x: Math.round(self.x / tileSize),
-                y: Math.round(self.y / tileSize)
+        function createPosition(self){
+            var grid = {
+                get x (){
+                    return Math.round(self.x / tileSize)
+                },
+                get y (){
+                    return Math.round(self.y / tileSize);
+                }
+            };
+
+            return {
+                get x(){
+                    return Math.round(self.x - grid.x * tileSize);
+                },
+                get y (){
+                    return Math.round(self.y - grid.y * tileSize);
+                },
+                get grid(){
+                    return grid;
+                }
             }
         }
+
+        /**
+         * calculate relative coordinates of another container
+         * calculate grid coordinates
+         * and integer mouse position in px of inside tile where 0,0 is center of
+         * @param self {{x, y}}
+         * @param rel {{x, y}}
+         * @returns {{x, y, grid}}
+         */
+        function createPositionRelative(self, rel){
+            var grid = {
+                get x(){
+                    return Math.round((rel.x - self.x) / tileSize);
+                },
+                get y(){
+                    return Math.round((rel.y - self.y) / tileSize);
+                }
+            };
+
+            return {
+                get x() {
+                    return Math.round((rel.x - self.x) - grid.x * tileSize);
+                },
+                get y() {
+                    return Math.round((rel.y - self.y)- grid.y * tileSize);
+                },
+                get grid(){
+                    return grid;
+                }
+
+            }
+        }
+
+
 
         return instance;
 

@@ -16,8 +16,8 @@
  */
 
 
-define(['config', 'logger', 'pixi', 'pixiPlayerContainer', 'eventDispatcher'],
-    function (config, Logger, pixi, playerContainer, dispatcher) {
+define(['config', 'logger', 'debugInfo', 'dataTypes', 'pixi'],
+    function (config, Logger, DebugInfo, dataTypes, pixi) {
 
         var logger = Logger.getLogger('gamePlayer');
         logger.setLevel(config.logger.gamePlayer || 0);
@@ -25,66 +25,44 @@ define(['config', 'logger', 'pixi', 'pixiPlayerContainer', 'eventDispatcher'],
 
         var tileSize = config.game.tiles.size;
 
-        function MainPlayer(user){
-            Player.call(this, user);
-            this.mainPlayer = true;
-        }
-        MainPlayer.prototype = Object.create(Player.prototype);
-        MainPlayer.prototype.constructor = MainPlayer;
-
-
-
         function Player(user) {
-            var self = this;
-            var texture = pixi.Texture.fromImage('assets/avatars/' + (user.avatar || 'devil.png'));
-            pixi.Sprite.call(this, texture);
-            this.anchor.set(.5);
+            pixi.Container.call(this);
+            var self = this,
+                texture = pixi.Texture.fromImage('assets/avatars/' + (user.avatar || 'devil.png')),
+                sprite = new pixi.Sprite(texture);
+            sprite.anchor.set(.5);
 
+            this.addChild(sprite);
             this.name = user.name;
-            this.id = user.id;
-
-            this.frameTick = function(frameData){
-
-                try{
-                    self.x += (self.location.x * tileSize - self.x) / 90 > 0 ? 1 : -1;
-                    self.y += (self.location.y * tileSize - self.y) / 90 > 0 ? 1 : -1;
-                }catch(e){
-                    logger.error('GamePlayer::updateLocation ', e);
-                }
-            };
-
-
-            this.interactive = true;
-            this.on('click', function(){
-                console.log('click');
+            this.location = new dataTypes.Location();
+            this.gridPosition = dataTypes.createPosition(this);
+            this.debug = new DebugInfo(this).debug;
+            // this.interactive = true;
+            /*
+            this.on('mousedown', function(e){
+                console.log('Player mousedown');
+                return false;
             });
-
-            dispatcher.game.clickGrid(function(mousePosition){
-                var grid = mousePosition.grid;
-                logger.info('click grid', grid);
-                self.location.x = grid.x;
-                self.location.y = grid.y;
-            });
-
-
+*/
             this.serverTick = function(gameState){
-
             };
 
             this.updateLocation = function(loc){
-                //self.location = loc;
+                self.location = loc;
             }
         }
 
-        var o = Player.prototype = Object.create(pixi.Sprite.prototype);
+        var o = Player.prototype = Object.create(pixi.Container.prototype);
         Player.prototype.constructor = Player;
-
-        o.location = {
-            area_id: 0,
-            world_id: 0,
-            x: 0,
-            y: 0,
-            z: 0
+        
+        o.frameTick = function(frameData){
+            this.debug(this.gridPosition);
+            try{
+                this.x += (this.location.x * tileSize - this.x) / 20;
+                this.y += (this.location.y * tileSize - this.y) / 20;
+            }catch(e){
+                logger.error('GamePlayer::updateLocation ', e);
+            }
         };
 
         return Player;
