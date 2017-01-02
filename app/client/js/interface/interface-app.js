@@ -27,7 +27,6 @@ define(['config', 'logger', 'gameSocket', 'gameRouter', 'i18n', 'backbone', 'und
 
 
         (function(){
-            logger.info('Load Interfaces');
             _.each(config.paths, function (v, k) {
                 if ( v.indexOf('interface/') != -1 ) {
                     interfaces[k] = require([k], function () {

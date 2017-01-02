@@ -15,10 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'underscore'],
-    function (config, Logger, _) {
+define(['config', 'logger', 'gameSocket'],
+    function (config, Logger, socket) {
 
         var tileSize = config.game.tiles.size,
+            chunkSize = config.game.chunks.size,
             logger = Logger.getLogger('dataTypes');
         logger.setLevel(config.logger.dataTypes || 0);
 
@@ -37,7 +38,7 @@ define(['config', 'logger', 'underscore'],
         };
 
         /**
-         *
+         * Represents Database UserLocation
          * @param x {int}
          * @param y {int}
          * @param z {int}
@@ -61,10 +62,67 @@ define(['config', 'logger', 'underscore'],
         };
 
         /**
-         * calculate grid coordinates
+         * Create calculators for position, grid and chunk
+         * @param p1
+         * @private
+         */
+        function _createCalculators(p1){
+            /**
+             * calculate if p1 and p2 is same
+             * @param p2 {{x, y}}
+             * @returns {boolean}
+             * @private
+             */
+            p1.eq = function (p2){
+                return (p1.x == p2.x && p1.y == p2.y);
+            };
+            /**
+             * calculate distance
+             * @param p2 {{x, y}}
+             * @returns {number}
+             */
+            p1.dist = function(p2){
+                return Math.sqrt(Math.pow(Math.abs(p1.x - p2.x), 2) + Math.pow(Math.abs(p1.y - p2.y), 2));
+            };
+            /**
+             * calculate difference
+             * Usage for movements: {x, y} = diff(posIsNow, posMoveTo)
+             * @param p2 {{x, y}}
+             * @returns {{x, y}}
+             */
+            p1.diff = function(p2){
+                return {
+                    x: p2.x - p1.x,
+                    y: p2.y - p1.y
+                }
+            };
+        }
+
+        /**
+         * Helper for createPosition and createPositionRelative
+         * @param grid {{x, y}}
+         * @returns {{x, y}}
+         */
+        function _getChunk(grid){
+            var chunk = {
+                get x (){
+                    return Math.round(grid.x / chunkSize);
+                },
+                get y (){
+                    return Math.round(grid.y / chunkSize);
+                }
+            };
+
+            _createCalculators(chunk);
+
+            return chunk;
+        }
+
+        /**
+         * calculate grid and chunk coordinates
          * and integer mouse position in px of inside tile where 0,0 is center of
          * @param self {{x, y}}
-         * @returns {{x, y, grid}}
+         * @returns {{x, y, grid, chunk}}
          */
         function createPosition(self){
             var grid = {
@@ -76,7 +134,11 @@ define(['config', 'logger', 'underscore'],
                 }
             };
 
-            return {
+            _createCalculators(grid);
+
+            var chunk = _getChunk(grid);
+
+            var pos = {
                 get x(){
                     return Math.round(self.x - grid.x * tileSize);
                 },
@@ -85,17 +147,25 @@ define(['config', 'logger', 'underscore'],
                 },
                 get grid(){
                     return grid;
+                },
+                get chunk(){
+                    return chunk;
                 }
-            }
+            };
+
+            _createCalculators(pos);
+
+            return pos;
         }
 
         /**
          * calculate relative coordinates of another container
          * calculate grid coordinates
-         * and integer mouse position in px of inside tile where 0,0 is center of
+         * and integer mouse position in px of inside tile where 0,0 is center of.
+         * Used only by pixiRootContainer to calculate mouseEvent position on the grid
          * @param self {{x, y}}
          * @param rel {{x, y}}
-         * @returns {{x, y, grid}}
+         * @returns {{x, y, grid, chunk}}
          */
         function createPositionRelative(self, rel){
             var grid = {
@@ -107,7 +177,11 @@ define(['config', 'logger', 'underscore'],
                 }
             };
 
-            return {
+            _createCalculators(grid);
+
+            var chunk = _getChunk(grid);
+
+            var pos =  {
                 get x() {
                     return Math.round((rel.x - self.x) - grid.x * tileSize);
                 },
@@ -116,9 +190,15 @@ define(['config', 'logger', 'underscore'],
                 },
                 get grid(){
                     return grid;
+                },
+                get chunk(){
+                    return chunk;
                 }
+            };
 
-            }
+            _createCalculators(pos);
+
+            return pos;
         }
 
 

@@ -16,7 +16,7 @@
  */
 
 define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher'],
-    function (config, Logger, dataTypes, pixi, dispatcher) {
+    function (config, Logger, dataTypes, pixi, dispatcher, gameApp) {
 
         var instance,
             logger = Logger.getLogger('pixiTilesContainer');
@@ -149,22 +149,10 @@ define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher'],
                 dispatcher.game.clickGrid.trigger(mousePosition);
             }
 
-            dispatcher.server.tick(function (game) {
-                if(mouseIsDown){
-                    playerGo();
-                }
-                // mainPlayer may not be loaded yet
-                if(game.state.mainPlayer){
-                    var loc = game.state.mainPlayer.location,
-                        pos = mousePosition.grid;
-                    grid.x = loc.x * tileSize;
-                    grid.y = loc.y * tileSize;
 
-                }
-            });
-
-            dispatcher.game.tick(function(frameData){
-                mousePosition = frameData.mousePosition;
+            dispatcher.game.tick(function(game){
+                return;
+                mousePosition = game.pixiRoot.mousePosition;
                 var pos = mousePosition.grid;
                 cursorFrame.x = pos.x * tileSize;
                 cursorFrame.y = pos.y * tileSize;

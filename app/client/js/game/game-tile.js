@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'pixi', 'gamePixi'],
-    function (config, Logger, pixi, pixiApp) {
+define(['config', 'logger', 'pixi'],
+    function (config, Logger, pixi) {
 
         var logger = Logger.getLogger('gameTile');
         logger.setLevel(config.logger.gameTile || 0);
@@ -34,10 +34,9 @@ define(['config', 'logger', 'pixi', 'gamePixi'],
 
             this.position.x = this.x * tileSize;
             this.position.y = this.y * tileSize;
-            pixiApp.addTile(this);
         }
 
-        GameTile.prototype = object.create(pixi.Sprite.prototype)
+        GameTile.prototype = Object.create(pixi.Sprite.prototype)
 
         return GameTile;
 

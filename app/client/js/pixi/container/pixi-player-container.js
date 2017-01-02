@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'pixi'],
-    function (config, Logger, pixi) {
+define(['config', 'logger', 'eventDispatcher', 'pixi', 'gameApp'],
+    function (config, Logger, dispatcher, pixi, gameApp) {
 
         var instance,
             logger = Logger.getLogger('pixiPlayerContainer');
@@ -34,10 +34,12 @@ define(['config', 'logger', 'pixi'],
             var playerContainer = new pixi.Container(),
                 mainPlayerContainer = new pixi.Container();
 
+            dispatcher.game.initialize(function(){
+                gameApp.addModule('pixiPlayer', this);
+            });
+
             this.addChild(playerContainer);
             this.addChild(mainPlayerContainer);
-
-            mainPlayerContainer.interactive = false;
 
             this.setMainPlayer = function(player){
                 mainPlayerContainer.removeChildren();

@@ -15,100 +15,50 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'gameSocket', 'gameRouter', 'tick', 'eventDispatcher', 'gamePlayerManager'],
-    function (config, Logger, socket, router, Tick, dispatcher, playerManager) {
+define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'dataTypes', 'eventDispatcher', 'tick', 'gameApp'],
+    function (config, Logger, Backbone, _, Pixi, $, dataTypes, dispatcher, Tick, gameApp) {
 
         var instance,
-            logger = Logger.getLogger('gameApp');
-        logger.setLevel(config.logger.gameApp || 0);
-
-        function GameState() {
-        }
-
-        GameState.prototype = {
-            mainPlayer: ''
-        };
-
-        function Received() {
-            this.floors = [];
-            this.mobiles = [];
-        }
+            logger = Logger.getLogger('pixiApp');
+        logger.setLevel(config.logger.pixiApp || 0);
 
 
-        function Response() {
+        function PixiApp() {
 
-        }
+            var renderer = Pixi.autoDetectRenderer(100, 100, {transparent: 1}),
+                $gameStage = $('#game-stage'),
+                ticker = new Tick(tick),
+                dispatchTick = dispatcher.game.tick.claimTrigger(this),
+                $body = $('body'),
+                app = gameApp;
 
-        /**
-         * Game Data Heartbeat
-         * Receive and send server data, update game data.
-         * Ticks every 0.5 second
-         */
-        function GameApp() {
-            var _state = new GameState(),
-                _received = new Received(),
-                _response = new Response(),
-                serverTicker = new Tick(serverTick),
-                trigger = dispatcher.server.tick.claimTrigger(this),
-                game = {
-                    get state() {
-                        // current gameState
-                        return _state;
-                    },
-                    get received() {
-                        // data received from server
-                        // is cleared (recreated) after each serverTick
-                        return _received;
-                    },
-                    get response() {
-                        // data to be send to server
-                        // is leared after each serverTick
-                        return _response;
-                    }
-                };
+            ticker.fps = config.game.fps;
 
-            this.gameState = function(){
-                return game;
-            };
-
-            serverTicker.fps = config.server.fps;
-            dispatcher.server.login(function () {
-                serverTicker.start();
-            });
-            dispatcher.server.logout(function () {
-                serverTicker.stop();
+            dispatcher.game.initialize(function(){
+                $gameStage.html(renderer.view);
+                ticker.start();
             });
 
-            function serverTick() {
-                // broadcast and collect server data
-                trigger(game);
-                _received = new Received();
-
-                socket.send('server.sendGameState', _response);
-                _response = new Response();
+            function tick(load) {
+                dispatchTick();
+                renderer.render(gameApp.pixiRoot);
             }
 
-            router.addModule('game', this, {
-                updateFloor: function (job) {
-                    _received.floors.push(job.data);
-                },
-                // receive locations from all players on current floor
-                playerLocations: function (job) {
-                    _.each(job.data, function (v, k) {
-                        _received.mobiles[k] = v;
-                    });
-                }
+            // resize stage
+            dispatcher.global.windowResize(function () {
+                renderer.resize($body.width(), $body.height());
             });
-        }
 
-        return getInstance();
+
+        }
 
         function getInstance() {
             if (!instance) {
-                instance = new GameApp();
+                instance = new PixiApp();
             }
             return instance;
         }
 
+        return getInstance();
 
     });

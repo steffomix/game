@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'underscore', 'eventDispatcher', 'gameMainPlayer', 'gamePlayer', 'pixiPlayerContainer'],
-    function (config, Logger, _, dispatcher, MainPlayer, Player, playerContainer) {
+define(['config', 'logger', 'underscore', 'eventDispatcher', 'gameMainPlayer', 'gamePlayer', 'pixiPlayerContainer', 'gameApp'],
+    function (config, Logger, _, dispatcher, MainPlayer, Player, playerContainer, gameApp) {
 
         var instance,
             logger = Logger.getLogger('gamePlayerManager');
@@ -36,6 +36,11 @@ define(['config', 'logger', 'underscore', 'eventDispatcher', 'gameMainPlayer', '
             var mainPlayer = '',
                 players = {};
 
+            dispatcher.game.initialize(function(){
+                logger.info('Game initialize PlayerManager');
+                gameApp.addModule('playerManager', this);
+            });
+
             dispatcher.server.login(function (user) {
                 reset();
                 var player = new MainPlayer(user);
@@ -49,12 +54,13 @@ define(['config', 'logger', 'underscore', 'eventDispatcher', 'gameMainPlayer', '
                 mainPlayer = '';
             });
 
-            dispatcher.game.tick(function(frameData){
+            dispatcher.game.tick(function(){
                 _.each(players, function(p){
-                    p.frameTick(frameData);
+                    p.tick();
                 })
             });
 
+            /*
             dispatcher.server.tick(function (gameState) {
 
                 var mobiles = gameState.received.mobiles;
@@ -87,6 +93,7 @@ define(['config', 'logger', 'underscore', 'eventDispatcher', 'gameMainPlayer', '
                     }
                 });
             });
+*/
 
             function reset() {
                 _.each(players, function (player) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 16.12.16 Stefan Brinkmann <steffomix@gmail.com>
+ * Copyright (C) 01.01.17 Stefan Brinkmann <steffomix@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,17 +15,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+define(['config', 'logger', 'pixi', 'dataTypes', 'gameApp'],
+    function (config, Logger, pixi, dataTypes, gameApp) {
 
-define(['config', 'logger', 'debugInfo', 'dataTypes', 'pixi', 'gameMobile'],
-    function (config, Logger, DebugInfo, dataTypes, pixi, Mobile) {
-
-        var logger = Logger.getLogger('gamePlayer');
-        logger.setLevel(config.logger.gamePlayer || 0);
-
+        var logger = Logger.getLogger('gameMobile');
+        logger.setLevel(config.logger.gameMobile || 0);
 
         var tileSize = config.game.tiles.size;
 
-        function Player(user) {
+        function Mobile(user) {
             pixi.Container.call(this);
             var self = this,
                 texture = pixi.Texture.fromImage('assets/avatars/' + (user.avatar || 'devil.png')),
@@ -38,17 +36,30 @@ define(['config', 'logger', 'debugInfo', 'dataTypes', 'pixi', 'gameMobile'],
             this.gamePosition = dataTypes.createPosition(this);
             this.debug = new DebugInfo(this).debug;
 
-            this.updateLocation = function(loc){
+            this.updateLocation = function (loc) {
                 self.location = loc;
             }
         }
 
-        var o = Player.prototype = Object.create(Mobile.prototype);
-        Player.prototype.constructor = Player;
-        
+        var o = Mobile.prototype = Object.create(pixi.Container.prototype);
+        Mobile.prototype.constructor = Mobile;
 
+        o.tick = function(){
+            this.debug(this.gamePosition);
+            var diff = this.gamePosition.diff({
+                x: this.location.x * tileSize,
+                y: this.location.y * tileSize
+            });
+            try{
+                this.x += diff.x / 20;
+                this.y += diff.y / 20;
+            }catch(e){
+                logger.error('GamePlayer::updateLocation ', e);
+            }
+        };
 
-        return Player;
+        o.onMouseDown = o.onMouseUp = o.onMouseMove = function(/*mousePosition, mouseState, gameApp*/){};
+
+        return Mobile;
 
     });
-

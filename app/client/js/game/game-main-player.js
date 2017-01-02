@@ -3,8 +3,8 @@
  */
 
 
-define(['config', 'logger', 'gamePlayer', 'eventDispatcher'],
-    function (config, Logger, Player, dispatcher) {
+define(['config', 'logger', 'gamePlayer', 'eventDispatcher', 'gameApp'],
+    function (config, Logger, Player, dispatcher, gameApp) {
 
         var logger = Logger.getLogger('gamePlayer');
         logger.setLevel(config.logger.gamePlayer || 0);
@@ -12,18 +12,22 @@ define(['config', 'logger', 'gamePlayer', 'eventDispatcher'],
 
         function MainPlayer(user) {
             Player.call(this, user);
-
-            this.frameTick = function (frameData) {
-                frameData.gridPosition = this.gridPosition;
-                Object.getPrototypeOf(MainPlayer.prototype).frameTick.call(this, frameData);
+            var self = this;
+            this.tick = function () {
+                Object.getPrototypeOf(MainPlayer.prototype).tick.call(this);
             };
 
-            dispatcher.game.clickGrid(function(mousePosition){
+            dispatcher.game.initialize(function(){
+                gameApp.addModule('mainPlayer', this);
+            });
+
+            dispatcher.game.mousedown(function(mousePosition, mouseState, gameApp){
                 var grid = mousePosition.grid;
                 logger.info('click grid', grid);
                 self.location.x = grid.x;
                 self.location.y = grid.y;
             });
+
         }
 
         MainPlayer.prototype = Object.create(Player.prototype);

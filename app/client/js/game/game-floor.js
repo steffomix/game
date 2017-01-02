@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'underscore', 'gameTile', 'gamePixi'],
-    function (config, Logger, _, Tile, pixi) {
+define(['config', 'logger', 'underscore', 'gameTile'],
+    function (config, Logger, _, Tile) {
 
         var logger = Logger.getLogger('gameFloor');
         logger.setLevel(config.logger.gameFloor || 0);

@@ -17,6 +17,7 @@
     "pathfinding": "^0.4.18",
     "pixi.js": "^4.1.1",
     "requirejs": "^2.3.2",
+    "seedrandom": "^2.4.2",
     "socket.io": "^1.5.1",
     "sqlite3": "^3.1.8",
     "underscore": "^1.8.3"

@@ -15,13 +15,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'jquery', 'dataTypes', 'debugInfo', 'pixi', 'eventDispatcher',
+define(['config', 'logger', 'jquery', 'dataTypes', 'debugInfo', 'pixi', 'eventDispatcher', 'gameApp',
         'pixiTilesContainer',
-        'pixiPlayerContainer'
-    ],
-    function (config, Logger, $, dataTypes, DebugInfo, pixi, dispatcher,
-              tilesContainer,
-              playerContainer) {
+        'pixiPlayerContainer'],
+    function (config, Logger, $, dataTypes, DebugInfo, pixi, dispatcher, gameApp,
+              playerContainer,
+              tilesContainer
+    ) {
 
         var instance,
             $body = $('body'),
@@ -54,6 +54,18 @@ define(['config', 'logger', 'jquery', 'dataTypes', 'debugInfo', 'pixi', 'eventDi
                     x: 0,
                     y: 0
                 },
+                mouseDown = false,
+                mouseEventState = {
+                    get x(){
+                        return mouse.x;
+                    },
+                    get y(){
+                        return mouse.y;
+                    },
+                    get isDown(){
+                        return mouseDown;
+                    }
+                },
                 // readonly obj
                 mousePosition = dataTypes.createPositionRelative(self, mouse);
 
@@ -74,26 +86,38 @@ define(['config', 'logger', 'jquery', 'dataTypes', 'debugInfo', 'pixi', 'eventDi
                 mouse.y = g.y;
             });
 
-            this.on('mousedown', function(e){
-                logger.info('rootcontainer.interactive: mousedown', mousePosition);
+            dispatcher.game.initialize(function(){
+                logger.info('Game initialize pixiRootContainer');
+                gameApp.addModule('pixiRoot', self);
             });
 
-
-
-            // get mainPlayer positione
-            dispatcher.server.tick(function (gameState) {
-                var player = gameState.state.mainPlayer;
-                // player may not be loaded yet
-                if(player){
-                    moveTo.x = $body.width() / 2 - player.location.x * tileSize;
-                    moveTo.y = $body.height() / 2 - player.location.y * tileSize;
-                }
+            this.on('mousemove', function(){
+                onMouseEvent('mousemove');
             });
+            this.on('mousedown', function(){
+                mouseDown = true;
+                onMouseEvent('mousedown');
+            });
+            this.on('mouseup', function(){
+                mouseDown = false;
+                onMouseEvent('mouseup');
+            });
+            this.on('touchstart', function(){
+                mouseDown = true;
+                onMouseEvent('mousedown');
+            });
+            this.on('touchend', function(){
+                mouseDown = false;
+                onMouseEvent('mouseup');
+            });
+
+            function onMouseEvent(e){
+                dispatcher.game[e].trigger(mousePosition, mouseEventState, gameApp);
+            }
+
 
             // move container to center to mainPlayer
-            dispatcher.game.tick(function (frameData) {
-                frameData.mousePosition = mousePosition;
-                debug(frameData.mousePosition);
+            dispatcher.game.tick(function () {
                 try {
                     self.x += (moveTo.x - self.x) / 30;
                     self.y += (moveTo.y - self.y) / 30;

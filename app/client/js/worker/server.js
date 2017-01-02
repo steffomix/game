@@ -137,7 +137,7 @@ define('server', ['config', 'logger', 'io', 'workerSlaveSocket', 'workerRouter']
 
                 connection.on('onUpdateFloor', function(data){
                     logger.info('Server: onUpdateFloor', data);
-                    router.command('cache.onUpdateFloor', data);
+                    //router.command('cache.onUpdateFloor', data);
                 });
 
                 connection.on('onUpdateTile', function(data){
@@ -147,7 +147,7 @@ define('server', ['config', 'logger', 'io', 'workerSlaveSocket', 'workerRouter']
 
                 connection.on('playerLocations', function(data){
                     // logger.info('Server: userLocation', data);
-                    socket.send('game.playerLocations', data);
+                    //socket.send('game.playerLocations', data);
                 });
 
                 connection.on('command', function (data) {

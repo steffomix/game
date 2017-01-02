@@ -16,8 +16,6 @@
  */
 
 
-
-
 (function () {
 
     var conf = {
@@ -39,6 +37,9 @@
             fps: 30, // game calculations and pixi render per second
             tiles: {
                 size: 100 // tile size in px
+            },
+            chunks: {
+                size: 16 // 16x16 tiles
             }
         },
         server: {
@@ -95,12 +96,12 @@
         ['gameFloorManager', 'game/game-floor-manager', 0],
         ['gameFloor', 'game/game-floor', 0],
         ['gameTile', 'game/game-tile', 0],
-        ['gamePlayer', 'game/game-player', 0],
-        ['gameMainPlayer', 'game/game-main-player', 0],
+        ['gameMainPlayer', 'game/game-main-player', 0], // extends gamePlayer
+        ['gamePlayer', 'game/game-player', 0], // extends gameMobile
+        ['gameMobile', 'game/game-mobile', 0], // extends pixi.Container
         ['gamePlayerManager', 'game/game-player-manager', 0],
 
         // pixi
-        ['pixiApp', 'pixi/pixi-app', 0],
         ['pixiRootContainer', 'pixi/container/pixi-root-container', 0],
         ['pixiTilesContainer', 'pixi/container/pixi-tiles-container', 0],
         ['pixiPlayerContainer', 'pixi/container/pixi-player-container', 0],
@@ -129,7 +130,8 @@
     // setup requirejs
     requirejs.config({
         paths: conf.paths,
-        baseUrl: conf.baseUrl
+        baseUrl: conf.baseUrl,
+        depths: {}
     });
 
     // create config module to be loadable
@@ -137,29 +139,35 @@
         return conf;
     });
 
-    define('gameRouter', ['commandRouter'], function (commandRouter) {
-        var instance;
-        return getInstance();
-        function getInstance() {
-            if (!instance) {
-                try {
-                    instance = commandRouter.getRouter('GameRouter');
-                } catch (e) {
-                    console.error('Module gameRouter create Instance: ', e);
+
+
+
+    var groups = ['lib', 'game', 'pixi', 'interface'],
+        preloadModules = ['backbone', 'jquery', 'eventDispatcher'],
+        p;
+    for (var m in conf.paths) {
+        if (conf.paths.hasOwnProperty(m)) {
+            p = conf.paths[m];
+            groups.forEach(function (g) {
+                if (p.indexOf(g + '/') != -1) {
+
+                    preloadModules.push(m);
                 }
-            }
-            return instance;
+            })
         }
-    });
+    }
 
-    require(['backbone', 'jquery'], function (backbone, $) {
+    console.log('Preload modules: ', preloadModules);
+
+    define('rottingUniverse', preloadModules, function(backbone, $, dispatcher){
         backbone.$ = $;
+        console.log('Trigger game initialize');
+        dispatcher.game.initialize.claimTrigger('main.js')();
     });
 
-    console.log('Start Game...');
-    require(['interfaceApp', 'gameApp', 'pixiApp'], function () {
+    require(['rottingUniverse'], function () {
+        console.log('game start...')
     });
-
 
 })();
 

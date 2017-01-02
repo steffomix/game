@@ -51,8 +51,7 @@
                         connect: e,
                         disconnect: e,
                         login: e,
-                        logout: e,
-                        tick: e // data tick (game-app.js)
+                        logout: e
                     },
                     global: {
                         windowResize: e
@@ -61,9 +60,11 @@
                         hideAll: e
                     },
                     game: {
-                        tick: e, // frame-tick (pixi-app.js)
+                        initialize: e,
+                        tick: e, // frame-tick (game-app.js)
                         mousedown: e,
                         mouseup: e,
+                        mousemove: e
 
 
                     }
