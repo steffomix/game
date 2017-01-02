@@ -15,33 +15,50 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'dataTypes', 'eventDispatcher', 'tick', 'gameApp'],
-    function (config, Logger, Backbone, _, Pixi, $, dataTypes, dispatcher, Tick, gameApp) {
+define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'dataTypes', 'eventDispatcher', 'tick'
+
+    ],
+    function (config, Logger, Backbone, _, Pixi, $, dataTypes, dispatcher, Tick) {
 
         var instance,
-            logger = Logger.getLogger('pixiApp');
-        logger.setLevel(config.logger.pixiApp || 0);
+            logger = Logger.getLogger('gameApp');
+        logger.setLevel(config.logger.gameApp || 0);
 
 
-        function PixiApp() {
+        function GameApp() {
 
-            var renderer = Pixi.autoDetectRenderer(100, 100, {transparent: 1}),
+            var self = this,
+                renderer = Pixi.autoDetectRenderer(100, 100, {transparent: 1}),
                 $gameStage = $('#game-stage'),
                 ticker = new Tick(tick),
                 dispatchTick = dispatcher.game.tick.claimTrigger(this),
-                $body = $('body'),
-                app = gameApp;
+                $body = $('body');
+
+            // add getter to this that represents the module
+            this.addModule = function (name, mod) {
+                if (self[name]) {
+                    return logger.error('GameApp Module ' + name + ' already set', self[name], mod);
+                }
+                Object.defineProperty(self, name, {
+                    get: function () {
+                        return mod;
+                    }
+                });
+
+            };
 
             ticker.fps = config.game.fps;
 
-            dispatcher.game.initialize(function(){
+            dispatcher.game.initialize(function () {
                 $gameStage.html(renderer.view);
-                ticker.start();
+                // start ticker when initialize is finished
+                setTimeout(ticker.start, 0);
             });
 
             function tick(load) {
+                var s = self.pixiRoot;
                 dispatchTick();
-                renderer.render(gameApp.pixiRoot);
+                renderer.render(self.pixiRoot);
             }
 
             // resize stage
@@ -54,7 +71,8 @@ define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'dataTyp
 
         function getInstance() {
             if (!instance) {
-                instance = new PixiApp();
+                instance = new GameApp();
+                dispatcher.game.initialize.trigger();
             }
             return instance;
         }
