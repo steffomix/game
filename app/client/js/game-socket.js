@@ -117,7 +117,12 @@ define('gameSocket', ['config', 'logger', 'workerMaster', 'commandRouter'],
                 setTimeout(function (cmd, data, cb, ct) {
                     if ( socketReady ) {
                         logger.info('Resend Command from unready gameSocket: ', cmd, data);
-                        fn(cmd, data, cb, ct);
+                        try{
+                            fn(cmd, data, cb, ct);
+                        }catch(e){
+                            logger.error('Create Worker GameSocket failed: ', e);
+                            resendMessage(cmd, data, cb, ct);
+                        }
                     } else {
                         resendMessage(cmd, data, cb, ct);
                     }

@@ -13,19 +13,13 @@ define(['config', 'logger', 'gamePlayer', 'eventDispatcher', 'gameApp'],
         function MainPlayer(user) {
             Player.call(this, user);
             var self = this;
-            this.tick = function () {
-                Object.getPrototypeOf(MainPlayer.prototype).tick.call(this);
-            };
 
-            dispatcher.game.initialize(function(){
-                gameApp.addModule('mainPlayer', this);
-            });
+            gameApp.setMainPlayer(this);
 
-            dispatcher.game.mousedown(function(mousePosition, mouseState, gameApp){
-                var grid = mousePosition.grid;
-                logger.info('click grid', grid);
-                self.location.x = grid.x;
-                self.location.y = grid.y;
+            dispatcher.game.mousedown(function(mousePosition){
+                self.location.x = mousePosition.grid.x;
+                self.location.y = mousePosition.grid.y;
+                this.tween.to(mousePosition);
             });
 
         }

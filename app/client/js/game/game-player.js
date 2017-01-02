@@ -26,26 +26,12 @@ define(['config', 'logger', 'debugInfo', 'dataTypes', 'pixi', 'gameMobile'],
         var tileSize = config.game.tiles.size;
 
         function Player(user) {
-            pixi.Container.call(this);
-            var self = this,
-                texture = pixi.Texture.fromImage('assets/avatars/' + (user.avatar || 'devil.png')),
-                sprite = new pixi.Sprite(texture);
-            sprite.anchor.set(.5);
+            Mobile.call(this, user);
 
-            this.addChild(sprite);
-            this.name = user.name;
-            this.location = new dataTypes.Location();
-            this.gamePosition = dataTypes.createPosition(this);
-            this.debug = new DebugInfo(this).debug;
-
-            this.updateLocation = function(loc){
-                self.location = loc;
-            }
         }
 
         var o = Player.prototype = Object.create(Mobile.prototype);
         Player.prototype.constructor = Player;
-        
 
 
         return Player;

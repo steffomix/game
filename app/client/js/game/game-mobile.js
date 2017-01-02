@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'pixi', 'dataTypes', 'gameApp'],
-    function (config, Logger, pixi, dataTypes, gameApp) {
+define(['config', 'logger', 'debugInfo', 'pixi', 'tween', 'dataTypes', 'gameApp'],
+    function (config, Logger, DebugInfo, pixi, tween, dataTypes, gameApp) {
 
         var logger = Logger.getLogger('gameMobile');
         logger.setLevel(config.logger.gameMobile || 0);
@@ -28,37 +28,54 @@ define(['config', 'logger', 'pixi', 'dataTypes', 'gameApp'],
             var self = this,
                 texture = pixi.Texture.fromImage('assets/avatars/' + (user.avatar || 'devil.png')),
                 sprite = new pixi.Sprite(texture);
+
             sprite.anchor.set(.5);
+            
+
+            var debug = new DebugInfo(this, 50).debug;
 
             this.addChild(sprite);
             this.name = user.name;
             this.location = new dataTypes.Location();
             this.gamePosition = dataTypes.createPosition(this);
-            this.debug = new DebugInfo(this).debug;
+            this.tween = new tween.Tween(this.gamePosition);
+            this.tween.easing(tween.Easing.Quadratic.In);
 
             this.updateLocation = function (loc) {
-                self.location = loc;
-            }
+                //self.location = loc;
+            };
+            
+            this.tick = function () {
+                var location = {
+                        x: self.location.x * tileSize,
+                        y: self.location.y * tileSize
+                    },
+                    diff = self.gamePosition.diff(location, 1, 1);
+                debug({
+                    diff: diff,
+                    gamePosition: self.gamePosition,
+                    location: location
+
+
+                });
+                this.tween.update();
+                /*
+                try {
+                    self.x += diff.x / 20;
+                    self.y += diff.y / 20;
+                } catch (e) {
+                    logger.error('GamePlayer::updateLocation ', e);
+                }
+                */
+            };
         }
 
         var o = Mobile.prototype = Object.create(pixi.Container.prototype);
         Mobile.prototype.constructor = Mobile;
 
-        o.tick = function(){
-            this.debug(this.gamePosition);
-            var diff = this.gamePosition.diff({
-                x: this.location.x * tileSize,
-                y: this.location.y * tileSize
-            });
-            try{
-                this.x += diff.x / 20;
-                this.y += diff.y / 20;
-            }catch(e){
-                logger.error('GamePlayer::updateLocation ', e);
-            }
-        };
 
-        o.onMouseDown = o.onMouseUp = o.onMouseMove = function(/*mousePosition, mouseState, gameApp*/){};
+        o.onMouseDown = o.onMouseUp = o.onMouseMove = function (/*mousePosition, mouseState, gameApp*/) {
+        };
 
         return Mobile;
 

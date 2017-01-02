@@ -24,6 +24,8 @@ define(['config', 'logger', 'jquery', 'dataTypes', 'debugInfo', 'pixi', 'eventDi
     ) {
 
         var instance,
+            renderer = pixi.autoDetectRenderer(100, 100, {transparent: 1}),
+            $gameStage = $('#game-stage'),
             $body = $('body'),
             logger = Logger.getLogger('pixiRootContainer');
         logger.setLevel(config.logger.pixiRootContainer || 0);
@@ -43,52 +45,78 @@ define(['config', 'logger', 'jquery', 'dataTypes', 'debugInfo', 'pixi', 'eventDi
         function PixiRootContainer() {
             pixi.Container.call(this);
             var self = this,
-                debug = new DebugInfo(this).debug,
-                // where this container has to move
-                moveTo = {
-                    x: 0,
-                    y: 0
-                },
+                debug = new DebugInfo(this, -200, 0).debug,
                 // last raw mousemove position
-                mouse = {
+                lastMouseMove = {
                     x: 0,
                     y: 0
                 },
                 mouseDown = false,
-                mouseEventState = {
-                    get x(){
-                        return mouse.x;
+                mousePosition = dataTypes.createPositionRelative(self, lastMouseMove),
+                gamePosition = dataTypes.createPosition({
+                    get x (){
+                        return self.x - $body.width() / 2;
                     },
-                    get y(){
-                        return mouse.y;
-                    },
-                    get isDown(){
-                        return mouseDown;
+                    get y (){
+                        return self.y - $body.height() / 2;
                     }
-                },
-                // readonly obj
-                mousePosition = dataTypes.createPositionRelative(self, mouse);
+                });
+
+            Object.defineProperty(mousePosition, 'isDown', {
+                get: function () {
+                    return mouseDown;
+                }
+            });
 
             // center container
             this.x = $body.width() / 2;
             this.y = $body.height() / 2;
 
-            this.addChild(tilesContainer);
             this.addChild(playerContainer);
+            this.addChild(tilesContainer);
             this.addChild(createInteractive());
 
 
             // trigger relative position that fits to root container position
             this.interactive = true;
             this.on('mousemove', function (e) {
-                var g = e.data.global;
-                mouse.x = g.x;
-                mouse.y = g.y;
+                lastMouseMove.x = e.data.global.x;
+                lastMouseMove.y = e.data.global.y;
+            });
+
+
+            // move container to center to mainPlayer
+            dispatcher.game.tick(function () {
+                var mainPlayer = gameApp.mainPlayer || {x: 0, y: 0},
+                    moveTo = {
+                        x: mainPlayer.x * -1,
+                        y: mainPlayer.y * -1
+                    };
+                var diff = gamePosition.diff(moveTo, 2, 2);
+                debug(gamePosition);
+                self.x += diff.x / 20;
+                self.y += diff.y / 20;
+
+                renderer.render(self);
             });
 
             dispatcher.game.initialize(function(){
+                $gameStage.html(renderer.view);
                 logger.info('Game initialize pixiRootContainer');
-                gameApp.addModule('pixiRoot', self);
+                gameApp.addModule('pixiRoot', {
+                    position: gamePosition
+                });
+                gameApp.addModule('mouse', {
+                    position: mousePosition,
+                    get isDown(){
+                        return mouseDown;
+                    }
+                });
+            });
+
+            // resize stage
+            dispatcher.global.windowResize(function () {
+                renderer.resize($body.width(), $body.height());
             });
 
             this.on('mousemove', function(){
@@ -112,19 +140,9 @@ define(['config', 'logger', 'jquery', 'dataTypes', 'debugInfo', 'pixi', 'eventDi
             });
 
             function onMouseEvent(e){
-                dispatcher.game[e].trigger(mousePosition, mouseEventState, gameApp);
+                dispatcher.game[e].trigger(mousePosition);
             }
 
-
-            // move container to center to mainPlayer
-            dispatcher.game.tick(function () {
-                try {
-                    self.x += (moveTo.x - self.x) / 30;
-                    self.y += (moveTo.y - self.y) / 30;
-                } catch (e) {
-                    logger.warn('PixiRootContainer::frameTick: ', e);
-                }
-            });
 
         }
 

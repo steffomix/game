@@ -59,7 +59,7 @@ define(['config', 'logger', 'gameSocket', 'gameRouter', 'i18n', 'backbone', 'und
             $('#game-container').show();
             //setTimeout(dispatcher.global.windowResize.trigger);
 
-            _autoLogin();
+            setTimeout(_autoLogin, 1000);
         })();
 
         function _autoLogin(){

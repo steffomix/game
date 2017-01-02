@@ -22,9 +22,11 @@ define(['config', 'logger', 'pixi'],
         logger.setLevel(config.logger.debugInfo || 0);
 
 
-        function DebugInfo(parent) {
-            pixi.Text.call(this, '', {fontSize: '1em'});
+        function DebugInfo(parent, x, y) {
+            pixi.Text.call(this, '', {fontSize: '2em'});
             var self = this;
+            this.x = x || 0;
+            this.y = y || 0;
 
             this.debug = function(o){
                 try{

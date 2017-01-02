@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher'],
+define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher', 'gameApp'],
     function (config, Logger, dataTypes, pixi, dispatcher, gameApp) {
 
         var instance,
@@ -31,29 +31,38 @@ define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher'],
             return instance;
         }
 
-        function drawGrid() {
+        /**
+         *Grid
+         * @constructor
+         */
+        function Grid() {
+            pixi.Graphics.call(this);
+            this.gamePosition = dataTypes.createPosition(this);
+            var x = 30 * tileSize - tileSize / 2;
+            this.lineStyle(8, 0x808080, .5);
 
-            var gr = new pixi.Graphics(),
-                x = 30 * tileSize - tileSize / 2;
-            gr.lineStyle(3, 0x808080, .1);
-
-            gr.blendMode = pixi.BLEND_MODES.OVERLAY;
+            //this.blendMode = pixi.BLEND_MODES.OVERLAY;
 
             for (var i = -x; i <= x; i += tileSize) {
-                gr.moveTo(i, -x);
-                gr.lineTo(i, x);
-                gr.moveTo(-x, i);
-                gr.lineTo(x, i);
+                this.moveTo(i, -x);
+                this.lineTo(i, x);
+                this.moveTo(-x, i);
+                this.lineTo(x, i);
             }
-            gr.hitArea = new pixi.Rectangle(-x, -x, x * 2, x * 2);
-            return gr;
-
+            this.hitArea = new pixi.Rectangle(-x, -x, x * 2, x * 2);
         }
+        Grid.prototype = Object.create(pixi.Graphics.prototype);
+        Grid.prototype.constructor =  Grid;
 
-        function CursorFrame() {
+        /**
+         * Cursor
+         * @constructor
+         */
+        function Cursor() {
             pixi.Graphics.call(this);
+            this.gamePosition = dataTypes.createPosition(this);
             var x = tileSize / 2;
-            this.blendMode = pixi.BLEND_MODES.OVERLAY;
+            //this.blendMode = pixi.BLEND_MODES.OVERLAY;
             this.lineStyle(3, 0x000000, .3);
             this.moveTo(-x, -x);
             this.lineTo(x, -x);
@@ -63,10 +72,14 @@ define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher'],
             
 
         }
-        CursorFrame.prototype = Object.create(pixi.Graphics.prototype);
-        CursorFrame.prototype.constructor = CursorFrame;
-        
-        function PointerFrame(){
+        Cursor.prototype = Object.create(pixi.Graphics.prototype);
+        Cursor.prototype.constructor = Cursor;
+
+        /**
+         * Pointer
+         * @constructor
+         */
+        function Pointer(){
 
             pixi.Graphics.call(this);
             var self = this,
@@ -76,24 +89,7 @@ define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher'],
                 alpha = .5,
                 fade = .01;
 
-            this.location = {
-                get x(){
-                    return gridX;
-                },
-                set x(x){
-                    gridX = x;
-                    self.x = x * tileSize;
-                },
-                get y(){
-                    return gridY;
-                },
-                set y(y){
-                    gridY = y;
-                    self.y = y * tileSize;
-                }
-            };
-
-            this.blendMode = pixi.BLEND_MODES.OVERLAY;
+            this.gamePosition = dataTypes.createPosition(this);
 
             this.lineStyle(3, 0xcc0000, alpha);
             this.moveTo(-x, -x);
@@ -110,53 +106,56 @@ define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher'],
                 this.alpha = alpha;
             }
         }
-        PointerFrame.prototype = Object.create(pixi.Graphics.prototype);
-        PointerFrame.prototype.constructor = PointerFrame;
+        Pointer.prototype = Object.create(pixi.Graphics.prototype);
+        Pointer.prototype.constructor = Pointer;
 
 
+        /**
+         *
+         * @constructor
+         */
         function PixiTilesContainer() {
             pixi.Container.call(this);
 
             var mousePosition = dataTypes.createPosition(this),
-                mouseIsDown = false,
-                grid = drawGrid(),
-                cursorFrame = new CursorFrame(),
-                pointerFrame = new PointerFrame(),
+                grid = new Grid(),
+                cursor = new Cursor(),
+                pointer = new Pointer(),
                 tilesGrid = new pixi.Container();
 
 
             this.addChild(grid);
             this.addChild(tilesGrid);
-            this.addChild(cursorFrame);
-            this.addChild(pointerFrame);
+            this.addChild(cursor);
+            this.addChild(pointer);
 
             this.interactive = true;
 
-            this.on('mousedown', function(e){
-                mouseIsDown = true;
-                logger.info(mousePosition);
-                playerGo();
-            });
 
-            this.on('mouseup', function(e){
-                mouseIsDown = false;
-            });
-            
             function playerGo(){
-                pointerFrame.show();
-                pointerFrame.location.x = mousePosition.grid.x;
-                pointerFrame.location.y = mousePosition.grid.y;
-                dispatcher.game.clickGrid.trigger(mousePosition);
+                pointer.show();
+                pointer.location.x = mousePosition.grid.x;
+                pointer.location.y = mousePosition.grid.y;
             }
 
 
-            dispatcher.game.tick(function(game){
-                return;
-                mousePosition = game.pixiRoot.mousePosition;
-                var pos = mousePosition.grid;
-                cursorFrame.x = pos.x * tileSize;
-                cursorFrame.y = pos.y * tileSize;
-                pointerFrame.fadeOut();
+            dispatcher.game.tick(function(){
+                var mouseGrid = gameApp.mouse.position.grid,
+                    gameGrid = gameApp.pixiRoot.position.grid;
+                cursor.gamePosition.grid.x = mouseGrid.x;
+                cursor.gamePosition.grid.y = mouseGrid.y;
+                grid.gamePosition.grid.x = gameGrid.x *-1;
+                grid.gamePosition.grid.y = gameGrid.y *-1;
+
+                if(gameApp.mouse.isDown){
+                    pointer.show();
+                    pointer.gamePosition.grid.x = mouseGrid.x;
+                    pointer.gamePosition.grid.y = mouseGrid.y;
+                }else{
+                    pointer.fadeOut();
+                }
+
+
             });
 
         }

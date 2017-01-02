@@ -88,35 +88,22 @@ define(['config', 'logger', 'gameSocket'],
              * calculate difference
              * Usage for movements: {x, y} = diff(posIsNow, posMoveTo)
              * @param p2 {{x, y}}
+             * @param minX {number} threshold, below defaults to 0
+             * @param minY {number} threshold, below defaults to 0
              * @returns {{x, y}}
              */
-            p1.diff = function(p2){
+            p1.diff = function(p2, minX, minY){
+                var x = p2.x - p1.x,
+                    y = p2.y - p1.y;
+                !minX && (minX = 0);
+                !minY && (minY = 0);
                 return {
-                    x: p2.x - p1.x,
-                    y: p2.y - p1.y
+                    x: Math.abs(x) >= minX ? x : 0,
+                    y: Math.abs(y) >= minY ? y : 0
                 }
             };
         }
 
-        /**
-         * Helper for createPosition and createPositionRelative
-         * @param grid {{x, y}}
-         * @returns {{x, y}}
-         */
-        function _getChunk(grid){
-            var chunk = {
-                get x (){
-                    return Math.round(grid.x / chunkSize);
-                },
-                get y (){
-                    return Math.round(grid.y / chunkSize);
-                }
-            };
-
-            _createCalculators(chunk);
-
-            return chunk;
-        }
 
         /**
          * calculate grid and chunk coordinates
@@ -125,25 +112,69 @@ define(['config', 'logger', 'gameSocket'],
          * @returns {{x, y, grid, chunk}}
          */
         function createPosition(self){
+
+            var tile = {
+                get x() {
+                    return self.x - grid.x * tileSize + tileSize / 2;
+                },
+                get y() {
+                    return self.y - grid.y * tileSize + tileSize / 2;
+                },
+                set x (x) {
+                    x = Math.max(0, Math.min(x, tileSize));
+                    self.x = x + grid.x * tileSize - tileSize / 2;
+                },
+                set y (y){
+                    y = Math.max(0, Math.min(y, tileSize));
+                    self.y = y + grid.y * tileSize - tileSize / 2;
+                }
+            };
+
             var grid = {
                 get x (){
                     return Math.round(self.x / tileSize)
                 },
                 get y (){
                     return Math.round(self.y / tileSize);
+                },
+                set x (x) {
+                    self.x = Math.round(x * tileSize);
+                },
+                set y (y){
+                    self.y = Math.round(y * tileSize);
                 }
             };
 
-            _createCalculators(grid);
-
-            var chunk = _getChunk(grid);
+            var chunk = {
+                get x (){
+                    return Math.round(self.x / tileSize / chunkSize);
+                },
+                get y (){
+                    return Math.round(self.y / tileSize / chunkSize);
+                },
+                set x (x) {
+                    self.x = Math.round(x * tileSize * chunkSize);
+                },
+                set y (y){
+                    self.y = Math.round(y * tileSize * chunkSize);
+                }
+            };
 
             var pos = {
                 get x(){
-                    return Math.round(self.x - grid.x * tileSize);
+                    return self.x * 100 / 100;
                 },
                 get y (){
-                    return Math.round(self.y - grid.y * tileSize);
+                    return self.y * 100 / 100;
+                },
+                set x(x){
+                    self.x = x;
+                },
+                set y (y){
+                    self.y = y;
+                },
+                get tile(){
+                    return tile;
                 },
                 get grid(){
                     return grid;
@@ -154,6 +185,9 @@ define(['config', 'logger', 'gameSocket'],
             };
 
             _createCalculators(pos);
+            _createCalculators(tile);
+            _createCalculators(grid);
+            _createCalculators(chunk);
 
             return pos;
         }
@@ -168,6 +202,15 @@ define(['config', 'logger', 'gameSocket'],
          * @returns {{x, y, grid, chunk}}
          */
         function createPositionRelative(self, rel){
+            var tile = {
+                get x() {
+                    return Math.round((rel.x - self.x) - grid.x * tileSize);
+                },
+                get y() {
+                    return Math.round((rel.y - self.y) - grid.y * tileSize);
+                }
+            };
+
             var grid = {
                 get x(){
                     return Math.round((rel.x - self.x) / tileSize);
@@ -177,16 +220,24 @@ define(['config', 'logger', 'gameSocket'],
                 }
             };
 
-            _createCalculators(grid);
-
-            var chunk = _getChunk(grid);
+            var chunk = {
+                get x (){
+                    return Math.round(grid.x / chunkSize);
+                },
+                get y (){
+                    return Math.round(grid.y / chunkSize);
+                }
+            };
 
             var pos =  {
                 get x() {
-                    return Math.round((rel.x - self.x) - grid.x * tileSize);
+                    return Math.round((rel.x - self.x) * 100) / 100;
                 },
                 get y() {
-                    return Math.round((rel.y - self.y)- grid.y * tileSize);
+                    return Math.round((rel.y - self.y) * 100) / 100;
+                },
+                get tile(){
+                    return tile;
                 },
                 get grid(){
                     return grid;
@@ -197,6 +248,9 @@ define(['config', 'logger', 'gameSocket'],
             };
 
             _createCalculators(pos);
+            _createCalculators(tile);
+            _createCalculators(grid);
+            _createCalculators(chunk);
 
             return pos;
         }

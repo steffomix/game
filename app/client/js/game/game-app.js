@@ -29,11 +29,10 @@ define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'dataTyp
 
             var self = this,
                 renderer = Pixi.autoDetectRenderer(100, 100, {transparent: 1}),
-                $gameStage = $('#game-stage'),
-                ticker = new Tick(tick),
-                dispatchTick = dispatcher.game.tick.claimTrigger(this),
+                ticker = new Tick(dispatcher.game.tick.claimTrigger(this)),
                 $body = $('body');
 
+            ticker.fps = config.game.fps;
             // add getter to this that represents the module
             this.addModule = function (name, mod) {
                 if (self[name]) {
@@ -47,23 +46,18 @@ define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'dataTyp
 
             };
 
-            ticker.fps = config.game.fps;
+            this.setMainPlayer = function(player){
+                Object.defineProperty(self, 'mainPlayer', {
+                    get: function () {
+                        return player;
+                    }
+                });
+            };
+
 
             dispatcher.game.initialize(function () {
-                $gameStage.html(renderer.view);
                 // start ticker when initialize is finished
                 setTimeout(ticker.start, 0);
-            });
-
-            function tick(load) {
-                var s = self.pixiRoot;
-                dispatchTick();
-                renderer.render(self.pixiRoot);
-            }
-
-            // resize stage
-            dispatcher.global.windowResize(function () {
-                renderer.resize($body.width(), $body.height());
             });
 
 

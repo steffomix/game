@@ -29,12 +29,13 @@
             'jquery': 'lib/jquery.min', // http://jquery.com/
             'io': 'lib/socket.io.min', // http://socket.io/
             'stateMachine': 'lib/state-machine.min', // https://github.com/jakesgordon/javascript-state-machine
+            'tween': 'lib/tween', // https://github.com/tweenjs/tween.js
             'pixi': 'lib/pixi_v4.3.0', // http://www.pixijs.com/
             'pathfinding': 'lib/pathfinding' // https://github.com/qiao/PathFinding.js
         },
         logger: {},
         game: {
-            fps: 30, // game calculations and pixi render per second
+            fps: 1, // game calculations and pixi render per second
             tiles: {
                 size: 100 // tile size in px
             },
