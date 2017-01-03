@@ -25,15 +25,16 @@ define(['config', 'logger', 'gameSocket'],
 
         var instance = {
 
-            get Location(){
+            get Location() {
                 return Location;
             },
-            get createPosition(){
-                return createPosition;
+            get gamePosition() {
+                return gamePosition;
             },
-            get createPositionRelative(){
-                return createPositionRelative;
+            get gamePositionRelative() {
+                return gamePositionRelative;
             }
+
 
         };
 
@@ -46,13 +47,14 @@ define(['config', 'logger', 'gameSocket'],
          * @param world_id {int}
          * @constructor
          */
-        function Location(x, y, z, area_id, world_id){
+        function Location(x, y, z, area_id, world_id) {
             this.x = x || 0;
             this.y = y || 0;
             this.z = z || 0;
             this.area_id = area_id || null;
             this.world_id = world_id || null;
         }
+
         Location.prototype = {
             x: 0,
             y: 0,
@@ -66,14 +68,14 @@ define(['config', 'logger', 'gameSocket'],
          * @param p1
          * @private
          */
-        function _createCalculators(p1){
+        function _createCalculators(p1) {
             /**
              * calculate if p1 and p2 is same
              * @param p2 {{x, y}}
              * @returns {boolean}
              * @private
              */
-            p1.eq = function (p2){
+            p1.eq = function (p2) {
                 return (p1.x == p2.x && p1.y == p2.y);
             };
             /**
@@ -81,7 +83,7 @@ define(['config', 'logger', 'gameSocket'],
              * @param p2 {{x, y}}
              * @returns {number}
              */
-            p1.dist = function(p2){
+            p1.dist = function (p2) {
                 return Math.sqrt(Math.pow(Math.abs(p1.x - p2.x), 2) + Math.pow(Math.abs(p1.y - p2.y), 2));
             };
             /**
@@ -92,7 +94,7 @@ define(['config', 'logger', 'gameSocket'],
              * @param minY {number} threshold, below defaults to 0
              * @returns {{x, y}}
              */
-            p1.diff = function(p2, minX, minY){
+            p1.diff = function (p2, minX, minY) {
                 var x = p2.x - p1.x,
                     y = p2.y - p1.y;
                 !minX && (minX = 0);
@@ -104,90 +106,160 @@ define(['config', 'logger', 'gameSocket'],
             };
         }
 
-
         /**
          * calculate grid and chunk coordinates
-         * and integer mouse position in px of inside tile where 0,0 is center of
+         * and integer mouse position in px of inside tile where 0,0 is center of.
+         *
+         * Calculates in Units:
+         * px,
+         * grid (px * tileSize)
+         * chunk (grid * chunkSize or  px * tileSize * chunkSize)
+         *
          * @param self {{x, y}}
          * @returns {{x, y, grid, chunk}}
          */
-        function createPosition(self){
+        function gamePosition(self) {
 
+            // position in px inside of tile where 0,0 is top left
+            // max x, y range: 0 to tileSize
             var tile = {
                 get x() {
-                    return self.x - grid.x * tileSize + tileSize / 2;
+                    return self.x - grid.x * tileSize;
                 },
                 get y() {
-                    return self.y - grid.y * tileSize + tileSize / 2;
+                    return self.y - grid.y * tileSize;
                 },
-                set x (x) {
+                set x(x) {
                     x = Math.max(0, Math.min(x, tileSize));
-                    self.x = x + grid.x * tileSize - tileSize / 2;
+                    self.x = x + grid.x * tileSize;
                 },
-                set y (y){
+                set y(y) {
                     y = Math.max(0, Math.min(y, tileSize));
-                    self.y = y + grid.y * tileSize - tileSize / 2;
+                    self.y = y + grid.y * tileSize;
                 }
             };
 
+            // tiles position in grid, eq to database location and user-location
             var grid = {
-                get x (){
+                get x() {
                     return Math.round(self.x / tileSize)
                 },
-                get y (){
+                get y() {
                     return Math.round(self.y / tileSize);
                 },
-                set x (x) {
+                set x(x) {
                     self.x = Math.round(x * tileSize);
                 },
-                set y (y){
+                set y(y) {
                     self.y = Math.round(y * tileSize);
                 }
             };
 
+            // tiles position in px on the tiles-grid
+            var gridPos = {
+                get x() {
+                    return grid.x * tileSize;
+                },
+                get y() {
+                    return grid.y * tileSize;
+                }
+            };
+
+            // chunk position in chunk
             var chunk = {
-                get x (){
-                    return Math.round(self.x / tileSize / chunkSize);
+                get x() {
+                    return Math.round((self.x + tileSize * (chunkSize / 2)) / tileSize / chunkSize) - 1;
                 },
-                get y (){
-                    return Math.round(self.y / tileSize / chunkSize);
+                get y() {
+                    return Math.round((self.y + tileSize * (chunkSize / 2)) / tileSize / chunkSize) - 1;
                 },
-                set x (x) {
-                    self.x = Math.round(x * tileSize * chunkSize);
+                set x(x) {
+                    self.x = chunkTile.x * tileSize + x * tileSize * chunkSize;
                 },
-                set y (y){
-                    self.y = Math.round(y * tileSize * chunkSize);
+                set y(y) {
+                    self.y = chunkTile.y * tileSize + y * tileSize * chunkSize;
+                }
+            };
+
+            // chunk position in px
+            var chunkPos = {
+                get x(){
+                    return chunk.x * tileSize * chunkSize;
+                },
+                get y(){
+                    return chunk.y * tileSize * chunkSize;
+                }
+            };
+
+            // tiles position inside chunk in grid
+            var chunkTile = {
+                get x() {
+                    return Math.round((self.x - chunk.x * tileSize * chunkSize) / tileSize);
+                },
+                get y() {
+                    return Math.round((self.y - chunk.y * tileSize * chunkSize) / tileSize);
+                },
+                set x(x) {
+                    self.x = chunk.x * tileSize * chunkSize + x * tileSize;
+                },
+                set x(y) {
+                    self.y = chunk.y * tileSize * chunkSize + y * tileSize;
+                }
+            };
+
+            // tiles position inside chunk in px
+            var chunkTilePos = {
+                get x() {
+                    return chunkTile.x * tileSize;
+                },
+                get y() {
+                    return chunkTile.y * tileSize;
                 }
             };
 
             var pos = {
-                get x(){
-                    return self.x * 100 / 100;
+                get x() {
+                    return self.x;
                 },
-                get y (){
-                    return self.y * 100 / 100;
+                get y() {
+                    return self.y;
                 },
-                set x(x){
+                set x(x) {
                     self.x = x;
                 },
-                set y (y){
+                set y(y) {
                     self.y = y;
                 },
-                get tile(){
+                get tile() {
                     return tile;
                 },
-                get grid(){
+                get grid() {
                     return grid;
                 },
-                get chunk(){
+                get gridPos() {
+                    return gridPos;
+                },
+                get chunk() {
                     return chunk;
+                },
+                get chunkPos(){
+                    return chunkPos;
+                },
+                get chunkTile() {
+                    return chunkTile;
+                },
+                get chunkTilePos() {
+                    return chunkTilePos;
                 }
             };
 
             _createCalculators(pos);
             _createCalculators(tile);
             _createCalculators(grid);
+            _createCalculators(gridPos);
             _createCalculators(chunk);
+            _createCalculators(chunkTile);
+            _createCalculators(chunkTilePos);
 
             return pos;
         }
@@ -201,7 +273,7 @@ define(['config', 'logger', 'gameSocket'],
          * @param rel {{x, y}}
          * @returns {{x, y, grid, chunk}}
          */
-        function createPositionRelative(self, rel){
+        function gamePositionRelative(self, rel) {
             var tile = {
                 get x() {
                     return Math.round((rel.x - self.x) - grid.x * tileSize);
@@ -212,38 +284,62 @@ define(['config', 'logger', 'gameSocket'],
             };
 
             var grid = {
-                get x(){
+                get x() {
                     return Math.round((rel.x - self.x) / tileSize);
                 },
-                get y(){
+                get y() {
                     return Math.round((rel.y - self.y) / tileSize);
                 }
             };
 
+            var gridPos = {
+                get x() {
+                    return grid.x * tileSize;
+                },
+                get y() {
+                    return grid.y * tileSize;
+                }
+            };
+
             var chunk = {
-                get x (){
+                get x() {
                     return Math.round(grid.x / chunkSize);
                 },
-                get y (){
+                get y() {
                     return Math.round(grid.y / chunkSize);
                 }
             };
 
-            var pos =  {
+            var chunkPos = {
+                get x(){
+                    return chunk.x * tileSize * chunkSize;
+                },
+                get y(){
+                    return chunk.y * tileSize * chunkSize;
+                }
+            };
+
+            var pos = {
                 get x() {
-                    return Math.round((rel.x - self.x) * 100) / 100;
+                    return (rel.x - self.x) * 100;
                 },
                 get y() {
-                    return Math.round((rel.y - self.y) * 100) / 100;
+                    return (rel.y - self.y) * 100;
                 },
-                get tile(){
+                get tile() {
                     return tile;
                 },
-                get grid(){
+                get grid() {
                     return grid;
                 },
-                get chunk(){
+                get gridPos() {
+                    return gridPos;
+                },
+                get chunk() {
                     return chunk;
+                },
+                get chunkPos(){
+                    return chunkPos;
                 }
             };
 
@@ -254,7 +350,6 @@ define(['config', 'logger', 'gameSocket'],
 
             return pos;
         }
-
 
 
         return instance;

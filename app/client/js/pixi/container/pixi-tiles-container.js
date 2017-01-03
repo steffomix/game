@@ -15,14 +15,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher', 'gameApp'],
-    function (config, Logger, dataTypes, pixi, dispatcher, gameApp) {
+define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher', 'gameApp', 'tween'],
+    function (config, Logger, dataTypes, pixi, dispatcher, gameApp, tween) {
 
         var instance,
             logger = Logger.getLogger('pixiTilesContainer');
         logger.setLevel(config.logger.pixiTilesContainer || 0);
 
-        var tileSize = config.game.tiles.size;
+        var tileSize = config.game.tiles.size,
+            chunkSize = config.game.chunks.size;
 
         function getInstance() {
             if (!instance) {
@@ -37,11 +38,9 @@ define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher', 'gameApp'],
          */
         function Grid() {
             pixi.Graphics.call(this);
-            this.gamePosition = dataTypes.createPosition(this);
+            this.gamePosition = dataTypes.gamePosition(this);
             var x = 30 * tileSize - tileSize / 2;
             this.lineStyle(8, 0x808080, .5);
-
-            //this.blendMode = pixi.BLEND_MODES.OVERLAY;
 
             for (var i = -x; i <= x; i += tileSize) {
                 this.moveTo(i, -x);
@@ -54,15 +53,37 @@ define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher', 'gameApp'],
         Grid.prototype = Object.create(pixi.Graphics.prototype);
         Grid.prototype.constructor =  Grid;
 
+
+
+        /**
+         * Chunk
+         * @constructor
+         */
+        function Chunk() {
+            pixi.Graphics.call(this);
+            this.gamePosition = dataTypes.gamePosition(this);
+            var x = 3 * tileSize * chunkSize + tileSize / 2;
+            this.lineStyle(8, 0x000000, .2);
+
+            for (var i = -x; i <= x; i += tileSize * chunkSize) {
+                this.moveTo(i, -x);
+                this.lineTo(i, x);
+                this.moveTo(-x, i);
+                this.lineTo(x, i);
+            }
+            this.hitArea = new pixi.Rectangle(-x, -x, x * 2, x * 2);
+        }
+        Chunk.prototype = Object.create(pixi.Graphics.prototype);
+        Chunk.prototype.constructor =  Chunk;
+
         /**
          * Cursor
          * @constructor
          */
         function Cursor() {
             pixi.Graphics.call(this);
-            this.gamePosition = dataTypes.createPosition(this);
+            this.gamePosition = dataTypes.gamePosition(this);
             var x = tileSize / 2;
-            //this.blendMode = pixi.BLEND_MODES.OVERLAY;
             this.lineStyle(3, 0x000000, .3);
             this.moveTo(-x, -x);
             this.lineTo(x, -x);
@@ -82,14 +103,11 @@ define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher', 'gameApp'],
         function Pointer(){
 
             pixi.Graphics.call(this);
-            var self = this,
-                gridX,
-                gridY,
-                x = tileSize / 2,
+            var x = tileSize / 2,
                 alpha = .5,
                 fade = .01;
 
-            this.gamePosition = dataTypes.createPosition(this);
+            this.gamePosition = dataTypes.gamePosition(this);
 
             this.lineStyle(3, 0xcc0000, alpha);
             this.moveTo(-x, -x);
@@ -117,29 +135,31 @@ define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher', 'gameApp'],
         function PixiTilesContainer() {
             pixi.Container.call(this);
 
-            var mousePosition = dataTypes.createPosition(this),
-                grid = new Grid(),
+            var grid = new Grid(),
+                chunk = new Chunk(),
                 cursor = new Cursor(),
                 pointer = new Pointer(),
-                tilesGrid = new pixi.Container();
+                tilesGrid = new pixi.Container(),
+                animate = new tween.Tween({
+                    get alpha (){
+                        return pointer.alpha
+                    },
+                    set alpha (a){
+                        pointer.alpha = a;
+                    }
+                });
 
 
             this.addChild(grid);
+            this.addChild(chunk);
             this.addChild(tilesGrid);
             this.addChild(cursor);
             this.addChild(pointer);
 
             this.interactive = true;
 
-
-            function playerGo(){
-                pointer.show();
-                pointer.location.x = mousePosition.grid.x;
-                pointer.location.y = mousePosition.grid.y;
-            }
-
-
-            dispatcher.game.tick(function(){
+            dispatcher.game.tick(function(t){
+                animate.update(t);
                 var mouseGrid = gameApp.mouse.position.grid,
                     gameGrid = gameApp.pixiRoot.position.grid;
                 cursor.gamePosition.grid.x = mouseGrid.x;
@@ -148,15 +168,16 @@ define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher', 'gameApp'],
                 grid.gamePosition.grid.y = gameGrid.y *-1;
 
                 if(gameApp.mouse.isDown){
-                    pointer.show();
+                    pointer.alpha = 1;
                     pointer.gamePosition.grid.x = mouseGrid.x;
                     pointer.gamePosition.grid.y = mouseGrid.y;
-                }else{
-                    pointer.fadeOut();
                 }
-
-
             });
+
+            dispatcher.game.mouseup(function showPointer(){
+                animate.to({alpha: 0}, 2000).start();
+            });
+
 
         }
 

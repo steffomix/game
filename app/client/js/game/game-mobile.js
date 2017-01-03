@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'debugInfo', 'pixi', 'tween', 'dataTypes', 'gameApp'],
-    function (config, Logger, DebugInfo, pixi, tween, dataTypes, gameApp) {
+define(['config', 'logger', 'debugInfo', 'pixi', 'dataTypes'],
+    function (config, Logger, DebugInfo, pixi, dataTypes) {
 
         var logger = Logger.getLogger('gameMobile');
         logger.setLevel(config.logger.gameMobile || 0);
@@ -30,51 +30,25 @@ define(['config', 'logger', 'debugInfo', 'pixi', 'tween', 'dataTypes', 'gameApp'
                 sprite = new pixi.Sprite(texture);
 
             sprite.anchor.set(.5);
-            
 
-            var debug = new DebugInfo(this, 50).debug;
+
 
             this.addChild(sprite);
             this.name = user.name;
             this.location = new dataTypes.Location();
-            this.gamePosition = dataTypes.createPosition(this);
-            this.tween = new tween.Tween(this.gamePosition);
-            this.tween.easing(tween.Easing.Quadratic.In);
+            this.gamePosition = dataTypes.gamePosition(this);
 
             this.updateLocation = function (loc) {
                 //self.location = loc;
             };
-            
-            this.tick = function () {
-                var location = {
-                        x: self.location.x * tileSize,
-                        y: self.location.y * tileSize
-                    },
-                    diff = self.gamePosition.diff(location, 1, 1);
-                debug({
-                    diff: diff,
-                    gamePosition: self.gamePosition,
-                    location: location
 
-
-                });
-                this.tween.update();
-                /*
-                try {
-                    self.x += diff.x / 20;
-                    self.y += diff.y / 20;
-                } catch (e) {
-                    logger.error('GamePlayer::updateLocation ', e);
-                }
-                */
-            };
         }
 
         var o = Mobile.prototype = Object.create(pixi.Container.prototype);
         Mobile.prototype.constructor = Mobile;
 
 
-        o.onMouseDown = o.onMouseUp = o.onMouseMove = function (/*mousePosition, mouseState, gameApp*/) {
+        o.onMouseDown = o.onMouseUp = o.onMouseMove = o.tick = function () {
         };
 
         return Mobile;

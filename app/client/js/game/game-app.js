@@ -57,7 +57,7 @@ define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'dataTyp
 
             dispatcher.game.initialize(function () {
                 // start ticker when initialize is finished
-                setTimeout(ticker.start, 0);
+                setTimeout(ticker.start, 100);
             });
 
 

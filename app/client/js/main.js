@@ -21,6 +21,7 @@
     var conf = {
         debug: true, // show debug info on screen
         baseUrl: '/js/',
+        urlArgs: "c=" + (new Date().getTime()),
         paths: {
             // third party libs
             'logger': 'lib/loglevel.min', // https://github.com/pimterry/loglevel
@@ -35,16 +36,13 @@
         },
         logger: {},
         game: {
-            fps: 1, // game calculations and pixi render per second
+            fps: 30, // game calculations and pixi render per second
             tiles: {
                 size: 100 // tile size in px
             },
             chunks: {
                 size: 16 // 16x16 tiles
             }
-        },
-        server: {
-            fps: 2 // send game updates per second
         }
 
     };

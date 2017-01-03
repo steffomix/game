@@ -15,10 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'jquery', 'dataTypes', 'debugInfo', 'pixi', 'eventDispatcher', 'gameApp',
+define(['config', 'logger', 'jquery', 'dataTypes', 'debugInfo', 'pixi', 'tween', 'eventDispatcher', 'gameApp',
         'pixiTilesContainer',
         'pixiPlayerContainer'],
-    function (config, Logger, $, dataTypes, DebugInfo, pixi, dispatcher, gameApp,
+    function (config, Logger, $, dataTypes, DebugInfo, pixi, tween, dispatcher, gameApp,
               playerContainer,
               tilesContainer
     ) {
@@ -44,6 +44,34 @@ define(['config', 'logger', 'jquery', 'dataTypes', 'debugInfo', 'pixi', 'eventDi
 
         function PixiRootContainer() {
             pixi.Container.call(this);
+
+            this.addChild(playerContainer);
+            this.addChild(tilesContainer);
+            this.addChild(createInteractive());
+            this.interactive = true;
+
+            // center container
+            this.x = $body.width() / 2;
+            this.y = $body.height() / 2;
+
+            this.on('mousemove', function (e) {
+                lastMouseMove.x = e.data.global.x;
+                lastMouseMove.y = e.data.global.y;
+                onMouseEvent('mousemove', e);
+            });
+            this.on('mousedown', function(e){
+                mouseDown = true;
+                onMouseEvent('mousedown', e);
+            });
+            this.on('mouseup', function(e){
+                mouseDown = false;
+                onMouseEvent('mouseup', e);
+            });
+
+            function onMouseEvent(name, event){
+                dispatcher.game[name].trigger(mousePosition, event);
+            }
+
             var self = this,
                 debug = new DebugInfo(this, -200, 0).debug,
                 // last raw mousemove position
@@ -52,8 +80,8 @@ define(['config', 'logger', 'jquery', 'dataTypes', 'debugInfo', 'pixi', 'eventDi
                     y: 0
                 },
                 mouseDown = false,
-                mousePosition = dataTypes.createPositionRelative(self, lastMouseMove),
-                gamePosition = dataTypes.createPosition({
+                mousePosition = dataTypes.gamePositionRelative(self, lastMouseMove),
+                gamePosition = dataTypes.gamePosition({
                     get x (){
                         return self.x - $body.width() / 2;
                     },
@@ -62,26 +90,11 @@ define(['config', 'logger', 'jquery', 'dataTypes', 'debugInfo', 'pixi', 'eventDi
                     }
                 });
 
+            // mouse down event
             Object.defineProperty(mousePosition, 'isDown', {
                 get: function () {
                     return mouseDown;
                 }
-            });
-
-            // center container
-            this.x = $body.width() / 2;
-            this.y = $body.height() / 2;
-
-            this.addChild(playerContainer);
-            this.addChild(tilesContainer);
-            this.addChild(createInteractive());
-
-
-            // trigger relative position that fits to root container position
-            this.interactive = true;
-            this.on('mousemove', function (e) {
-                lastMouseMove.x = e.data.global.x;
-                lastMouseMove.y = e.data.global.y;
             });
 
 
@@ -92,10 +105,12 @@ define(['config', 'logger', 'jquery', 'dataTypes', 'debugInfo', 'pixi', 'eventDi
                         x: mainPlayer.x * -1,
                         y: mainPlayer.y * -1
                     };
-                var diff = gamePosition.diff(moveTo, 2, 2);
-                debug(gamePosition);
-                self.x += diff.x / 20;
-                self.y += diff.y / 20;
+                var diff = gamePosition.diff(moveTo, .5, .5);
+
+                gameApp.mainPlayer && gameApp.mainPlayer.debug(mousePosition);
+
+                self.x += diff.x / 25;
+                self.y += diff.y / 25;
 
                 renderer.render(self);
             });
@@ -118,30 +133,6 @@ define(['config', 'logger', 'jquery', 'dataTypes', 'debugInfo', 'pixi', 'eventDi
             dispatcher.global.windowResize(function () {
                 renderer.resize($body.width(), $body.height());
             });
-
-            this.on('mousemove', function(){
-                onMouseEvent('mousemove');
-            });
-            this.on('mousedown', function(){
-                mouseDown = true;
-                onMouseEvent('mousedown');
-            });
-            this.on('mouseup', function(){
-                mouseDown = false;
-                onMouseEvent('mouseup');
-            });
-            this.on('touchstart', function(){
-                mouseDown = true;
-                onMouseEvent('mousedown');
-            });
-            this.on('touchend', function(){
-                mouseDown = false;
-                onMouseEvent('mouseup');
-            });
-
-            function onMouseEvent(e){
-                dispatcher.game[e].trigger(mousePosition);
-            }
 
 
         }

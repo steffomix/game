@@ -54,9 +54,9 @@ define(['config', 'logger', 'underscore', 'eventDispatcher', 'gameMainPlayer', '
                 mainPlayer = '';
             });
 
-            dispatcher.game.tick(function(){
+            dispatcher.game.tick(function(t, l){
                 _.each(players, function(p){
-                    p.tick();
+                    p.tick(t, l);
                 })
             });
 

@@ -15,14 +15,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger'],
-    function (config, Logger) {
+define(['config', 'logger', 'tween'],
+    function (config, Logger, tween) {
         logger = Logger.getLogger('tick');
         logger.setLevel(config.logger.tick|| 0);
 
         function queue (){
 
         }
+
 
 
         function  GameTick(trigger){
@@ -43,14 +44,14 @@ define(['config', 'logger'],
             };
             tick();
             function tick(){
-                var t = new Date().getTime();
+                var t = tween.now();
                 try{
-                    running && trigger(100 - self.load);
+                    running && trigger(t, 100 - self.load);
                 }catch(e){
                     logger.error('Tick failed: ', e);
                     self.fps /= 2;
                 }
-                var nt = Math.min(Math.max(Math.round(1000 / self.fps) - (new Date().getTime() - t), 0), 3000);
+                var nt = Math.min(Math.max(Math.round(1000 / self.fps) - (tween.now() - t), 0), 3000);
                 self.load += ((100 * nt / (1000 / self.fps) - self.load) / self.volatility);
                 setTimeout(tick, nt);
             }
