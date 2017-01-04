@@ -25,6 +25,8 @@
         paths: {
             // third party libs
             'logger': 'lib/loglevel.min', // https://github.com/pimterry/loglevel
+            'seedrandom': 'lib/seedrandom', // https://github.com/davidbau/seedrandom
+            'noise': 'lib/noise', // https://github.com/josephg/noisejs
             'underscore': 'lib/underscore', // http://underscorejs.org/
             'backbone': 'lib/backbone', // http://backbonejs.org/
             'jquery': 'lib/jquery.min', // http://jquery.com/
@@ -36,12 +38,13 @@
         },
         logger: {},
         game: {
-            fps: 30, // game calculations and pixi render per second
+            fps: 60, // game calculations and pixi render per second
             tiles: {
-                size: 100 // tile size in px
+                size: 64, // tile size in px
+                scale: .5 // scale tiles
             },
             chunks: {
-                size: 16 // 16x16 tiles
+                size: 5 // 16x16 tiles
             }
         }
 
@@ -92,7 +95,7 @@
 
         // game
         ['gameApp', 'game/game-app', 0],
-        ['gameFloorManager', 'game/game-floor-manager', 0],
+        //['gameFloorManager', 'game/game-floor-manager', 0],
         ['gameFloor', 'game/game-floor', 0],
         ['gameTile', 'game/game-tile', 0],
         ['gameMainPlayer', 'game/game-main-player', 0], // extends gamePlayer
@@ -101,9 +104,9 @@
         ['gamePlayerManager', 'game/game-player-manager', 0],
 
         // pixi
-        ['pixiRootContainer', 'pixi/container/pixi-root-container', 0],
-        ['pixiTilesContainer', 'pixi/container/pixi-tiles-container', 0],
-        ['pixiPlayerContainer', 'pixi/container/pixi-player-container', 0],
+        ['pixiRootLayer', 'pixilayer/pixilayer-root', 0],
+        ['pixiTilesLayer', 'pixilayer/pixilayer-tiles', 0],
+        ['pixiPlayerLayer', 'pixilayer/pixilayer-player', 0],
 
     ];
 
@@ -141,7 +144,7 @@
 
 
 
-    var groups = ['lib', 'game', 'pixi', 'interface'],
+    var groups = ['lib', 'game', 'pixilayer', 'interface'],
         preloadModules = ['backbone', 'jquery', 'eventDispatcher'],
         p;
     for (var m in conf.paths) {

@@ -21,7 +21,8 @@ define(['config', 'logger', 'debugInfo', 'pixi', 'dataTypes'],
         var logger = Logger.getLogger('gameMobile');
         logger.setLevel(config.logger.gameMobile || 0);
 
-        var tileSize = config.game.tiles.size;
+        var tileSize = config.game.tiles.size,
+            scale = config.game.tiles.scale;
 
         function Mobile(user) {
             pixi.Container.call(this);
@@ -30,7 +31,7 @@ define(['config', 'logger', 'debugInfo', 'pixi', 'dataTypes'],
                 sprite = new pixi.Sprite(texture);
 
             sprite.anchor.set(.5);
-
+            this.setTransform(0, 0, scale, scale);
 
 
             this.addChild(sprite);

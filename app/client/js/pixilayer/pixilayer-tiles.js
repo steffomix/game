@@ -15,19 +15,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher', 'gameApp', 'tween'],
-    function (config, Logger, dataTypes, pixi, dispatcher, gameApp, tween) {
+define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher', 'gameApp', 'tween', 'gameFloor'],
+    function (config, Logger, dataTypes, pixi, dispatcher, gameApp, tween, GameFloor) {
 
         var instance,
-            logger = Logger.getLogger('pixiTilesContainer');
-        logger.setLevel(config.logger.pixiTilesContainer || 0);
+            logger = Logger.getLogger('pixiTilesLayer');
+        logger.setLevel(config.logger.pixiTilesLayer || 0);
 
         var tileSize = config.game.tiles.size,
             chunkSize = config.game.chunks.size;
 
         function getInstance() {
             if (!instance) {
-                instance = new PixiTilesContainer();
+                instance = new PixiTilesLayer();
             }
             return instance;
         }
@@ -132,14 +132,14 @@ define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher', 'gameApp', '
          *
          * @constructor
          */
-        function PixiTilesContainer() {
+        function PixiTilesLayer() {
             pixi.Container.call(this);
 
             var grid = new Grid(),
                 chunk = new Chunk(),
                 cursor = new Cursor(),
                 pointer = new Pointer(),
-                tilesGrid = new pixi.Container(),
+                tilesGrid = new GameFloor(),
                 animate = new tween.Tween({
                     get alpha (){
                         return pointer.alpha
@@ -181,8 +181,8 @@ define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher', 'gameApp', '
 
         }
 
-        PixiTilesContainer.prototype = Object.create(pixi.Container.prototype);
-        PixiTilesContainer.prototype.constructor = PixiTilesContainer;
+        PixiTilesLayer.prototype = Object.create(pixi.Container.prototype);
+        PixiTilesLayer.prototype.constructor = PixiTilesLayer;
 
         return getInstance();
     });

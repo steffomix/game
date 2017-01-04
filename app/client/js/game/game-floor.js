@@ -15,33 +15,147 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'underscore', 'gameTile'],
-    function (config, Logger, _, Tile) {
+define(['config', 'logger', 'underscore', 'dataTypes', 'eventDispatcher', 'pixi', 'noise', 'gameApp', 'gameTile'],
+    function (config, Logger, _, dataTypes, dispatcher, pixi, noise, gameApp, GameTile) {
 
         var logger = Logger.getLogger('gameFloor');
         logger.setLevel(config.logger.gameFloor || 0);
 
+        var tileSize = config.game.tiles.size;
+            chunkSize = config.game.chunks.size;
 
-        function GameFloor(data) {
-            this.world_id = data.world_id;
-            this.area_id = data.area_id;
-            this.z = data.z;
-            this.tiles = data.tiles;
-            this.updateFloor(this.tiles);
+
+        GameFloor.prototype = Object.create(pixi.Container.prototype);
+        Chunk.prototype = Object.create(pixi.Container.prototype);
+        Row.prototype = Object.create(pixi.Container.prototype);
+        Collumn.prototype = Object.create(pixi.Container.prototype);
+
+        GameFloor.prototype.constructor = GameFloor;
+        Chunk.prototype.constructor = Chunk;
+        Row.prototype.constructor = Row;
+        Collumn.prototype.constructor = Collumn;
+
+
+        function Floor() {
         }
 
-        GameFloor.prototype = {
-            updateFloor: function(data){
-                this.tiles = {};
-                var self = this;
-                _.each(data, function(v, k){
-                    self.tiles[k] = new Tile(v);
-                })
-            },
-            updateTile: function(tile){
-                this.tile = new Tile(tile);
-            }
+        function Chunk(x, y){
+            pixi.Container.call(this);
+            this.gamePosition = dataTypes.gamePosition(x * tileSize * chunkSize, y * tileSize * chunkSize);
+            this.tiles = {};
+
+        }
+        Chunk.prototype.setTile = function(x, y, texture){
+            this.addChild(this.tiles[coord(x, y)] = new GameTile(x * tileSize, y * tileSize, texture));
         };
+
+        function Row(y) {
+            pixi.Container.call(this);
+            this.y = y;
+        }
+
+        function Collumn(x) {
+            pixi.Container.call(this);
+            this.x = x;
+        }
+
+
+        function GameFloor() {
+            pixi.Container.call(this);
+            var self = this,
+                chunks = {};
+            dispatcher.game.tick(function(){
+                if(gameApp.mainPlayer){
+                    var position = gameApp.mainPlayer.gamePosition.chunk,
+                        nChunks = {};
+
+                    _.each(chunks, function(chunk){
+                        var cPos = chunk.gamePosition.chunk
+                        if(cPos.dist(position) > 1.5){
+                            chunk.destroy();
+                        }
+                    });
+
+                    for(var i = -1; i <= 1; i++){
+                        for(var ii = -1; ii <= 1; ii++){
+                            var x = position.x + i,
+                                y = position.y + ii,
+                                id = coord(x, y);
+                            if(!chunks[id]){
+                                var chunk = drawChunk(x, y);
+                                nChunks[id] = chunk;
+                                self.addChild(chunk);
+                            }else{
+                                nChunks[id] = chunks[id];
+                            }
+
+                        }
+                    }
+                    chunks = nChunks;
+                }
+
+
+
+            });
+
+
+
+
+        }
+
+        function coord(x, y){
+            return x + '_' + y;
+        }
+
+        function drawChunk(_x, _y) {
+            var value,
+                chunk = new Chunk(_x, _y),
+                ranges = [
+                    0, 100, //Water
+                    120, // sand
+                    160, // grass
+                    200, // wood
+                    240, // stone
+                    256 // snow
+                ],
+                textures = [
+                    'water',
+                    'sand',
+                    'grass',
+                    'wood',
+                    'stone',
+                    'snow'
+                ];
+
+            for (var x = _x * chunkSize; x < _x * chunkSize + chunkSize; x++) {
+                for (var y = _y * chunkSize; y < _y * chunkSize + chunkSize; y++) {
+
+                    value = calcNoise(x, y, 10) / 2;
+                    value += calcNoise(y, x, 5) / 4;
+                    value += calcNoise(x, y, 2.5) / 8;
+                    value += calcNoise(y, x, 1) / 8;
+                    value = Math.min(255, value);
+
+                    for (var i = 0; i < ranges.length - 1; i++) {
+                        if (value >= ranges[i] && value < ranges[i + 1]) {
+                            chunk.setTile(x, y, textures[i]);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return chunk;
+
+            function scaleNoise(s) {
+                return s * 5;
+            }
+
+            function calcNoise(x, y, s) {
+                var value = Math.min(Infinity, Math.max(-Infinity, noise.simplex2(x / scaleNoise(s), y / scaleNoise(s), 0)));
+                return (1 + value) * 1.1 * 128;
+            }
+        }
 
         return GameFloor;
     });

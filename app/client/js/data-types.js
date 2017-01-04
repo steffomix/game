@@ -268,7 +268,7 @@ define(['config', 'logger', 'gameSocket'],
          * calculate relative coordinates of another container
          * calculate grid coordinates
          * and integer mouse position in px of inside tile where 0,0 is center of.
-         * Used only by pixiRootContainer to calculate mouseEvent position on the grid
+         * Used only by pixiRootLayer to calculate mouseEvent position on the grid
          * @param self {{x, y}}
          * @param rel {{x, y}}
          * @returns {{x, y, grid, chunk}}

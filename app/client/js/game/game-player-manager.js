@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'underscore', 'eventDispatcher', 'gameMainPlayer', 'gamePlayer', 'pixiPlayerContainer', 'gameApp'],
+define(['config', 'logger', 'underscore', 'eventDispatcher', 'gameMainPlayer', 'gamePlayer', 'pixiPlayerLayer', 'gameApp'],
     function (config, Logger, _, dispatcher, MainPlayer, Player, playerContainer, gameApp) {
 
         var instance,

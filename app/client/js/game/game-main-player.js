@@ -27,13 +27,13 @@ define(['config', 'logger', 'gamePlayer', 'debugInfo', 'eventDispatcher', 'tween
 
             this.tick = function (t, l) {
                 animate.update(t);
-                /*
+
                 debug({
                     time: Math.round(t),
                     load: Math.round(l),
                     pos: self.gamePosition
                 });
-*/
+
                 if (gameApp.mouse.isDown) {
                     var pos = gameApp.mouse.position.gridPos;
                     if(!gameApp.mouse.position.grid.eq(self.gamePosition.grid)){

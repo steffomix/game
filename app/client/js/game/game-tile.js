@@ -15,28 +15,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'pixi'],
-    function (config, Logger, pixi) {
+define(['config', 'logger', 'pixi', 'dataTypes'],
+    function (config, Logger, pixi, dataTypes) {
 
         var logger = Logger.getLogger('gameTile');
         logger.setLevel(config.logger.gameTile || 0);
 
-        var tileSize = config.game.tiles.size;
+        var tileSize = config.game.tiles.size,
+            scale = config.game.tiles.scale;
 
-        function GameTile(data) {
-            this.world_id = data.world_id;
-            this.area_id = data.area_id;
-            this.x = data.x;
-            this.y = data.y;
-            this.z = data.z;
-            this.tileData = data.data || {};
-            pixi.Sprite.fromImage.call(this, 'assets/tiles/blank.png');
+        function GameTile(x, y, texture) {
+            pixi.Container.call(this);
+            var sprite = new pixi.Sprite(pixi.Texture.fromImage('assets/tiles/' + texture+ '.png'));
+            this.setTransform(x, y, scale, scale);
+            this.gamePosition = dataTypes.gamePosition(this);
 
-            this.position.x = this.x * tileSize;
-            this.position.y = this.y * tileSize;
+            sprite.anchor.set(.5);
+            this.addChild(sprite);
+
         }
 
-        GameTile.prototype = Object.create(pixi.Sprite.prototype)
+        GameTile.prototype = Object.create(pixi.Container.prototype);
+        GameTile.prototype.constructor = GameTile;
 
         return GameTile;
 

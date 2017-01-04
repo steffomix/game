@@ -16,21 +16,23 @@
  */
 
 define(['config', 'logger', 'jquery', 'dataTypes', 'debugInfo', 'pixi', 'tween', 'eventDispatcher', 'gameApp',
-        'pixiTilesContainer',
-        'pixiPlayerContainer'],
+        'pixiTilesLayer',
+        'pixiPlayerLayer'],
     function (config, Logger, $, dataTypes, DebugInfo, pixi, tween, dispatcher, gameApp,
               playerContainer,
-              tilesContainer
-    ) {
+              tilesContainer) {
 
         var instance,
             renderer = pixi.autoDetectRenderer(100, 100, {transparent: 1}),
             $gameStage = $('#game-stage'),
             $body = $('body'),
-            logger = Logger.getLogger('pixiRootContainer');
-        logger.setLevel(config.logger.pixiRootContainer || 0);
+            scale = .5,
+            logger = Logger.getLogger('pixiRootLayer');
+        logger.setLevel(config.logger.pixiRootLayer || 0);
 
         var tileSize = config.game.tiles.size;
+
+        var touch = [];
 
         function createInteractive() {
             var ct = new pixi.Container(),
@@ -42,7 +44,7 @@ define(['config', 'logger', 'jquery', 'dataTypes', 'debugInfo', 'pixi', 'tween',
 
         }
 
-        function PixiRootContainer() {
+        function PixiRootLayer() {
             pixi.Container.call(this);
 
             this.addChild(playerContainer);
@@ -50,26 +52,32 @@ define(['config', 'logger', 'jquery', 'dataTypes', 'debugInfo', 'pixi', 'tween',
             this.addChild(createInteractive());
             this.interactive = true;
 
-            // center container
-            this.x = $body.width() / 2;
-            this.y = $body.height() / 2;
 
-            this.on('mousemove', function (e) {
+            // center container
+
+
+            // mouse events
+            this.on('mousemove', onMouseMove)
+                .on('mousedown', onMouseDown)
+                .on('mouseup', onMouseUp)
+                // touch events
+                .on('touchmove', onMouseMove)
+                .on('touchstart', onMouseDown)
+                .on('touchend', onMouseUp);
+
+            function onMouseMove(e) {
                 lastMouseMove.x = e.data.global.x;
                 lastMouseMove.y = e.data.global.y;
-                onMouseEvent('mousemove', e);
-            });
-            this.on('mousedown', function(e){
+                dispatcher.game.mousemove.trigger(mousePosition, e);
+            }
+            function onMouseDown(e) {
                 mouseDown = true;
-                onMouseEvent('mousedown', e);
-            });
-            this.on('mouseup', function(e){
-                mouseDown = false;
-                onMouseEvent('mouseup', e);
-            });
+                dispatcher.game.mousedown.trigger(mousePosition, e);
+            }
 
-            function onMouseEvent(name, event){
-                dispatcher.game[name].trigger(mousePosition, event);
+            function onMouseUp(e) {
+                mouseDown = false;
+                dispatcher.game.mouseup.trigger(mousePosition, e);
             }
 
             var self = this,
@@ -82,10 +90,10 @@ define(['config', 'logger', 'jquery', 'dataTypes', 'debugInfo', 'pixi', 'tween',
                 mouseDown = false,
                 mousePosition = dataTypes.gamePositionRelative(self, lastMouseMove),
                 gamePosition = dataTypes.gamePosition({
-                    get x (){
+                    get x() {
                         return self.x - $body.width() / 2;
                     },
-                    get y (){
+                    get y() {
                         return self.y - $body.height() / 2;
                     }
                 });
@@ -107,7 +115,7 @@ define(['config', 'logger', 'jquery', 'dataTypes', 'debugInfo', 'pixi', 'tween',
                     };
                 var diff = gamePosition.diff(moveTo, .5, .5);
 
-                gameApp.mainPlayer && gameApp.mainPlayer.debug(mousePosition);
+                //gameApp.mainPlayer && gameApp.mainPlayer.debug(lastMouseMove);
 
                 self.x += diff.x / 25;
                 self.y += diff.y / 25;
@@ -115,15 +123,15 @@ define(['config', 'logger', 'jquery', 'dataTypes', 'debugInfo', 'pixi', 'tween',
                 renderer.render(self);
             });
 
-            dispatcher.game.initialize(function(){
+            dispatcher.game.initialize(function () {
                 $gameStage.html(renderer.view);
-                logger.info('Game initialize pixiRootContainer');
+                logger.info('Game initialize pixiRootLayer');
                 gameApp.addModule('pixiRoot', {
                     position: gamePosition
                 });
                 gameApp.addModule('mouse', {
                     position: mousePosition,
-                    get isDown(){
+                    get isDown() {
                         return mouseDown;
                     }
                 });
@@ -137,13 +145,13 @@ define(['config', 'logger', 'jquery', 'dataTypes', 'debugInfo', 'pixi', 'tween',
 
         }
 
-        PixiRootContainer.prototype = Object.create(pixi.Container.prototype);
-        PixiRootContainer.prototype.constructor = PixiRootContainer;
+        PixiRootLayer.prototype = Object.create(pixi.Container.prototype);
+        PixiRootLayer.prototype.constructor = PixiRootLayer;
 
 
         function getInstance() {
             if (!instance) {
-                instance = new PixiRootContainer();
+                instance = new PixiRootLayer();
             }
             return instance;
         }

@@ -19,17 +19,17 @@ define(['config', 'logger', 'eventDispatcher', 'pixi', 'gameApp'],
     function (config, Logger, dispatcher, pixi, gameApp) {
 
         var instance,
-            logger = Logger.getLogger('pixiPlayerContainer');
-        logger.setLevel(config.logger.pixiPlayerContainer || 0);
+            logger = Logger.getLogger('pixiPlayerLayer');
+        logger.setLevel(config.logger.pixiPlayerLayer || 0);
 
         function getInstance() {
             if (!instance) {
-                instance = new PixiPlayerContainer();
+                instance = new PixiPlayerLayer();
             }
             return instance;
         }
 
-        function PixiPlayerContainer() {
+        function PixiPlayerLayer() {
             pixi.Container.call(this);
             var playerContainer = new pixi.Container(),
                 mainPlayerContainer = new pixi.Container();
@@ -52,8 +52,8 @@ define(['config', 'logger', 'eventDispatcher', 'pixi', 'gameApp'],
 
         }
 
-        var o = PixiPlayerContainer.prototype = Object.create(pixi.Container.prototype);
-        PixiPlayerContainer.prototype.constructor = PixiPlayerContainer;
+        var o = PixiPlayerLayer.prototype = Object.create(pixi.Container.prototype);
+        PixiPlayerLayer.prototype.constructor = PixiPlayerLayer;
 
         return getInstance();
     });
