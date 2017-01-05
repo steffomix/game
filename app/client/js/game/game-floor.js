@@ -22,97 +22,15 @@ define(['config', 'logger', 'underscore', 'dataTypes', 'eventDispatcher', 'pixi'
         logger.setLevel(config.logger.gameFloor || 0);
 
         var tileSize = config.game.tiles.size,
-            chunkSize = config.game.chunks.size,
-            drawChunks = config.game.chunks.draw,
-            diag = Math.sqrt(2);
-
+            scale = config.game.tiles.scale;
 
         GameFloor.prototype = Object.create(pixi.Container.prototype);
-        Chunk.prototype = Object.create(pixi.Container.prototype);
-        Row.prototype = Object.create(pixi.Container.prototype);
-        Collumn.prototype = Object.create(pixi.Container.prototype);
-
         GameFloor.prototype.constructor = GameFloor;
-        Chunk.prototype.constructor = Chunk;
-        Row.prototype.constructor = Row;
-        Collumn.prototype.constructor = Collumn;
-
-
-        function Chunk(x, y) {
-            pixi.Container.call(this);
-            this.setTransform(x, y);
-            this.gamePosition = dataTypes.gamePosition(this);
-            this.tiles = {};
-
-        }
-
-        Chunk.prototype.setTile = function (x, y, texture) {
-            var tile = new GameTile(x * tileSize, y * tileSize, texture);
-            this.tiles[coord(x, y)] = tile;
-            this.addChild(tile);
-        };
-
-        function Row(y) {
-            pixi.Container.call(this);
-            this.y = y;
-        }
-
-        function Collumn(x) {
-            pixi.Container.call(this);
-            this.x = x;
-        }
-
 
         function GameFloor() {
             pixi.Container.call(this);
             var self = this,
-                chunks = {};
-            dispatcher.game.tick(function () {
-                if (gameApp.mainPlayer) {
-
-                    var player = gameApp.mainPlayer;
-
-
-                    var position = gameApp.mainPlayer.gamePosition.chunk,
-                        nChunks = {};
-
-                    _.each(chunks, function (chunk) {
-                        var cPos = chunk.gamePosition.chunk;
-                        var dist = cPos.dist(position);
-                        if (dist > drawChunk * diag) {
-                            chunk.destroy();
-                        }
-                    });
-
-                    for (var i = -drawChunks; i <= drawChunks; i++) {
-                        for (var ii = -drawChunks; ii <= drawChunks; ii++) {
-                            var x = position.x + i,
-                                y = position.y + ii,
-                                id = coord(x, y);
-                            if (!chunks[id]) {
-                                var chunk = drawChunk(x, y);
-                                nChunks[id] = chunk;
-                                self.addChild(chunk);
-                            } else {
-                                nChunks[id] = chunks[id];
-                            }
-
-                        }
-                    }
-                    chunks = nChunks;
-                }
-            });
-        }
-
-        function coord(x, y) {
-            return x + '_' + y;
-        }
-
-        function drawChunk(_x, _y) {
-            var value,
-                posX = 0,
-                posY = 0,
-                chunk = new Chunk(_x * chunkSize * tileSize, _y * chunkSize * tileSize),
+                tiles = {},
                 ranges = [
                     0, 100, //Water
                     115, // sand
@@ -130,39 +48,88 @@ define(['config', 'logger', 'underscore', 'dataTypes', 'eventDispatcher', 'pixi'
                     'snow'
                 ];
 
+            dispatcher.game.tick(function () {
+                if (gameApp.mainPlayer) {
 
-            for (var y = _y * chunkSize; y < _y * chunkSize + chunkSize; y++) {
-                for (var x = _x * chunkSize; x < _x * chunkSize + chunkSize; x++) {
+                    // get current state
+                    var nTiles = {},
+                        pGrid = gameApp.mainPlayer.gamePosition.grid,
+                        px = pGrid.x,
+                        py = pGrid.y,
+                        screen = gameApp.screen;
 
-                    value = calcNoise(x, y, 10) / 2;
-                    value += calcNoise(y, x, 5) / 4;
-                    value += calcNoise(x, y, 2.5) / 8;
-                    value += calcNoise(y, x, 1) / 8;
-                    value = Math.min(255, value);
+                    // count tiles needed
+                    var nTilesWidth = Math.round(screen.width / 2 / tileSize  / scale),
+                        nTilesHeight = Math.round(screen.height / 2 / tileSize  / scale);
 
-                    for (var i = 0; i < ranges.length - 1; i++) {
-                        if (value >= ranges[i] && value < ranges[i + 1]) {
-                            chunk.setTile(posX, posY, textures[i]);
-                            break;
+                    var tilesOffsetX = Math.round(screen.playerOffset.x / tileSize),
+                        tilesOffsetY = Math.round(screen.playerOffset.y / tileSize);
+
+                    var lx = (px - tilesOffsetX - nTilesWidth) - 1, lxx = lx * tileSize,
+                        rx = (px - tilesOffsetX + nTilesWidth) + 1, rxx = rx * tileSize,
+                        ly = (py - tilesOffsetY - nTilesHeight) - 1, lyy = ly * tileSize,
+                        ry = (py - tilesOffsetY + nTilesHeight) + 1, ryy = ry * tileSize;
+
+                    _.each(tiles, function (t) {
+                        if(t.x < lxx || t.x > rxx || t.y < lyy || t.y > ryy){
+                            t.destroy();
+                        }
+                    });
+
+                    var id, tile;
+                    for(var x = lx; x <= rx; x ++){
+                        for(var y = ly; y <= ry; y ++){
+                            id = coord(x, y);
+                            if(!tiles[id]){
+                                tile = drawTile(x, y);
+                                nTiles[id] = tile;
+                                addTile(tile);
+                            }else{
+                                nTiles[id] = tiles[id];
+                            }
                         }
                     }
-                    posX++;
+                    tiles = nTiles;
                 }
-                posX = 0;
-                posY++;
+            });
+
+            function addTile(tile){
+                self.addChild(tile);
             }
 
-            return chunk;
 
-            function scaleNoise(s) {
-                return s * 5;
+            function drawTile(x, y){
+
+
+                var value = calcNoise(x, y, 10) / 2;
+                value += calcNoise(y, x, 5) / 4;
+                value += calcNoise(x, y, 2.5) / 8;
+                value += calcNoise(y, x, 1) / 8;
+                value = Math.min(255, value);
+
+                for (var i = 0; i < ranges.length - 1; i++) {
+                    if (value >= ranges[i] && value < ranges[i + 1]) {
+                       return new GameTile(x * tileSize, y * tileSize, textures[i]);
+                    }
+                }
             }
 
             function calcNoise(x, y, s) {
                 var value = Math.min(Infinity, Math.max(-Infinity, noise.simplex2(x / scaleNoise(s), y / scaleNoise(s), 0)));
                 return (1 + value) * 1.1 * 128;
             }
+
+            function scaleNoise(s) {
+                return s * 5;
+            }
+
+            function coord(x, y) {
+                return x + '_' + y;
+            }
+
         }
+
+
 
         return GameFloor;
     });

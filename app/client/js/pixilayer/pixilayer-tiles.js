@@ -151,8 +151,8 @@ define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher', 'gameApp', '
                 });
 
 
-            this.addChild(grid);
-            this.addChild(chunk);
+            //this.addChild(grid);
+            //this.addChild(chunk);
             this.addChild(tilesGrid);
             this.addChild(cursor);
             this.addChild(pointer);
@@ -166,10 +166,10 @@ define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher', 'gameApp', '
                     chunkGrid = gameApp.pixiRoot.position.chunk;
                 cursor.gamePosition.grid.x = mouseGrid.x;
                 cursor.gamePosition.grid.y = mouseGrid.y;
-                grid.gamePosition.grid.x = gameGrid.x *-1 / scale;
-                grid.gamePosition.grid.y = gameGrid.y *-1 / scale;
-                chunk.gamePosition.chunk.x = chunkGrid.x *-1 / scale -1;
-                chunk.gamePosition.chunk.y = chunkGrid.y *-1 / scale -1;
+                //grid.gamePosition.grid.x = gameGrid.x *-1;
+                //grid.gamePosition.grid.y = gameGrid.y *-1;
+                //chunk.gamePosition.chunk.x = chunkGrid.x *-1  -1;
+                //chunk.gamePosition.chunk.y = chunkGrid.y *-1  -1;
 
                 if(gameApp.mouse.isDown){
                     pointer.alpha = 1;

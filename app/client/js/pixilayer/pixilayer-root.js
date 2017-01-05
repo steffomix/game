@@ -24,6 +24,7 @@ define(['config', 'logger', 'jquery', 'dataTypes', 'debugInfo', 'pixi', 'tween',
 
         var instance,
             renderer = pixi.autoDetectRenderer(100, 100, {transparent: 1}),
+            // renderer = new pixi.CanvasRenderer(100, 100, {transparent: 1}),
             $gameStage = $('#game-stage'),
             $body = $('body'),
             tileSize = config.game.tiles.size,
@@ -147,7 +148,7 @@ define(['config', 'logger', 'jquery', 'dataTypes', 'debugInfo', 'pixi', 'tween',
                 });
                 gameApp.addModule('screen', {
 
-                    get witdth() {
+                    get width() {
                         return $body.width();
                     },
                     get height() {

@@ -31,6 +31,7 @@ define(['config', 'logger', 'gamePlayer', 'debugInfo', 'eventDispatcher', 'tween
                 debug({
                     time: Math.round(t),
                     load: Math.round(l),
+                    chunk: gameApp.pixiRoot.position.chunk,
                     screen: gameApp.screen,
                     pixiRootPos: gameApp.pixiRoot.position.grid,
                     mousePos: gameApp.mouse.position.grid

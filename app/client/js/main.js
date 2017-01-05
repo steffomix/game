@@ -38,10 +38,10 @@
         },
         logger: {},
         game: {
-            fps: 30, // game calculations and pixi render per second
+            fps: 60, // game calculations and pixi render per second
             tiles: {
                 size: 128, // tile size in px
-                scale: .5 // scale tiles
+                scale: .5// scale tiles
             },
             chunks: {
                 size: 5, // draw tiles per chunk: 5 = 5*5 tiles

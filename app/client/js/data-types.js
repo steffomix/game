@@ -169,16 +169,16 @@ define(['config', 'logger', 'gameSocket'],
             // chunk position in chunk
             var chunk = {
                 get x() {
-                    return Math.round((self.x + tileSize * (chunkSize / 2)) / tileSize / chunkSize) - 1;
+                    return Math.round(self.x / tileSize / chunkSize) - 1;
                 },
                 get y() {
-                    return Math.round((self.y + tileSize * (chunkSize / 2)) / tileSize / chunkSize) - 1;
+                    return Math.round(self.y / tileSize / chunkSize) - 1;
                 },
                 set x(x) {
-                    self.x = chunkTile.x * tileSize + x * tileSize * chunkSize;
+                    self.x = x * tileSize * chunkSize;
                 },
                 set y(y) {
-                    self.y = chunkTile.y * tileSize + y * tileSize * chunkSize;
+                    self.y = y * tileSize * chunkSize;
                 }
             };
 
