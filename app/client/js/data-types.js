@@ -20,6 +20,7 @@ define(['config', 'logger', 'gameSocket'],
 
         var tileSize = config.game.tiles.size,
             chunkSize = config.game.chunks.size,
+            scale = config.game.tiles.scale,
             logger = Logger.getLogger('dataTypes');
         logger.setLevel(config.logger.dataTypes || 0);
 
@@ -274,21 +275,31 @@ define(['config', 'logger', 'gameSocket'],
          * @returns {{x, y, grid, chunk}}
          */
         function gamePositionRelative(self, rel) {
-            var tile = {
+            var pos = {
                 get x() {
-                    return Math.round((rel.x - self.x) - grid.x * tileSize);
+                    return (rel.x - self.x) / scale;
                 },
                 get y() {
-                    return Math.round((rel.y - self.y) - grid.y * tileSize);
+                    return (rel.y - self.y) / scale;
+                }
+            };
+
+
+            var tile = {
+                get x() {
+                    return Math.round(pos.x - grid.x * tileSize);
+                },
+                get y() {
+                    return Math.round(pos.y - grid.y * tileSize);
                 }
             };
 
             var grid = {
                 get x() {
-                    return Math.round((rel.x - self.x) / tileSize);
+                    return Math.round(pos.x / tileSize);
                 },
                 get y() {
-                    return Math.round((rel.y - self.y) / tileSize);
+                    return Math.round(pos.y / tileSize);
                 }
             };
 
@@ -319,12 +330,12 @@ define(['config', 'logger', 'gameSocket'],
                 }
             };
 
-            var pos = {
-                get x() {
-                    return (rel.x - self.x) * 100;
+            var position = {
+                get x(){
+                    return pos.x;
                 },
-                get y() {
-                    return (rel.y - self.y) * 100;
+                get y(){
+                    return pos.y;
                 },
                 get tile() {
                     return tile;
@@ -348,7 +359,7 @@ define(['config', 'logger', 'gameSocket'],
             _createCalculators(grid);
             _createCalculators(chunk);
 
-            return pos;
+            return position;
         }
 
 

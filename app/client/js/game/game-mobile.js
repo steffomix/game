@@ -31,7 +31,7 @@ define(['config', 'logger', 'debugInfo', 'pixi', 'dataTypes'],
                 sprite = new pixi.Sprite(texture);
 
             sprite.anchor.set(.5);
-            this.setTransform(0, 0, scale, scale);
+            this.setTransform(0, 0);
 
 
             this.addChild(sprite);

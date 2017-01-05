@@ -26,13 +26,11 @@ define(['config', 'logger', 'jquery', 'dataTypes', 'debugInfo', 'pixi', 'tween',
             renderer = pixi.autoDetectRenderer(100, 100, {transparent: 1}),
             $gameStage = $('#game-stage'),
             $body = $('body'),
-            scale = .5,
+            tileSize = config.game.tiles.size,
+            scale = config.game.tiles.scale,
             logger = Logger.getLogger('pixiRootLayer');
         logger.setLevel(config.logger.pixiRootLayer || 0);
 
-        var tileSize = config.game.tiles.size;
-
-        var touch = [];
 
         function createInteractive() {
             var ct = new pixi.Container(),
@@ -51,6 +49,7 @@ define(['config', 'logger', 'jquery', 'dataTypes', 'debugInfo', 'pixi', 'tween',
             this.addChild(tilesContainer);
             this.addChild(createInteractive());
             this.interactive = true;
+            this.setTransform(0, 0, scale, scale);
 
 
             // center container
@@ -70,6 +69,7 @@ define(['config', 'logger', 'jquery', 'dataTypes', 'debugInfo', 'pixi', 'tween',
                 lastMouseMove.y = e.data.global.y;
                 dispatcher.game.mousemove.trigger(mousePosition, e);
             }
+
             function onMouseDown(e) {
                 mouseDown = true;
                 dispatcher.game.mousedown.trigger(mousePosition, e);
@@ -91,12 +91,24 @@ define(['config', 'logger', 'jquery', 'dataTypes', 'debugInfo', 'pixi', 'tween',
                 mousePosition = dataTypes.gamePositionRelative(self, lastMouseMove),
                 gamePosition = dataTypes.gamePosition({
                     get x() {
-                        return self.x - $body.width() / 2;
+                        return (self.x / scale) - $body.width() / 2 / scale;
                     },
                     get y() {
-                        return self.y - $body.height() / 2;
+                        return (self.y / scale) - $body.height() / 2 / scale;
                     }
-                });
+                }),
+                moveTo = {
+                    x: 0,
+                    y: 0
+                },
+                playerOffset = {
+                    get x() {
+                        return gamePosition.x - moveTo.x;
+                    },
+                    get y() {
+                        return gamePosition.y - moveTo.y;
+                    }
+                };
 
             // mouse down event
             Object.defineProperty(mousePosition, 'isDown', {
@@ -106,14 +118,12 @@ define(['config', 'logger', 'jquery', 'dataTypes', 'debugInfo', 'pixi', 'tween',
             });
 
 
-            // move container to center to mainPlayer
+            // move container to center of mainPlayer
             dispatcher.game.tick(function () {
-                var mainPlayer = gameApp.mainPlayer || {x: 0, y: 0},
-                    moveTo = {
-                        x: mainPlayer.x * -1,
-                        y: mainPlayer.y * -1
-                    };
-                var diff = gamePosition.diff(moveTo, .5, .5);
+                var mainPlayer = gameApp.mainPlayer || {x: 0, y: 0};
+                moveTo.x = mainPlayer.x * -1;
+                moveTo.y = mainPlayer.y * -1;
+                var diff = gamePosition.diff(moveTo, .1, .1);
 
                 //gameApp.mainPlayer && gameApp.mainPlayer.debug(lastMouseMove);
 
@@ -135,6 +145,18 @@ define(['config', 'logger', 'jquery', 'dataTypes', 'debugInfo', 'pixi', 'tween',
                         return mouseDown;
                     }
                 });
+                gameApp.addModule('screen', {
+
+                    get witdth() {
+                        return $body.width();
+                    },
+                    get height() {
+                        return $body.height();
+                    },
+                    get playerOffset() {
+                        return playerOffset;
+                    }
+                })
             });
 
             // resize stage

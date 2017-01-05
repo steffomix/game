@@ -27,7 +27,7 @@ define(['config', 'logger', 'pixi', 'dataTypes'],
         function GameTile(x, y, texture) {
             pixi.Container.call(this);
             var sprite = new pixi.Sprite(pixi.Texture.fromImage('assets/tiles/' + texture+ '.png'));
-            this.setTransform(x, y, scale, scale);
+            this.setTransform(x, y);
             this.gamePosition = dataTypes.gamePosition(this);
 
             sprite.anchor.set(.5);

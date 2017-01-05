@@ -21,8 +21,10 @@ define(['config', 'logger', 'underscore', 'dataTypes', 'eventDispatcher', 'pixi'
         var logger = Logger.getLogger('gameFloor');
         logger.setLevel(config.logger.gameFloor || 0);
 
-        var tileSize = config.game.tiles.size;
-            chunkSize = config.game.chunks.size;
+        var tileSize = config.game.tiles.size,
+            chunkSize = config.game.chunks.size,
+            drawChunks = config.game.chunks.draw,
+            diag = Math.sqrt(2);
 
 
         GameFloor.prototype = Object.create(pixi.Container.prototype);
@@ -36,17 +38,18 @@ define(['config', 'logger', 'underscore', 'dataTypes', 'eventDispatcher', 'pixi'
         Collumn.prototype.constructor = Collumn;
 
 
-        function Floor() {
-        }
-
-        function Chunk(x, y){
+        function Chunk(x, y) {
             pixi.Container.call(this);
-            this.gamePosition = dataTypes.gamePosition(x * tileSize * chunkSize, y * tileSize * chunkSize);
+            this.setTransform(x, y);
+            this.gamePosition = dataTypes.gamePosition(this);
             this.tiles = {};
 
         }
-        Chunk.prototype.setTile = function(x, y, texture){
-            this.addChild(this.tiles[coord(x, y)] = new GameTile(x * tileSize, y * tileSize, texture));
+
+        Chunk.prototype.setTile = function (x, y, texture) {
+            var tile = new GameTile(x * tileSize, y * tileSize, texture);
+            this.tiles[coord(x, y)] = tile;
+            this.addChild(tile);
         };
 
         function Row(y) {
@@ -64,28 +67,33 @@ define(['config', 'logger', 'underscore', 'dataTypes', 'eventDispatcher', 'pixi'
             pixi.Container.call(this);
             var self = this,
                 chunks = {};
-            dispatcher.game.tick(function(){
-                if(gameApp.mainPlayer){
+            dispatcher.game.tick(function () {
+                if (gameApp.mainPlayer) {
+
+                    var player = gameApp.mainPlayer;
+
+
                     var position = gameApp.mainPlayer.gamePosition.chunk,
                         nChunks = {};
 
-                    _.each(chunks, function(chunk){
-                        var cPos = chunk.gamePosition.chunk
-                        if(cPos.dist(position) > 1.5){
+                    _.each(chunks, function (chunk) {
+                        var cPos = chunk.gamePosition.chunk;
+                        var dist = cPos.dist(position);
+                        if (dist > drawChunk * diag) {
                             chunk.destroy();
                         }
                     });
 
-                    for(var i = -1; i <= 1; i++){
-                        for(var ii = -1; ii <= 1; ii++){
+                    for (var i = -drawChunks; i <= drawChunks; i++) {
+                        for (var ii = -drawChunks; ii <= drawChunks; ii++) {
                             var x = position.x + i,
                                 y = position.y + ii,
                                 id = coord(x, y);
-                            if(!chunks[id]){
+                            if (!chunks[id]) {
                                 var chunk = drawChunk(x, y);
                                 nChunks[id] = chunk;
                                 self.addChild(chunk);
-                            }else{
+                            } else {
                                 nChunks[id] = chunks[id];
                             }
 
@@ -93,29 +101,24 @@ define(['config', 'logger', 'underscore', 'dataTypes', 'eventDispatcher', 'pixi'
                     }
                     chunks = nChunks;
                 }
-
-
-
             });
-
-
-
-
         }
 
-        function coord(x, y){
+        function coord(x, y) {
             return x + '_' + y;
         }
 
         function drawChunk(_x, _y) {
             var value,
-                chunk = new Chunk(_x, _y),
+                posX = 0,
+                posY = 0,
+                chunk = new Chunk(_x * chunkSize * tileSize, _y * chunkSize * tileSize),
                 ranges = [
                     0, 100, //Water
-                    120, // sand
+                    115, // sand
                     160, // grass
-                    200, // wood
-                    240, // stone
+                    190, // wood
+                    220, // stone
                     256 // snow
                 ],
                 textures = [
@@ -127,8 +130,9 @@ define(['config', 'logger', 'underscore', 'dataTypes', 'eventDispatcher', 'pixi'
                     'snow'
                 ];
 
-            for (var x = _x * chunkSize; x < _x * chunkSize + chunkSize; x++) {
-                for (var y = _y * chunkSize; y < _y * chunkSize + chunkSize; y++) {
+
+            for (var y = _y * chunkSize; y < _y * chunkSize + chunkSize; y++) {
+                for (var x = _x * chunkSize; x < _x * chunkSize + chunkSize; x++) {
 
                     value = calcNoise(x, y, 10) / 2;
                     value += calcNoise(y, x, 5) / 4;
@@ -138,11 +142,14 @@ define(['config', 'logger', 'underscore', 'dataTypes', 'eventDispatcher', 'pixi'
 
                     for (var i = 0; i < ranges.length - 1; i++) {
                         if (value >= ranges[i] && value < ranges[i + 1]) {
-                            chunk.setTile(x, y, textures[i]);
+                            chunk.setTile(posX, posY, textures[i]);
                             break;
                         }
                     }
+                    posX++;
                 }
+                posX = 0;
+                posY++;
             }
 
             return chunk;

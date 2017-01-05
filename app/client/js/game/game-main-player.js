@@ -31,7 +31,9 @@ define(['config', 'logger', 'gamePlayer', 'debugInfo', 'eventDispatcher', 'tween
                 debug({
                     time: Math.round(t),
                     load: Math.round(l),
-                    pos: self.gamePosition
+                    screen: gameApp.screen,
+                    pixiRootPos: gameApp.pixiRoot.position.grid,
+                    mousePos: gameApp.mouse.position.grid
                 });
 
                 if (gameApp.mouse.isDown) {
@@ -54,7 +56,7 @@ define(['config', 'logger', 'gamePlayer', 'debugInfo', 'eventDispatcher', 'tween
             });
 
             function walk(pos) {
-                animate.to(pos, self.gamePosition.gridPos.dist(gameApp.mouse.position.gridPos) * 5).start();
+                animate.to(pos, self.gamePosition.gridPos.dist(gameApp.mouse.position.gridPos) ).start();
             }
 
         }

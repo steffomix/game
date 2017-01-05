@@ -22,7 +22,8 @@ define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher', 'gameApp', '
             logger = Logger.getLogger('pixiTilesLayer');
         logger.setLevel(config.logger.pixiTilesLayer || 0);
 
-        var tileSize = config.game.tiles.size,
+        var scale = config.game.tiles.scale,
+            tileSize = config.game.tiles.size,
             chunkSize = config.game.chunks.size;
 
         function getInstance() {
@@ -40,7 +41,7 @@ define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher', 'gameApp', '
             pixi.Graphics.call(this);
             this.gamePosition = dataTypes.gamePosition(this);
             var x = 30 * tileSize - tileSize / 2;
-            this.lineStyle(8, 0x808080, .5);
+            this.lineStyle(3, 0x808080, .3);
 
             for (var i = -x; i <= x; i += tileSize) {
                 this.moveTo(i, -x);
@@ -62,8 +63,8 @@ define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher', 'gameApp', '
         function Chunk() {
             pixi.Graphics.call(this);
             this.gamePosition = dataTypes.gamePosition(this);
-            var x = 3 * tileSize * chunkSize + tileSize / 2;
-            this.lineStyle(8, 0x000000, .2);
+            var x = 6 * tileSize * chunkSize + tileSize / 2;
+            this.lineStyle(4, 0x000000, .3);
 
             for (var i = -x; i <= x; i += tileSize * chunkSize) {
                 this.moveTo(i, -x);
@@ -84,7 +85,7 @@ define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher', 'gameApp', '
             pixi.Graphics.call(this);
             this.gamePosition = dataTypes.gamePosition(this);
             var x = tileSize / 2;
-            this.lineStyle(3, 0x000000, .3);
+            this.lineStyle(6, 0x000000, .5);
             this.moveTo(-x, -x);
             this.lineTo(x, -x);
             this.lineTo(x, x);
@@ -109,7 +110,7 @@ define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher', 'gameApp', '
 
             this.gamePosition = dataTypes.gamePosition(this);
 
-            this.lineStyle(3, 0xcc0000, alpha);
+            this.lineStyle(6, 0xcc0000, alpha);
             this.moveTo(-x, -x);
             this.lineTo(x, -x);
             this.lineTo(x, x);
@@ -161,11 +162,14 @@ define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher', 'gameApp', '
             dispatcher.game.tick(function(t){
                 animate.update(t);
                 var mouseGrid = gameApp.mouse.position.grid,
-                    gameGrid = gameApp.pixiRoot.position.grid;
+                    gameGrid = gameApp.pixiRoot.position.grid,
+                    chunkGrid = gameApp.pixiRoot.position.chunk;
                 cursor.gamePosition.grid.x = mouseGrid.x;
                 cursor.gamePosition.grid.y = mouseGrid.y;
-                grid.gamePosition.grid.x = gameGrid.x *-1;
-                grid.gamePosition.grid.y = gameGrid.y *-1;
+                grid.gamePosition.grid.x = gameGrid.x *-1 / scale;
+                grid.gamePosition.grid.y = gameGrid.y *-1 / scale;
+                chunk.gamePosition.chunk.x = chunkGrid.x *-1 / scale -1;
+                chunk.gamePosition.chunk.y = chunkGrid.y *-1 / scale -1;
 
                 if(gameApp.mouse.isDown){
                     pointer.alpha = 1;
