@@ -57,7 +57,7 @@ define(['config', 'logger', 'gamePlayer', 'debugInfo', 'eventDispatcher', 'tween
             });
 
             function walk(pos) {
-                animate.to(pos, self.gamePosition.gridPos.dist(gameApp.mouse.position.gridPos) ).start();
+                animate.to(pos, self.gamePosition.gridPos.dist(gameApp.mouse.position.gridPos) * 3).start();
             }
 
         }

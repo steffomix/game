@@ -24,12 +24,12 @@ define(['config', 'logger', 'pixi', 'dataTypes'],
         var tileSize = config.game.tiles.size,
             scale = config.game.tiles.scale;
 
-        function GameTile(x, y, texture) {
+        function GameTile(texture) {
             pixi.Container.call(this);
             var sprite = new pixi.Sprite(pixi.Texture.fromImage('assets/tiles/' + texture+ '.png'));
             sprite.anchor.set(.5, .5);
-            this.setTransform(x, y);
             this.addChild(sprite);
+            sprite.scale.set(1, 1.1);
 
             this.gamePosition = dataTypes.gamePosition(this);
         }

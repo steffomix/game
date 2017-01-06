@@ -17,7 +17,6 @@
 
 
 (function () {
-
     var conf = {
         debug: true, // show debug info on screen
         baseUrl: '/js/',
@@ -38,7 +37,7 @@
         },
         logger: {},
         game: {
-            fps: 60, // game calculations and pixi render per second
+            fps: 30, // game calculations and pixi render per second
             tiles: {
                 size: 128, // tile size in px
                 scale: .5// scale tiles
