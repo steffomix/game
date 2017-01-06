@@ -29,7 +29,7 @@ define(['config', 'logger', 'pixi', 'dataTypes'],
             var sprite = new pixi.Sprite(pixi.Texture.fromImage('assets/tiles/' + texture+ '.png'));
             sprite.anchor.set(.5, .5);
             this.addChild(sprite);
-            sprite.scale.set(1, 1.1);
+            //sprite.scale.set(1, 1.1);
 
             this.gamePosition = dataTypes.gamePosition(this);
         }

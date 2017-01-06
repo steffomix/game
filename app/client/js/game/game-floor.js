@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'underscore', 'dataTypes', 'eventDispatcher', 'pixi', 'noise', 'gameApp', 'gameTile'],
-    function (config, Logger, _, dataTypes, dispatcher, pixi, noise, gameApp, GameTile) {
+define(['config', 'logger', 'underscore', 'dataTypes', 'eventDispatcher', 'pixi', 'noise', 'gameApp', 'worldGenerator', 'gameTile'],
+    function (config, Logger, _, dataTypes, dispatcher, pixi, noise, gameApp, worldGenerator, GameTile) {
 
         var logger = Logger.getLogger('gameFloor');
         logger.setLevel(config.logger.gameFloor || 0);
@@ -73,8 +73,8 @@ define(['config', 'logger', 'underscore', 'dataTypes', 'eventDispatcher', 'pixi'
                         screen = gameApp.screen;
 
                     // count tiles needed
-                    var nTilesWidth = Math.round(screen.width / 2 / tileSize / scale ),
-                        nTilesHeight = Math.round(screen.height / 2 / tileSize / scale );
+                    var nTilesWidth = Math.round(screen.width / 2 / tileSize / scale),
+                        nTilesHeight = Math.round(screen.height / 2 / tileSize / scale);
 
                     // center offset
                     var tilesOffsetX = Math.round(screen.playerOffset.x / tileSize),
@@ -102,11 +102,10 @@ define(['config', 'logger', 'underscore', 'dataTypes', 'eventDispatcher', 'pixi'
                         _.each(rows, function (row) {
                             var y = row._y;
                             if (y < ly || y > ry) {
-                                logger.info('remove row', y);
                                 self.removeChild(row);
                                 row.destroy();
                                 minY = self.getChildAt(0)._y;
-                            }else{
+                            } else {
                                 nRows[y] = row;
                                 minY = Math.min(minY, y);
                                 maxY = Math.max(maxY, y);
@@ -117,7 +116,6 @@ define(['config', 'logger', 'underscore', 'dataTypes', 'eventDispatcher', 'pixi'
 
                     } else {
                         // create initial row
-                        logger.info('GameFloor::tick: create initial row at ', ly);
                         minY = maxY = ly;
                         row = new pixi.Container();
                         row._y = ly;
@@ -131,7 +129,7 @@ define(['config', 'logger', 'underscore', 'dataTypes', 'eventDispatcher', 'pixi'
                         for (var y = ly; y <= ry; y++) {
                             id = coord(x, y);
                             if (!tiles[id]) {
-                                tile = drawTile(x, y);
+                                tile = new GameTile(worldGenerator.tile(x, y));
                                 nTiles[id] = tile;
                                 addTile(x, y, tile);
                             } else {
@@ -147,28 +145,18 @@ define(['config', 'logger', 'underscore', 'dataTypes', 'eventDispatcher', 'pixi'
 
 
             function pushRow(y) {
-                try {
-                    logger.info('push row', y);
-                    var row = new pixi.Container();
-                    row._y = y;
-                    rows[y] = row;
-                    self.addChild(row);
-                    return row;
-                } catch (e) {
-                    logger.error(e);
-                }
+                var row = new pixi.Container();
+                row._y = y;
+                rows[y] = row;
+                self.addChild(row);
+                return row;
             }
 
             function unshiftRow(y) {
-                try {
-                    logger.info('unshift row', y);
-                    var childs = self.removeChildren(),
-                        row = pushRow(y);
-                    for (var i = 0; i < childs.length; i++) {
-                        self.addChild(childs[i]);
-                    }
-                } catch (e) {
-                    logger.error(e);
+                var childs = self.removeChildren(),
+                    row = pushRow(y);
+                for (var i = 0; i < childs.length; i++) {
+                    self.addChild(childs[i]);
                 }
             }
 
@@ -176,24 +164,20 @@ define(['config', 'logger', 'underscore', 'dataTypes', 'eventDispatcher', 'pixi'
             function addTile(x, y, tile) {
                 var i;
                 if (y < minY) {
-                    for(i = minY - 1; i >= y; i --){
+                    for (i = minY - 1; i >= y; i--) {
                         unshiftRow(i);
                     }
                     minY = y;
                 }
 
                 if (y > maxY) {
-                    for(i = maxY + 1; i <= y; i++){
+                    for (i = maxY + 1; i <= y; i++) {
                         pushRow(i);
                     }
                     maxY = y;
                 }
-                try {
-                    tile.setTransform(x * tileSize, y * tileSize);
-                    rows[y].addChild(tile);
-                } catch (e) {
-                    logger.error(e);
-                }
+                tile.setTransform(x * tileSize, y * tileSize);
+                rows[y].addChild(tile);
             }
 
 
@@ -217,9 +201,6 @@ define(['config', 'logger', 'underscore', 'dataTypes', 'eventDispatcher', 'pixi'
                 return (1 + value) * 1.1 * 128;
             }
 
-            function scaleNoise(s) {
-                return s * 5;
-            }
 
         }
 

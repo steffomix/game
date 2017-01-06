@@ -37,14 +37,34 @@
         },
         logger: {},
         game: {
-            fps: 30, // game calculations and pixi render per second
+            fps: 35, // game calculations and pixi render per second
             tiles: {
-                size: 128, // tile size in px
+                size: 120, // tile size in px
                 scale: .5// scale tiles
             },
             chunks: {
-                size: 5, // draw tiles per chunk: 5 = 5*5 tiles
-                draw: 2 // visible chunks: 1 = 3*3 chunks, 2 = 5*5 chunks ...
+                size: 5 // draw tiles per chunk: 5 = 5*5 tiles
+            },
+            worldGenerator: {
+                scale: 5,
+                noiseRanges: [
+                    0,
+                    100, // Water
+                    115, // sand
+                    160, // grass
+                    190, // wood
+                    220, // stone
+                    256 // snow
+                ],
+                // textures for world generator
+                textures: [
+                    'water',
+                    'sand',
+                    'grass',
+                    'wood',
+                    'stone',
+                    'snow'
+                ]
             }
         }
 
@@ -96,6 +116,7 @@
 
         // game
         ['gameApp', 'game/game-app', 0],
+        ['worldGenerator', 'game/world-generator', 0],
         //['gameFloorManager', 'game/game-floor-manager', 0],
         ['gameFloor', 'game/game-floor', 0],
         ['gameTile', 'game/game-tile', 0],
@@ -143,8 +164,6 @@
     });
 
 
-
-
     var groups = ['lib', 'game', 'pixilayer', 'interface'],
         preloadModules = ['backbone', 'jquery', 'eventDispatcher'],
         p;
@@ -162,7 +181,7 @@
 
     console.log('Preload modules: ', preloadModules);
 
-    define('rottingUniverse', preloadModules, function(backbone, $, dispatcher){
+    define('rottingUniverse', preloadModules, function (backbone, $, dispatcher) {
         backbone.$ = $;
         console.log('Trigger game initialize');
         dispatcher.game.initialize.claimTrigger('main.js')();
