@@ -37,7 +37,8 @@
         },
         logger: {},
         game: {
-            fps: 35, // game calculations and pixi render per second
+            frameTick: 35, // ticks per second. Game calculations and pixi render per second...
+            workerTick: .5, // ticks per second. Send mouse position to worker...
             tiles: {
                 size: 120, // tile size in px
                 scale: .5// scale tiles
@@ -66,6 +67,9 @@
                     'snow'
                 ]
             }
+        },
+        worker: {
+
         }
 
     };
@@ -86,12 +90,10 @@
         ['translation', 'translation', 3],
         ['eventDispatcher', 'event-dispatcher', 3],
         ['tick', 'tick', 4],
-        ['dataTypes', 'data-types', 0],
         ['debugInfo', 'debug-info', 0],
-        ['gameRouter', 'game-router', 3],
         ['workerMaster', 'worker-master', 3],
-        ['gameSocket', 'game-socket', 3],
         ['commandRouter', 'command-router', 3],
+        ['worldGenerator', 'world-generator', 0],
 
         // interface
         // ['interface', 'interface/interface', 0],
@@ -116,7 +118,10 @@
 
         // game
         ['gameApp', 'game/game-app', 0],
-        ['worldGenerator', 'game/world-generator', 0],
+        ['gameLocation', 'game/game-location', 0],
+        ['gamePosition', 'game/game-position', 0],
+        ['gameRouter', 'game/game-router', 3],
+        ['gameSocket', 'game/game-socket', 3],
         //['gameFloorManager', 'game/game-floor-manager', 0],
         ['gameFloor', 'game/game-floor', 0],
         ['gameTile', 'game/game-tile', 0],
@@ -126,9 +131,10 @@
         ['gamePlayerManager', 'game/game-player-manager', 0],
 
         // pixi
-        ['pixiRootLayer', 'pixilayer/pixilayer-root', 0],
-        ['pixiTilesLayer', 'pixilayer/pixilayer-tiles', 0],
-        ['pixiPlayerLayer', 'pixilayer/pixilayer-player', 0],
+        ['pixiRoot', 'pixilayer/pixilayer-root', 0],
+        ['pixiTiles', 'pixilayer/pixilayer-tiles', 0],
+        ['pixiPlayers', 'pixilayer/pixilayer-players', 0],
+        ['pixiMainPlayer', 'pixilayer/pixilayer-mainplayer', 0]
 
     ];
 

@@ -41,10 +41,9 @@
              * result in usage trigger: dispatcher.global.myEvent.trigger();
              *
              * @param eventContext {object} orig this
-             * @param callback {function} orig callback
              *
              */
-            function e (eventContext, callback) {}
+            function e (eventContext) {}
             var eventHandler = {},
                 template = {
                     server: {
@@ -61,12 +60,14 @@
                     },
                     game: {
                         initialize: e,
-                        tick: e, // frame-tick (game-app.js)
+                        // fps frame-tick (game-app.js)
+                        frameTick: e,
+                        // slowTick every .5 seconds
+                        // send mouse position to worker, calculate pathfinder...
+                        workerTick: e,
                         mousedown: e,
                         mouseup: e,
                         mousemove: e
-
-
                     }
                 };
 

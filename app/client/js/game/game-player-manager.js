@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'underscore', 'eventDispatcher', 'gameMainPlayer', 'gamePlayer', 'pixiPlayerLayer', 'gameApp'],
-    function (config, Logger, _, dispatcher, MainPlayer, Player, playerContainer, gameApp) {
+define(['config', 'logger', 'gameSocket', 'gameRouter', 'underscore', 'eventDispatcher', 'gameMainPlayer', 'gamePlayer', 'pixiPlayers', 'gameApp'],
+    function (config, Logger, socket, router, _, dispatcher, MainPlayer, Player, playerContainer, gameApp) {
 
         var instance,
             logger = Logger.getLogger('gamePlayerManager');
@@ -36,17 +36,15 @@ define(['config', 'logger', 'underscore', 'eventDispatcher', 'gameMainPlayer', '
             var mainPlayer = '',
                 players = {};
 
-            dispatcher.game.initialize(function(){
-                logger.info('Game initialize PlayerManager');
-                gameApp.addModule('playerManager', this);
+            router.addModule('players', this, {
+                walk: function(){
+
+                }
             });
 
-            dispatcher.server.login(function (user) {
-                reset();
-                var player = new MainPlayer(user);
-                playerContainer.setMainPlayer(player);
-                players[user.name] = player;
-                mainPlayer = user.name;
+            dispatcher.game.initialize(function(){
+                logger.info('Game initialize PlayerManager');
+                gameApp.set('playerManager', this);
             });
 
             dispatcher.server.logout(function(){
@@ -54,9 +52,15 @@ define(['config', 'logger', 'underscore', 'eventDispatcher', 'gameMainPlayer', '
                 mainPlayer = '';
             });
 
-            dispatcher.game.tick(function(t, l){
+            dispatcher.game.frameTick(function(t, l){
                 _.each(players, function(p){
-                    p.tick(t, l);
+                    p.frameTick(t, l);
+                })
+            });
+
+            dispatcher.game.workerTick(function(t, l){
+                _.each(players, function(p){
+                    p.workerTick(t, l);
                 })
             });
 

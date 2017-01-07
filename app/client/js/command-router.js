@@ -39,6 +39,22 @@ define('commandRouter', ['config', 'logger', 'underscore'],
             }
         }
 
+        function Listener () {
+            var listener = {};
+
+            this.getListener = function (id) {
+                return listener[id];
+            };
+
+            this.listenTo = function (id, fn) {
+                listener[id] = fn;
+            };
+
+            this.list = function(){
+                return Object.keys(listener);
+            }
+        }
+
         /**
          * Creates a command router instance
          * @param name {string} Only used as logging prefix
@@ -47,7 +63,6 @@ define('commandRouter', ['config', 'logger', 'underscore'],
         function CommandRouter (name) {
 
             var modules = {},
-                commandBlacklist = {},
                 listener = new Listener();
 
 
@@ -63,21 +78,23 @@ define('commandRouter', ['config', 'logger', 'underscore'],
                 if ( modules[name] ) {
                     return logger.error('CommandRouter: Module "' + name + '" already set');
                 } else {
-                    modules[name] = module;
-                    _.each(commands, function (fn, key) {
-                        listener.addListener(name + '.' + key, fn);
-                    });
+                    this.replaceModule(name, module, commands);
                 }
             };
-
             /**
-             * add command to blacklist
-             * @param command
+             * Overwrites receivers list and
+             * combines name and command to command 'name.command'.
+             * E.g. router.route('moduleName.command', []);
+             * @param name {string} command prefix and module name
+             * @param module {object}
+             * @param commands {object} key<command>:value<boolean enabled> pairs
              */
-            this.deny = function (command) {
-                commandBlacklist['' + command] = true;
+            this.replaceModule = function(name, module, commands){
+                modules[name] = module;
+                _.each(commands, function (fn, key) {
+                    listener.listenTo(name + '.' + key, fn);
+                });
             };
-
 
             /**
              * Map Arguments to Job-like Object and forward command to route.
@@ -100,9 +117,6 @@ define('commandRouter', ['config', 'logger', 'underscore'],
              */
             this.route = function (job) {
                 var cmd = job.cmd;
-                if (commandBlacklist[cmd]) {
-                    return logger.warn('Router ' + name + ' skip blacklisted: ' + cmd, job);
-                }
                 logger.info(name, job);
                 var mod = cmd.split('.')[0];
                 try {
@@ -112,30 +126,16 @@ define('commandRouter', ['config', 'logger', 'underscore'],
                         if ( _.isFunction(fn) ) {
                             fn.apply(obj, [job]);
                         } else {
-                            logger.error('Router ' + name + ': target "' + cmd + '" is not a function.', job, listener.listener);
+                            logger.error('Router ' + name + ': target "' + cmd + '" is not a function.', job, listener.list());
                         }
                     } else {
-                        logger.error('Router ' + name + ': target "' + cmd + '" not found.', job, listener.listener);
+                        logger.error('Router ' + name + ': target "' + cmd + '" not found.', job, listener.list());
                     }
                 } catch (e) {
-                    logger.error('Route ' + name + ': "' + cmd + '" throw error:' + e, job);
+                    logger.error('Route ' + name + ': "' + cmd + '" throw error:' + e, job, listener.list());
                 }
             };
 
-            function Listener () {
-                var listener = {},
-                    self = this;
-
-                self.listener = listener;
-
-                self.getListener = function (cmd) {
-                    return listener[cmd];
-                };
-
-                self.addListener = function (k, v) {
-                    listener[k] = v;
-                };
-            }
         }
 
 

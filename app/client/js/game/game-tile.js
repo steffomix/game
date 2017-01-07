@@ -15,14 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'pixi', 'dataTypes'],
-    function (config, Logger, pixi, dataTypes) {
+define(['config', 'logger', 'pixi', 'gamePosition'],
+    function (config, Logger, pixi, position) {
 
         var logger = Logger.getLogger('gameTile');
         logger.setLevel(config.logger.gameTile || 0);
-
-        var tileSize = config.game.tiles.size,
-            scale = config.game.tiles.scale;
 
         function GameTile(texture) {
             pixi.Container.call(this);
@@ -31,7 +28,7 @@ define(['config', 'logger', 'pixi', 'dataTypes'],
             this.addChild(sprite);
             //sprite.scale.set(1, 1.1);
 
-            this.gamePosition = dataTypes.gamePosition(this);
+            this.gamePosition = position.factory(this);
         }
 
         GameTile.prototype = Object.create(pixi.Container.prototype);

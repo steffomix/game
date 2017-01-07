@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'debugInfo', 'pixi', 'dataTypes'],
-    function (config, Logger, DebugInfo, pixi, dataTypes) {
+define(['config', 'logger', 'debugInfo', 'pixi', 'gameLocation', 'gamePosition'],
+    function (config, Logger, DebugInfo, pixi, Location, position) {
 
         var logger = Logger.getLogger('gameMobile');
         logger.setLevel(config.logger.gameMobile || 0);
@@ -24,20 +24,18 @@ define(['config', 'logger', 'debugInfo', 'pixi', 'dataTypes'],
         var tileSize = config.game.tiles.size,
             scale = config.game.tiles.scale;
 
-        function Mobile(user) {
+        function Mobile(mobile) {
             pixi.Container.call(this);
-            var self = this,
-                texture = pixi.Texture.fromImage('assets/avatars/' + (user.avatar || 'devil.png')),
+            var texture = pixi.Texture.fromImage('assets/avatars/' + (mobile.avatar || 'devil.png')),
                 sprite = new pixi.Sprite(texture);
 
             sprite.anchor.set(.5);
             this.setTransform(0, 0);
 
-
             this.addChild(sprite);
-            this.name = user.name;
-            this.location = new dataTypes.Location();
-            this.gamePosition = dataTypes.gamePosition(this);
+            this.name = mobile.name;
+            this.location = new Location();
+            this.gamePosition = position.factory(this);
 
             this.updateLocation = function (loc) {
                 //self.location = loc;
@@ -49,7 +47,7 @@ define(['config', 'logger', 'debugInfo', 'pixi', 'dataTypes'],
         Mobile.prototype.constructor = Mobile;
 
 
-        o.onMouseDown = o.onMouseUp = o.onMouseMove = o.tick = function () {
+        o.onMouseDown = o.onMouseUp = o.onMouseMove = o.frameTick = o.workerTick = function () {
         };
 
         return Mobile;

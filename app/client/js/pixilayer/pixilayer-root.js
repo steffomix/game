@@ -15,10 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'jquery', 'dataTypes', 'debugInfo', 'pixi', 'tween', 'eventDispatcher', 'gameApp',
-        'pixiTilesLayer',
-        'pixiPlayerLayer'],
-    function (config, Logger, $, dataTypes, DebugInfo, pixi, tween, dispatcher, gameApp,
+define(['config', 'logger', 'jquery', 'gamePosition', 'debugInfo', 'pixi', 'tween', 'eventDispatcher', 'gameApp',
+        'pixiTiles',
+        'pixiPlayers'],
+    function (config, Logger, $, position, DebugInfo, pixi, tween, dispatcher, gameApp,
               playerContainer,
               tilesContainer) {
 
@@ -29,8 +29,8 @@ define(['config', 'logger', 'jquery', 'dataTypes', 'debugInfo', 'pixi', 'tween',
             $body = $('body'),
             tileSize = config.game.tiles.size,
             scale = config.game.tiles.scale,
-            logger = Logger.getLogger('pixiRootLayer');
-        logger.setLevel(config.logger.pixiRootLayer || 0);
+            logger = Logger.getLogger('pixiRoot');
+        logger.setLevel(config.logger.pixiRoot || 0);
 
 
         function createInteractive() {
@@ -89,8 +89,8 @@ define(['config', 'logger', 'jquery', 'dataTypes', 'debugInfo', 'pixi', 'tween',
                     y: 0
                 },
                 mouseDown = false,
-                mousePosition = dataTypes.gamePositionRelative(self, lastMouseMove),
-                gamePosition = dataTypes.gamePosition({
+                mousePosition = position.factory(self, lastMouseMove),
+                gamePosition = position.factory({
                     get x() {
                         return (self.x / scale) - $body.width() / 2 / scale;
                     },
@@ -102,6 +102,8 @@ define(['config', 'logger', 'jquery', 'dataTypes', 'debugInfo', 'pixi', 'tween',
                     x: 0,
                     y: 0
                 },
+                // the heigher the slower
+                moveSpeed = 100,
                 playerOffset = {
                     get x() {
                         return gamePosition.x - moveTo.x;
@@ -120,33 +122,31 @@ define(['config', 'logger', 'jquery', 'dataTypes', 'debugInfo', 'pixi', 'tween',
 
 
             // move container to center of mainPlayer
-            dispatcher.game.tick(function () {
-                var mainPlayer = gameApp.mainPlayer || {x: 0, y: 0};
+            dispatcher.game.frameTick(function () {
+                var mainPlayer = gameApp.get('mainPlayer') || {x: 0, y: 0};
                 moveTo.x = mainPlayer.x * -1;
                 moveTo.y = mainPlayer.y * -1;
                 var diff = gamePosition.diff(moveTo, .1, .1);
 
-                //gameApp.mainPlayer && gameApp.mainPlayer.debug(lastMouseMove);
-
-                self.x += diff.x / 25;
-                self.y += diff.y / 25;
+                self.x += diff.x / moveSpeed;
+                self.y += diff.y / moveSpeed;
 
                 renderer.render(self);
             });
 
             dispatcher.game.initialize(function () {
                 $gameStage.html(renderer.view);
-                logger.info('Game initialize pixiRootLayer');
-                gameApp.addModule('pixiRoot', {
+                logger.info('Game initialize pixiRoot');
+                gameApp.set('pixiRoot', {
                     position: gamePosition
                 });
-                gameApp.addModule('mouse', {
+                gameApp.set('mouse', {
                     position: mousePosition,
                     get isDown() {
                         return mouseDown;
                     }
                 });
-                gameApp.addModule('screen', {
+                gameApp.set('screen', {
 
                     get width() {
                         return $body.width();
@@ -175,6 +175,7 @@ define(['config', 'logger', 'jquery', 'dataTypes', 'debugInfo', 'pixi', 'tween',
         function getInstance() {
             if (!instance) {
                 instance = new PixiRootLayer();
+                new pixi.Container().addChild(instance);
             }
             return instance;
         }

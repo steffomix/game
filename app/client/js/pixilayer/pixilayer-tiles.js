@@ -15,12 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher', 'gameApp', 'tween', 'gameFloor'],
-    function (config, Logger, dataTypes, pixi, dispatcher, gameApp, tween, GameFloor) {
+define(['config', 'logger', 'gamePosition', 'pixi', 'eventDispatcher', 'gameApp', 'tween', 'gameFloor'],
+    function (config, Logger, gamePosition, pixi, dispatcher, gameApp, tween, GameFloor) {
 
         var instance,
-            logger = Logger.getLogger('pixiTilesLayer');
-        logger.setLevel(config.logger.pixiTilesLayer || 0);
+            logger = Logger.getLogger('pixiTiles');
+        logger.setLevel(config.logger.pixiTiles || 0);
 
         var scale = config.game.tiles.scale,
             tileSize = config.game.tiles.size,
@@ -39,7 +39,7 @@ define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher', 'gameApp', '
          */
         function Grid() {
             pixi.Graphics.call(this);
-            this.gamePosition = dataTypes.gamePosition(this);
+            this.gamePosition = gamePosition.factory(this);
             var x = 30 * tileSize - tileSize / 2;
             this.lineStyle(3, 0x808080, .3);
 
@@ -62,7 +62,7 @@ define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher', 'gameApp', '
          */
         function Chunk() {
             pixi.Graphics.call(this);
-            this.gamePosition = dataTypes.gamePosition(this);
+            this.gamePosition = gamePosition.factory(this);
             var x = 6 * tileSize * chunkSize + tileSize / 2;
             this.lineStyle(4, 0x000000, .3);
 
@@ -83,7 +83,7 @@ define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher', 'gameApp', '
          */
         function Cursor() {
             pixi.Graphics.call(this);
-            this.gamePosition = dataTypes.gamePosition(this);
+            this.gamePosition = gamePosition.factory(this);
             var x = tileSize / 2;
             this.lineStyle(6, 0x000000, .5);
             this.moveTo(-x, -x);
@@ -108,7 +108,7 @@ define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher', 'gameApp', '
                 alpha = .5,
                 fade = .01;
 
-            this.gamePosition = dataTypes.gamePosition(this);
+            this.gamePosition = gamePosition.factory(this);
 
             this.lineStyle(6, 0xcc0000, alpha);
             this.moveTo(-x, -x);
@@ -127,7 +127,6 @@ define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher', 'gameApp', '
         }
         Pointer.prototype = Object.create(pixi.Graphics.prototype);
         Pointer.prototype.constructor = Pointer;
-
 
         /**
          *
@@ -157,25 +156,31 @@ define(['config', 'logger', 'dataTypes', 'pixi', 'eventDispatcher', 'gameApp', '
             this.addChild(cursor);
             this.addChild(pointer);
 
+
             this.interactive = true;
 
-            dispatcher.game.tick(function(t){
+            dispatcher.game.frameTick(function(t){
                 animate.update(t);
-                var mouseGrid = gameApp.mouse.position.grid,
-                    gameGrid = gameApp.pixiRoot.position.grid,
-                    chunkGrid = gameApp.pixiRoot.position.chunk;
+                var mouse = gameApp.get('mouse');
+                var mouseGrid = mouse.position.grid;
                 cursor.gamePosition.grid.x = mouseGrid.x;
                 cursor.gamePosition.grid.y = mouseGrid.y;
-                //grid.gamePosition.grid.x = gameGrid.x *-1;
-                //grid.gamePosition.grid.y = gameGrid.y *-1;
-                //chunk.gamePosition.chunk.x = chunkGrid.x *-1  -1;
-                //chunk.gamePosition.chunk.y = chunkGrid.y *-1  -1;
 
-                if(gameApp.mouse.isDown){
+                if(mouse.isDown){
                     pointer.alpha = 1;
                     pointer.gamePosition.grid.x = mouseGrid.x;
                     pointer.gamePosition.grid.y = mouseGrid.y;
                 }
+                /*
+                // debug grid position
+                var gameGrid = gameApp.get('pixiRoot').position.grid,
+                chunkGrid = gameApp.get('pixiRoot').position.chunk;
+
+                grid.gamePosition.grid.x = gameGrid.x *-1;
+                grid.gamePosition.grid.y = gameGrid.y *-1;
+                chunk.gamePosition.chunk.x = chunkGrid.x *-1  -1;
+                chunk.gamePosition.chunk.y = chunkGrid.y *-1  -1;
+                */
             });
 
             dispatcher.game.mouseup(function showPointer(){

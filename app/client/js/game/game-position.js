@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 27.12.16 Stefan Brinkmann <steffomix@gmail.com>
+ * Copyright (C) 07.01.17 Stefan Brinkmann <steffomix@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,53 +15,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'gameSocket'],
-    function (config, Logger, socket) {
+
+define(['config', 'logger'],
+    function (config, Logger) {
 
         var tileSize = config.game.tiles.size,
             chunkSize = config.game.chunks.size,
             scale = config.game.tiles.scale,
-            logger = Logger.getLogger('dataTypes');
-        logger.setLevel(config.logger.dataTypes || 0);
-
-        var instance = {
-
-            get Location() {
-                return Location;
-            },
-            get gamePosition() {
-                return gamePosition;
-            },
-            get gamePositionRelative() {
-                return gamePositionRelative;
-            }
+            logger = Logger.getLogger('gamePosition');
+        logger.setLevel(config.logger.gamePosition || 0);
 
 
-        };
-
-        /**
-         * Represents Database UserLocation
-         * @param x {int}
-         * @param y {int}
-         * @param z {int}
-         * @param area_id {int}
-         * @param world_id {int}
-         * @constructor
-         */
-        function Location(x, y, z, area_id, world_id) {
-            this.x = x || 0;
-            this.y = y || 0;
-            this.z = z || 0;
-            this.area_id = area_id || null;
-            this.world_id = world_id || null;
+        function factory(self, relative){
+            return relative ? gamePositionRelative(self, relative) : gamePosition(self);
         }
 
-        Location.prototype = {
-            x: 0,
-            y: 0,
-            z: 0,
-            area_id: null,
-            world_id: null
+        return {
+            factory: factory
         };
 
         /**
@@ -269,7 +239,7 @@ define(['config', 'logger', 'gameSocket'],
          * calculate relative coordinates of another container
          * calculate grid coordinates
          * and integer mouse position in px of inside tile where 0,0 is center of.
-         * Used only by pixiRootLayer to calculate mouseEvent position on the grid
+         * Used only by pixiRoot to calculate mouseEvent position on the grid
          * @param self {{x, y}}
          * @param rel {{x, y}}
          * @returns {{x, y, grid, chunk}}
@@ -362,7 +332,5 @@ define(['config', 'logger', 'gameSocket'],
             return position;
         }
 
-
-        return instance;
 
     });

@@ -16,14 +16,11 @@
  */
 
 
-define(['config', 'logger', 'debugInfo', 'dataTypes', 'pixi', 'gameMobile'],
-    function (config, Logger, DebugInfo, dataTypes, pixi, Mobile) {
+define(['config', 'logger', 'gameMobile'],
+    function (config, Logger, Mobile) {
 
         var logger = Logger.getLogger('gamePlayer');
         logger.setLevel(config.logger.gamePlayer || 0);
-
-
-        var tileSize = config.game.tiles.size;
 
         function Player(user) {
             Mobile.call(this, user);

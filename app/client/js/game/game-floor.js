@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'underscore', 'dataTypes', 'eventDispatcher', 'pixi', 'noise', 'gameApp', 'worldGenerator', 'gameTile'],
-    function (config, Logger, _, dataTypes, dispatcher, pixi, noise, gameApp, worldGenerator, GameTile) {
+define(['config', 'logger', 'underscore', 'eventDispatcher', 'pixi', 'noise', 'gameApp', 'worldGenerator', 'gameTile'],
+    function (config, Logger, _, dispatcher, pixi, noise, gameApp, worldGenerator, GameTile) {
 
         var logger = Logger.getLogger('gameFloor');
         logger.setLevel(config.logger.gameFloor || 0);
@@ -39,107 +39,95 @@ define(['config', 'logger', 'underscore', 'dataTypes', 'eventDispatcher', 'pixi'
                 // topmost row
                 minY = Infinity,
                 // bottommost row
-                maxY = -Infinity,
-                // noiseRanges for world generator
-                noiseRanges = [
-                    0,
-                    100, // Water
-                    115, // sand
-                    160, // grass
-                    190, // wood
-                    220, // stone
-                    256 // snow
-                ],
-                // textures for world generator
-                textures = [
-                    'water',
-                    'sand',
-                    'grass',
-                    'wood',
-                    'stone',
-                    'snow'
-                ];
+                maxY = -Infinity;
 
-            dispatcher.game.tick(function () {
-                if (gameApp.mainPlayer) {
+            // update gameFloor
+            dispatcher.game.frameTick(function () {
+                var mainPlayer = gameApp.get('mainPlayer');
+                try{
+                    if (mainPlayer) {
 
-                    // get current state
-                    var row,
-                        nTiles = {},
-                        nRows = {},
-                        pGrid = gameApp.mainPlayer.gamePosition.grid,
-                        px = pGrid.x,
-                        py = pGrid.y,
-                        screen = gameApp.screen;
+                        // get current state
+                        var row,
+                            nTiles = {},
+                            nRows = {},
+                            pGrid = gameApp.get('mainPlayer').gamePosition.grid,
+                            px = pGrid.x,
+                            py = pGrid.y,
+                            screen = gameApp.get('screen');
 
-                    // count tiles needed
-                    var nTilesWidth = Math.round(screen.width / 2 / tileSize / scale),
-                        nTilesHeight = Math.round(screen.height / 2 / tileSize / scale);
+                        // count tiles needed
+                        var nTilesWidth = Math.round(screen.width / 2 / tileSize / scale),
+                            nTilesHeight = Math.round(screen.height / 2 / tileSize / scale);
 
-                    // center offset
-                    var tilesOffsetX = Math.round(screen.playerOffset.x / tileSize),
-                        tilesOffsetY = Math.round(screen.playerOffset.y / tileSize);
+                        // center offset
+                        var tilesOffsetX = Math.round(screen.playerOffset.x / tileSize),
+                            tilesOffsetY = Math.round(screen.playerOffset.y / tileSize);
 
-                    // rectangle to fill with tiles
-                    var lx = (px - tilesOffsetX - nTilesWidth) - 1, lxx = lx * tileSize,
-                        rx = (px - tilesOffsetX + nTilesWidth) + 1, rxx = rx * tileSize,
-                        ly = (py - tilesOffsetY - nTilesHeight) - 1, lyy = ly * tileSize,
-                        ry = (py - tilesOffsetY + nTilesHeight) + 1, ryy = ry * tileSize;
+                        // rectangle to fill with tiles
+                        var lx = (px - tilesOffsetX - nTilesWidth) - 1, lxx = lx * tileSize,
+                            rx = (px - tilesOffsetX + nTilesWidth) + 1, rxx = rx * tileSize,
+                            ly = (py - tilesOffsetY - nTilesHeight) - 1, lyy = ly * tileSize,
+                            ry = (py - tilesOffsetY + nTilesHeight) + 1, ryy = ry * tileSize;
 
-                    if (self.children.length) {
+                        if (self.children.length) {
 
-                        // remove tiles out of view
-                        _.each(tiles, function (t) {
-                            if (t.x < lxx || t.x > rxx || t.y < lyy || t.y > ryy) {
-                                t.destroy();
-                            }
-                        });
+                            // remove tiles out of view
+                            _.each(tiles, function (t) {
+                                if (t.x < lxx || t.x > rxx || t.y < lyy || t.y > ryy) {
+                                    t.destroy();
+                                }
+                            });
 
 
-                        // cleanup empty rows
-                        minY = Infinity;
-                        maxY = -Infinity;
-                        _.each(rows, function (row) {
-                            var y = row._y;
-                            if (y < ly || y > ry) {
-                                self.removeChild(row);
-                                row.destroy();
-                                minY = self.getChildAt(0)._y;
-                            } else {
-                                nRows[y] = row;
-                                minY = Math.min(minY, y);
-                                maxY = Math.max(maxY, y);
-                            }
-                        });
-                        // replace rows register
-                        rows = nRows;
+                            // cleanup empty rows
+                            minY = Infinity;
+                            maxY = -Infinity;
+                            _.each(rows, function (row) {
+                                var y = row._y;
+                                if (y < ly || y > ry) {
+                                    self.removeChild(row);
+                                    row.destroy();
+                                    minY = self.getChildAt(0)._y;
+                                } else {
+                                    nRows[y] = row;
+                                    minY = Math.min(minY, y);
+                                    maxY = Math.max(maxY, y);
+                                }
+                            });
+                            // replace rows register
+                            rows = nRows;
 
-                    } else {
-                        // create initial row
-                        minY = maxY = ly;
-                        row = new pixi.Container();
-                        row._y = ly;
-                        rows[ly] = row;
-                        self.addChild(row);
-                    }
+                        } else {
+                            // create initial row
+                            minY = maxY = ly;
+                            row = new pixi.Container();
+                            row._y = ly;
+                            rows[ly] = row;
+                            self.addChild(row);
+                        }
 
-                    // add new tiles come into view
-                    var id, tile;
-                    for (var x = lx; x <= rx; x++) {
-                        for (var y = ly; y <= ry; y++) {
-                            id = coord(x, y);
-                            if (!tiles[id]) {
-                                tile = new GameTile(worldGenerator.tile(x, y));
-                                nTiles[id] = tile;
-                                addTile(x, y, tile);
-                            } else {
-                                nTiles[id] = tiles[id];
+                        // add new tiles come into view
+                        var id, tile;
+                        for (var x = lx; x <= rx; x++) {
+                            for (var y = ly; y <= ry; y++) {
+                                id = coord(x, y);
+                                if (!tiles[id]) {
+                                    tile = new GameTile(worldGenerator.tile(x, y));
+                                    nTiles[id] = tile;
+                                    addTile(x, y, tile);
+                                } else {
+                                    nTiles[id] = tiles[id];
+                                }
                             }
                         }
+                        // replace tiles register
+                        tiles = nTiles;
                     }
-                    // replace tiles register
-                    tiles = nTiles;
+                }catch(e){
+                    logger.error('GameFloor::frameTick: ', e);
                 }
+
 
             });
 
@@ -180,26 +168,6 @@ define(['config', 'logger', 'underscore', 'dataTypes', 'eventDispatcher', 'pixi'
                 rows[y].addChild(tile);
             }
 
-
-            function drawTile(x, y) {
-                var value = calcNoise(x, y, 10) / 2;
-                value += calcNoise(y, x, 5) / 4;
-                value += calcNoise(x, y, 2.5) / 8;
-                value += calcNoise(y, x, 1) / 8;
-                value = Math.min(255, value);
-
-                for (var i = 0; i < noiseRanges.length - 1; i++) {
-                    if (value >= noiseRanges[i] && value < noiseRanges[i + 1]) {
-                        return new GameTile(textures[i]);
-                    }
-                }
-                logger.error('GameFloor::drawTile not in Range', value, noiseRanges);
-            }
-
-            function calcNoise(x, y, s) {
-                var value = Math.min(Infinity, Math.max(-Infinity, noise.simplex2(x / scaleNoise(s), y / scaleNoise(s), 0)));
-                return (1 + value) * 1.1 * 128;
-            }
 
 
         }

@@ -15,12 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'eventDispatcher', 'pixi', 'gameApp'],
-    function (config, Logger, dispatcher, pixi, gameApp) {
+define(['config', 'logger', 'eventDispatcher', 'pixi', 'gameApp', 'pixiMainPlayer'],
+    function (config, Logger, dispatcher, pixi, gameApp, PixiMainPlayer) {
 
         var instance,
-            logger = Logger.getLogger('pixiPlayerLayer');
-        logger.setLevel(config.logger.pixiPlayerLayer || 0);
+            logger = Logger.getLogger('pixiPlayers');
+        logger.setLevel(config.logger.pixiPlayers || 0);
 
         function getInstance() {
             if (!instance) {
@@ -31,28 +31,28 @@ define(['config', 'logger', 'eventDispatcher', 'pixi', 'gameApp'],
 
         function PixiPlayerLayer() {
             pixi.Container.call(this);
-            var playerContainer = new pixi.Container(),
-                mainPlayerContainer = new pixi.Container();
+            var players = new pixi.Container(),
+                mainPlayer = new PixiMainPlayer();
 
-            dispatcher.game.initialize(function(){
-                gameApp.addModule('pixiPlayer', this);
-            });
-
-            this.addChild(playerContainer);
-            this.addChild(mainPlayerContainer);
-
-            this.setMainPlayer = function(player){
-                mainPlayerContainer.removeChildren();
-                mainPlayerContainer.addChild(player);
-            };
+            this.addChild(players);
+            this.addChild(mainPlayer);
 
             this.addPlayer = function(player){
-                playerContainer.addChild(player);
-            }
+                players.addChild(player);
+            };
 
+            this.removePlayer = function(player){
+                var childs = players.children;
+                for(var i = 0; i < childs.length; i++){
+                    if(childs[i].name == player.name){
+                        players.removeChild(childs[i]).destroy();
+                        break;
+                    }
+                }
+            }
         }
 
-        var o = PixiPlayerLayer.prototype = Object.create(pixi.Container.prototype);
+        PixiPlayerLayer.prototype = Object.create(pixi.Container.prototype);
         PixiPlayerLayer.prototype.constructor = PixiPlayerLayer;
 
         return getInstance();

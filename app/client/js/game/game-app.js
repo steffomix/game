@@ -15,10 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'dataTypes', 'eventDispatcher', 'tick'
-
-    ],
-    function (config, Logger, Backbone, _, Pixi, $, dataTypes, dispatcher, Tick) {
+define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'gamePosition', 'eventDispatcher', 'tick'],
+    function (config, Logger, Backbone, _, pixi, $, gamePosition, dispatcher, Tick) {
 
         var instance,
             logger = Logger.getLogger('gameApp');
@@ -28,39 +26,29 @@ define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'dataTyp
         function GameApp() {
 
             var self = this,
-                renderer = Pixi.autoDetectRenderer(100, 100, {transparent: 1}),
-                ticker = new Tick(dispatcher.game.tick.claimTrigger(this)),
-                $body = $('body');
+                modules = {},
+                frameTick = new Tick(dispatcher.game.frameTick.claimTrigger(this)),
+                workerTick = new Tick(dispatcher.game.workerTick.claimTrigger(this));
 
-            ticker.fps = config.game.fps;
-            // add getter to this that represents the module
-            this.addModule = function (name, mod) {
-                if (self[name]) {
-                    return logger.error('GameApp Module ' + name + ' already set', self[name], mod);
-                }
-                Object.defineProperty(self, name, {
-                    get: function () {
-                        return mod;
-                    }
-                });
+            frameTick.fps = config.game.frameTick;
+            workerTick.fps = config.game.workerTick;
 
+            this.set = function(id, module){
+                modules[id] = module;
             };
 
-            this.setMainPlayer = function(player){
-                Object.defineProperty(self, 'mainPlayer', {
-                    get: function () {
-                        return player;
-                    }
-                });
+            this.get = function(id){
+                return modules[id];
             };
-
 
             dispatcher.game.initialize(function () {
-                // start ticker when initialize is finished
-                setTimeout(ticker.start, 100);
+                // start ticker after initialize is finished
+                setTimeout(function(){
+                    frameTick.start();
+                    workerTick.start();
+                }, 100);
+
             });
-
-
         }
 
         function getInstance() {
