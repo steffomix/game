@@ -15,10 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'jquery', 'gamePosition', 'debugInfo', 'pixi', 'tween', 'eventDispatcher', 'gameApp',
+define(['config', 'logger', 'jquery', 'gameRouter', 'gameSocket', 'gamePosition', 'debugInfo', 'pixi', 'tween', 'eventDispatcher', 'gameApp',
         'pixiTiles',
         'pixiPlayers'],
-    function (config, Logger, $, position, DebugInfo, pixi, tween, dispatcher, gameApp,
+    function (config, Logger, $, router, socket, position, DebugInfo, pixi, tween, dispatcher, gameApp,
               playerContainer,
               tilesContainer) {
 
@@ -45,41 +45,6 @@ define(['config', 'logger', 'jquery', 'gamePosition', 'debugInfo', 'pixi', 'twee
 
         function PixiRootLayer() {
             pixi.Container.call(this);
-
-            this.addChild(playerContainer);
-            this.addChild(tilesContainer);
-            this.addChild(createInteractive());
-            this.interactive = true;
-            this.setTransform(0, 0, scale, scale);
-
-
-            // center container
-
-
-            // mouse events
-            this.on('mousemove', onMouseMove)
-                .on('mousedown', onMouseDown)
-                .on('mouseup', onMouseUp)
-                // touch events
-                .on('touchmove', onMouseMove)
-                .on('touchstart', onMouseDown)
-                .on('touchend', onMouseUp);
-
-            function onMouseMove(e) {
-                lastMouseMove.x = e.data.global.x;
-                lastMouseMove.y = e.data.global.y;
-                dispatcher.game.mousemove.trigger(mousePosition, e);
-            }
-
-            function onMouseDown(e) {
-                mouseDown = true;
-                dispatcher.game.mousedown.trigger(mousePosition, e);
-            }
-
-            function onMouseUp(e) {
-                mouseDown = false;
-                dispatcher.game.mouseup.trigger(mousePosition, e);
-            }
 
             var self = this,
                 debug = new DebugInfo(this, -200, 0).debug,
@@ -112,6 +77,66 @@ define(['config', 'logger', 'jquery', 'gamePosition', 'debugInfo', 'pixi', 'twee
                         return gamePosition.y - moveTo.y;
                     }
                 };
+
+            // add layers
+            this.addChild(playerContainer);
+            this.addChild(tilesContainer);
+            this.addChild(createInteractive());
+
+            // catch all mouse events
+            this.interactive = true;
+            this.setTransform(0, 0, scale, scale);
+
+            // mouse events
+            this.on('mousemove', onMouseMove)
+                .on('mousedown', onMouseDown)
+                .on('mouseup', onMouseUp)
+                // touch events
+                .on('touchmove', onMouseMove)
+                .on('touchstart', onMouseDown)
+                .on('touchend', onMouseUp);
+
+
+            function onMouseMove(e) {
+                lastMouseMove.x = e.data.global.x;
+                lastMouseMove.y = e.data.global.y;
+                dispatcher.game.mousemove.trigger(mousePosition, e);
+            }
+
+
+            function onMouseDown(e) {
+                socket.send('mainPlayer.mouseDown', mousePositionSocket());
+                mouseDown = true;
+                dispatcher.game.mousedown.trigger(mousePosition, e);
+            }
+
+            function onMouseUp(e) {
+                socket.send('mainPlayer.mouseUp', mousePositionSocket());
+                mouseDown = false;
+                dispatcher.game.mouseup.trigger(mousePosition, e);
+            }
+
+            dispatcher.game.workerTick(function(){
+                socket.send('mainPlayer.mouseMove', {
+                    position: mousePositionSocket(),
+                    idDown: mouseDown
+                });
+            })
+
+            function mousePositionSocket(){
+                return {
+                    x: mousePosition.x,
+                    y: mousePosition.y,
+                    tile: {
+                        x: mousePosition.tile.x,
+                        y: mousePosition.tile.y
+                    },
+                    tilePos: {
+                        x: mousePosition.tilePos.x,
+                        y: mousePosition.tilePos.y
+                    }
+                }
+            }
 
             // mouse down event
             Object.defineProperty(mousePosition, 'isDown', {

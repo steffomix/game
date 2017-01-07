@@ -109,6 +109,7 @@
         ['server', 'worker/server', 0],
         ['workerSocket', 'worker/worker-socket', 4],
         ['workerRouter', 'worker/worker-router', 4],
+        ['workerMainPlayer', 'worker/worker-main-player', 0],
 
         // cache and matrix renderer
         ['cache', 'worker/cache/cache', 0],

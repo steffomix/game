@@ -110,6 +110,21 @@ define(['config', 'logger'],
                 }
             };
 
+            var tilePos = {
+                get x (){
+                    return self.x - gridPos.x;
+                },
+                get y (){
+                    return self.y - gridPos.y;
+                },
+                set x (x){
+                    self.x = gridPos.y + Math.max(0, Math.min(x, tileSize));
+                },
+                set y (y){
+                    self.y = gridPos.y + Math.max(0, Math.min(y, tileSize));
+                }
+            };
+
             // tiles position in grid, eq to database location and user-location
             var grid = {
                 get x() {
@@ -204,12 +219,15 @@ define(['config', 'logger'],
                 get tile() {
                     return tile;
                 },
+                get tilePos(){
+                    return tilePos;
+                },
                 get grid() {
                     return grid;
                 },
                 get gridPos() {
                     return gridPos;
-                },
+                } /*,
                 get chunk() {
                     return chunk;
                 },
@@ -222,15 +240,19 @@ define(['config', 'logger'],
                 get chunkTilePos() {
                     return chunkTilePos;
                 }
+                */
             };
 
             _createCalculators(pos);
             _createCalculators(tile);
+            _createCalculators(tilePos);
             _createCalculators(grid);
             _createCalculators(gridPos);
+            /*
             _createCalculators(chunk);
             _createCalculators(chunkTile);
             _createCalculators(chunkTilePos);
+             */
 
             return pos;
         }
@@ -251,6 +273,15 @@ define(['config', 'logger'],
                 },
                 get y() {
                     return (rel.y - self.y) / scale;
+                }
+            };
+
+            var tilePos = {
+                get x (){
+                    return pos.x - gridPos.x;
+                },
+                get y (){
+                    return pos.y - gridPos.y;
                 }
             };
 
@@ -309,6 +340,9 @@ define(['config', 'logger'],
                 },
                 get tile() {
                     return tile;
+                },
+                get tilePos(){
+                    return tilePos;
                 },
                 get grid() {
                     return grid;

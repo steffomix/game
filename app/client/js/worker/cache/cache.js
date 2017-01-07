@@ -1,7 +1,7 @@
 
 
-define('cache', ['config', 'logger', 'underscore', 'workerSocket', 'workerRouter', 'server', 'cacheFloorManager'],
-    function (config, Logger, _, workerSocket, router, server, floorManager) {
+define(['config', 'logger', 'underscore', 'workerSocket', 'workerRouter', 'server', 'cacheFloorManager', 'workerMainPlayer'],
+    function (config, Logger, _, socket, router, server, floorManager) {
 
         var instance,
             logger = Logger.getLogger('gameCache');
