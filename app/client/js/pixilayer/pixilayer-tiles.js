@@ -127,6 +127,44 @@ define(['config', 'logger', 'gameRouter', 'gamePosition', 'pixi', 'eventDispatch
         Pointer.prototype = Object.create(pixi.Graphics.prototype);
         Pointer.prototype.constructor = Pointer;
 
+        function Path(){
+            pixi.Container.call(this);
+            var self = this;
+
+            this.drawPath = function(path){
+                var graph = new pixi.Graphics(),
+                    p1 = path[0];
+
+                self.removeChildren().forEach(function(child){
+                    child.destroy();
+                });
+
+                addText(p1);
+                graph.lineStyle(6, 0xcc0000, 1);
+                graph.moveTo(p1.x * tileSize, p1.y * tileSize);
+                for(var i = 1; i < path.length; i++){
+                    var p = path[i];
+                    addText(p, path);
+                    graph.lineTo(p.x * tileSize, p.y * tileSize);
+                }
+
+                self.addChild(graph);
+
+            }
+
+            function addText(step){
+                var t = new pixi.Text();
+                t.text = step.tile;//JSON.stringify(step);
+                t.x = step.x * tileSize;
+                t.y = step.y * tileSize;
+                self.addChild(t);
+            }
+
+
+        }
+        Path.prototype = Object.create(pixi.Container.prototype);
+        Path.prototype.constructor = Path;
+
         /**
          *
          * @constructor
@@ -136,6 +174,7 @@ define(['config', 'logger', 'gameRouter', 'gamePosition', 'pixi', 'eventDispatch
 
             var grid = new Grid(),
                 chunk = new Chunk(),
+                path = new Path(),
                 cursor = new Cursor(),
                 pointer = new Pointer(),
                 tilesGrid = new GameFloor(),
@@ -152,12 +191,13 @@ define(['config', 'logger', 'gameRouter', 'gamePosition', 'pixi', 'eventDispatch
             //this.addChild(grid);
             //this.addChild(chunk);
             this.addChild(tilesGrid);
+            this.addChild(path);
             this.addChild(cursor);
             this.addChild(pointer);
 
             router.addModule('tilesGrid', this, {
                 showPath: function(job){
-                    
+                    path.drawPath(job.data);
                 }
             })
 

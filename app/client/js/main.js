@@ -74,12 +74,12 @@
                 },
                 get pathWeights(){
                     return {
-                        'water': 4,
-                        'sand': 1,
-                        'grass': 0,
-                        'wood': 3,
-                        'stone': 0,
-                        'snow': 2
+                        'water': 5,
+                        'sand': 2,
+                        'grass': 1,
+                        'wood': 4,
+                        'stone': 1,
+                        'snow': 3
                     };
                 }
             }

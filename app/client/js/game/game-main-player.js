@@ -35,7 +35,7 @@ define(['config', 'logger', 'gameRouter', 'gamePlayer', 'debugInfo', 'eventDispa
                 var root = gameApp.get('pixiRoot'),
                     mouse = gameApp.get('mouse'),
                     screen = gameApp.get('screen');
-
+/*
                 debug({
                     time: Math.round(t),
                     load: Math.round(l),
@@ -44,7 +44,7 @@ define(['config', 'logger', 'gameRouter', 'gamePlayer', 'debugInfo', 'eventDispa
                     pixiRootPos: root.position.grid,
                     mousePos: mouse.position.tile
                 });
-
+*/
                 if (mouse.isDown) {
                     var pos = mouse.position.gridPos;
                     if(!mouse.position.grid.eq(self.gamePosition.grid)){

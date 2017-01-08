@@ -24,7 +24,7 @@ define(['config', 'logger', 'workerSocket', 'workerRouter', 'pathfinding', 'work
 
         var mouseQueue = [],
             pathfinder = new pathfinding.AStarFinder({
-                allowDiagonal: false
+                allowDiagonal: true
             });
 
         function addMouseHistory(move) {
@@ -84,95 +84,181 @@ define(['config', 'logger', 'workerSocket', 'workerRouter', 'pathfinding', 'work
                 }
             });
 
-            function findPath(p1, p2) {
-                logger.info(p1, p2);
-                var extendGrid = 1,
-                    // get bounds of real grid
+
+            /**
+             *
+             * @param p1 Player position
+             * @param p2 Mouse position
+             */
+            function Finder(p1, p2){
+
+                // enlarge grid around min and max values
+                var extendGrid = 8;
+
+                // matrix bounds
+                var
                     xMin = Math.min(p1.x, p2.x),
                     xMax = Math.max(p1.x, p2.x),
                     yMin = Math.min(p1.y, p2.y),
                     yMax = Math.max(p1.y, p2.y),
                     width = xMax - xMin,
                     height = yMax - yMin,
-                    // where the player actually stands
-                    baseWeight = pathWeights[worldGenerator.tile(p1.x, p1.y)];
+                    xOffset = 0,
+                    yOffset = 0;
 
-                if (baseWeight == Infinity) {
-                    // no path found from within water or wall
+                // calculate offset
+                // shift real grid positions to matrix positions
+                if(xMin < 0 ){
+                    xOffset = xMin * -1 + extendGrid;
+                }
+                if(xMax > width){
+                    xOffset = (xMax - width - extendGrid) * -1;
+                }
+                if(yMin < 0){
+                    yOffset = yMin * -1 + extendGrid;
+                }
+                if(yMax > width){
+                    yOffset = (yMax - height - extendGrid) * -1;
+                }
+
+                // where the player stands on
+                var baseWeigh = pathWeights[worldGenerator.tile(p1.x, p1.y)];
+
+                //
+                var maxWeight;
+
+
+
+
+
+
+                function createMatrix(xMin, xMax, yMin, yMax, extendGrid, baseWeight){
+
+                    // create base matrix
+                    var matrix = [], row, weight, maxWeight = 0;
+                    for (var y = yMin - extendGrid; y <= yMax + extendGrid; y++) {
+                        row = [];
+                        for (var x = xMin - extendGrid; x <= xMax + extendGrid; x++) {
+                            weight = pathWeights[worldGenerator.tile(x, y)] - baseWeight;
+                            if (weight < Infinity) {
+                                maxWeight = Math.max(maxWeight, weight);
+                            }
+                            row.push(Math.max(0, weight));
+                        }
+                        matrix.push(row);
+                    }
+                    return matrix;
+                }
+
+            }
+
+
+
+            function findPath(p1, p2) {
+                //logger.info(p1, p2);
+                try{
+                    var extendGrid = 8,
+                        // get bounds of real grid
+                        xMin = Math.min(p1.x, p2.x),
+                        xMax = Math.max(p1.x, p2.x),
+                        yMin = Math.min(p1.y, p2.y),
+                        yMax = Math.max(p1.y, p2.y),
+                        width = xMax - xMin,
+                        height = yMax - yMin,
+                        // where the player actually stands
+                        baseWeight = pathWeights[worldGenerator.tile(p1.x, p1.y)];
+
+                    if (baseWeight == Infinity) {
+                        // no path found from within water or wall
+                        return [];
+                    }
+
+                    // create base matrix
+                    var matrix = [], row, weight, maxWeight = 0;
+                    for (var y = yMin - extendGrid; y <= yMax + extendGrid; y++) {
+                        row = [];
+                        for (var x = xMin - extendGrid; x <= xMax + extendGrid; x++) {
+                            weight = pathWeights[worldGenerator.tile(x, y)] - baseWeight;
+                            if (weight < Infinity) {
+                                maxWeight = Math.max(maxWeight, weight);
+                            }
+                            row.push(Math.max(0, weight));
+                        }
+                        matrix.push(row);
+                    }
+
+                    // logger.info(matrix[0].length, matrix.length);
+
+
+                    var xOffset = 0, yOffset = 0;
+
+                    // shift real grid positions to matrix positions
+                    xMin < 0 && (xOffset = xMin * -1 + extendGrid);
+                    xMax > width && (xOffset = (xMax - width - extendGrid) * -1);
+                    yMin < 0 && (yOffset = yMin * -1 + extendGrid);
+                    yMax > width && (yOffset = (yMax - height - extendGrid) * -1);
+
+                    // assign shift to positions
+                    var x1 = p1.x + xOffset, x2 = p2.x + xOffset,
+                        y1 = p1.y + yOffset, y2 = p2.y + yOffset;
+
+
+                    // create paths
+                    // add weights to paths
+                    var grid, paths = [], weights = [], path, tileWeight = 0;
+                    do {
+                        // create path
+                        grid = new pathfinding.Grid(matrix);
+                        path = pathfinder.findPath(x1, y1, x2, y2, grid);
+                        paths.push(path);
+
+                        // calculate weight of path
+                        weight = 0;
+                        for (var i = 0; i < path.length; i++) {
+                            // calculate weight and shift positions back to its origin
+                            tileWeight = worldGenerator.tile(path[i][0]  - xOffset, path[i][1] - yOffset);
+                            path[i] = {
+                                x: path[i][0] - xOffset,
+                                y: path[i][1] - yOffset,
+                                weight: pathWeights[tileWeight],
+                                tile: tileWeight
+                            };
+                            weight += path[i].weight;
+                        }
+                        weights.push(weight);
+
+                        // reduce matrix weight an repeat
+                        maxWeight--;
+                        maxWeight >= 0 && reduceMatrixWeight(matrix);
+                    } while (maxWeight >= 0);
+
+                    logger.info.apply(logger, weights);
+
+                    // find most cheap path
+                    var cheap = Infinity, cheapest;
+                    for (var i = 0; i < weights.length; i++) {
+                        if (paths[i].length && weights[i] < cheap) {
+                            cheap = weights[i];
+                            cheapest = i;
+                        }
+                    }
+
+                    var path = paths[cheapest] || [];
+                    path.mx = {
+                        w: matrix[0].length,
+                        h: matrix.length
+                    };
+                    // logger.info(path);
+                    return path;
+                }catch(e){
+                    logger.info(e);
                     return [];
                 }
 
-                // create base matrix
-                var matrix = [], row, weight, maxWeight = 0;
-                for (var y = yMin - extendGrid; y <= yMax + extendGrid; y++) {
-                    row = [];
-                    for (var x = xMin - extendGrid; x <= xMax + extendGrid; x++) {
-                        weight = pathWeights[worldGenerator.tile(x, y)] - baseWeight;
-                        if (weight < Infinity) {
-                            maxWeight = Math.max(maxWeight, weight);
-                        }
-                        row.push(Math.max(0, weight));
-                    }
-                    matrix.push(row);
-                }
-
-
-                var xOffset = 0, yOffset = 0;
-
-                // shift real grid positions to matrix positions
-                xMin < 0 && (xOffset = xMin * -1 + extendGrid);
-                xMax > width && (xOffset = (xMax - width - extendGrid) * -1);
-                yMin < 0 && (yOffset = yMin * -1 + extendGrid);
-                yMax > width && (yOffset = (yMax - height - extendGrid) * -1);
-
-                // assign shift to positions
-                var x1 = p1.x + xOffset, x2 = p2.x + xOffset,
-                    y1 = p1.y + yOffset, y2 = p2.y + yOffset;
-
-
-                // create paths
-                // add weights to paths
-                var grid, paths = [], weights = [], path, weight = 0;
-                do {
-                    // create path
-                    grid = new pathfinding.Grid(matrix);
-                    path = pathfinder.findPath(x1, y1, x2, y2, grid);
-                    paths.push(path);
-
-                    // calculate weight of path
-                    weight = 0;
-                    for (var i = 0; i < path.length; i++) {
-                        // calculate weight and shift positions back to its origin
-                        path[i] = {
-                            x: path[i][0] - xOffset,
-                            y: path[i][1] - yOffset,
-                            weight: pathWeights[worldGenerator.tile(path[i][0], path[i][1])]
-                        };
-                        weight += path[i].weight;
-                    }
-                    weights.push(weight);
-
-                    // reduce matrix weight an repeat
-                    maxWeight--;
-                    maxWeight >= 0 && reduceMatrixWeight(matrix);
-                } while (maxWeight >= 0);
-
-
-                // find most cheap path
-                var cheap = Infinity, cheapest;
-                for (var i = 0; i < weights.length; i++) {
-                    if (paths[i].length && weights[i] < cheap) {
-                        cheap = weights[i];
-                        cheapest = i;
-                    }
-                }
-
-                var path = paths[cheapest] || [];
-
-                // logger.info(path);
-                return path;
 
             }
+
+
 
             function reduceMatrixWeight(matrix) {
                 var row;
