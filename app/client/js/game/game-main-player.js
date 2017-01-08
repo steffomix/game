@@ -42,7 +42,7 @@ define(['config', 'logger', 'gameRouter', 'gamePlayer', 'debugInfo', 'eventDispa
                     chunk: root.position.chunk,
                     screen: screen,
                     pixiRootPos: root.position.grid,
-                    mousePos: mouse.position.grid
+                    mousePos: mouse.position.tile
                 });
 
                 if (mouse.isDown) {
@@ -61,7 +61,15 @@ define(['config', 'logger', 'gameRouter', 'gamePlayer', 'debugInfo', 'eventDispa
                 animate.to(pos, self.gamePosition.gridPos.dist(gameApp.get('mouse').position.gridPos) * 5).start();
             }
 
-            dispatcher.game.mousedown(function (mousePosition) {
+            dispatcher.game.mouseUp(function (mousePosition) {
+                walk({
+                    x: mousePosition.gridPos.x,
+                    y: mousePosition.gridPos.y
+                });
+            });
+
+
+            dispatcher.game.mouseDown(function (mousePosition) {
                 walk({
                     x: mousePosition.gridPos.x,
                     y: mousePosition.gridPos.y

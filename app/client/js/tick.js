@@ -20,17 +20,13 @@ define(['config', 'logger', 'tween'],
         logger = Logger.getLogger('tick');
         logger.setLevel(config.logger.tick|| 0);
 
-        function queue (){
-
-        }
-
 
 
         function  GameTick(trigger){
             var self = this,
                 running = false;
 
-            this.fps = config.game.fps;
+            this.fps = 1;
             this.load = 50;
             this.volatility = 10;
             this.stop = function (){

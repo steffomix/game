@@ -38,7 +38,7 @@
         logger: {},
         game: {
             frameTick: 35, // ticks per second. Game calculations and pixi render per second...
-            workerTick: .5, // ticks per second. Send mouse position to worker...
+            workerTick: 2, // ticks per second. Send mouse position to worker...
             tiles: {
                 size: 120, // tile size in px
                 scale: .5// scale tiles
@@ -47,25 +47,41 @@
                 size: 5 // draw tiles per chunk: 5 = 5*5 tiles
             },
             worldGenerator: {
-                scale: 5,
-                noiseRanges: [
-                    0,
-                    100, // Water
-                    115, // sand
-                    160, // grass
-                    190, // wood
-                    220, // stone
-                    256 // snow
-                ],
+                get scale(){
+                    return 10;
+                },
+                get noiseRanges(){
+                    return [
+                        0,
+                        100, // Water
+                        115, // sand
+                        160, // grass
+                        190, // wood
+                        220, // stone
+                        256 // snow
+                    ];
+                },
                 // textures for world generator
-                textures: [
-                    'water',
-                    'sand',
-                    'grass',
-                    'wood',
-                    'stone',
-                    'snow'
-                ]
+                get textures(){
+                    return [
+                        'water',
+                        'sand',
+                        'grass',
+                        'wood',
+                        'stone',
+                        'snow'
+                    ];
+                },
+                get pathWeights(){
+                    return {
+                        'water': 4,
+                        'sand': 1,
+                        'grass': 0,
+                        'wood': 3,
+                        'stone': 0,
+                        'snow': 2
+                    };
+                }
             }
         },
         worker: {
@@ -110,9 +126,12 @@
         ['workerSocket', 'worker/worker-socket', 4],
         ['workerRouter', 'worker/worker-router', 4],
         ['workerMainPlayer', 'worker/worker-main-player', 0],
+        ['workerEvents', 'worker/worker-events', 0],
+        ['workerDispatcher', 'worker/worker-dispatcher', 0],
 
         // cache and matrix renderer
-        ['cache', 'worker/cache/cache', 0],
+        ['workerMain', 'worker/worker-main', 0],
+        ['workerCache', 'worker/cache/cache', 0],
         //['pathfinder', 'worker/cache/pathfinder', 0], // used by gamecache
         ['cacheFloorManager', 'worker/cache/cache-floor-manager', 0],
         ['cacheFloor', 'worker/cache/cache-floor', 0],

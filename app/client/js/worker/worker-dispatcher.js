@@ -16,11 +16,11 @@
      */
 
 
-    define(['config', 'logger', 'backbone', 'underscore'], function (config, Logger, Backbone, _) {
+    define(['config', 'logger', 'workerEvents', 'underscore'], function (config, Logger, Events, _) {
 
         var instance;
-                logger = Logger.getLogger('eventDispatcher');
-            logger.setLevel(config.logger.eventDispatcher || 0);
+                logger = Logger.getLogger('workerDispatcher');
+            logger.setLevel(config.logger.workerDispatcher || 0);
 
         function getInstance () {
             if ( !instance ) {
@@ -40,39 +40,21 @@
              * result in usage register: dispatcher.global.myEvent(this, callback);
              * result in usage trigger: dispatcher.global.myEvent.trigger();
              *
-             * @param eventContext {object} orig this
+             * @param callback {object} orig this
              *
              */
-            function e (eventContext) {}
+            function e (callback) {}
             var eventHandler = {},
                 template = {
-                    server: {
-                        connect: e,
-                        disconnect: e,
-                        login: e,
-                        logout: e
-                    },
-                    global: {
-                        windowResize: e
-                    },
-                    interface: {
-                        hideAll: e
-                    },
-                    game: {
-                        initialize: e,
-                        // fps frame-tick (game-app.js)
-                        frameTick: e,
-                        // slowTick every .5 seconds
-                        // send mouse position to worker, calculate pathfinder...
-                        workerTick: e,
+                    mainPlayer: {
                         mouseDown: e,
                         mouseUp: e,
-                        mouseMove: e
+                        mouseGridMove: e
                     }
                 };
 
             _.each(template, function (events, category) {
-                var handler = eventHandler[category] = _.extend({}, Backbone.Events);
+                var handler = eventHandler[category] = _.extend({}, Events);
                 handler.name = category;
                 var categoryEvents = {
                     // turn off listener from <category>.<**all events**> with given _this or callback or both:
@@ -94,11 +76,8 @@
                 _.each(events, function (value, event) {
                     // create new Listener <event> in <category>
                     // e.g.: template.global.onSomething(this, fn);
-                    categoryEvents[event] = function (_this, callback) {
-                        if(!_.isFunction(callback ? callback : _this)){
-                            return logger.error('Event callback must be a function: ', category, event, _this, callback);
-                        }
-                        callback ? _this.listenTo(handler, event, callback) : handler.listenTo(handler, event, _this);
+                    categoryEvents[event] = function (callback) {
+                        handler.listenTo(handler, event, callback);
                     };
                     // create new Listener <event> in <category> for only one trigger
                     // e.g.: template.global.onSomething(this, fn);

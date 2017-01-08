@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'gamePosition', 'pixi', 'eventDispatcher', 'gameApp', 'tween', 'gameFloor'],
-    function (config, Logger, gamePosition, pixi, dispatcher, gameApp, tween, GameFloor) {
+define(['config', 'logger', 'gameRouter', 'gamePosition', 'pixi', 'eventDispatcher', 'gameApp', 'tween', 'gameFloor'],
+    function (config, Logger, router, gamePosition, pixi, dispatcher, gameApp, tween, GameFloor) {
 
         var instance,
             logger = Logger.getLogger('pixiTiles');
@@ -105,8 +105,7 @@ define(['config', 'logger', 'gamePosition', 'pixi', 'eventDispatcher', 'gameApp'
 
             pixi.Graphics.call(this);
             var x = tileSize / 2,
-                alpha = .5,
-                fade = .01;
+                alpha = .5;
 
             this.gamePosition = gamePosition.factory(this);
 
@@ -156,21 +155,28 @@ define(['config', 'logger', 'gamePosition', 'pixi', 'eventDispatcher', 'gameApp'
             this.addChild(cursor);
             this.addChild(pointer);
 
+            router.addModule('tilesGrid', this, {
+                showPath: function(job){
+                    
+                }
+            })
+
 
             this.interactive = true;
 
             dispatcher.game.frameTick(function(t){
-                animate.update(t);
                 var mouse = gameApp.get('mouse');
                 var mouseGrid = mouse.position.grid;
                 cursor.gamePosition.grid.x = mouseGrid.x;
                 cursor.gamePosition.grid.y = mouseGrid.y;
 
                 if(mouse.isDown){
-                    pointer.alpha = 1;
-                    pointer.gamePosition.grid.x = mouseGrid.x;
-                    pointer.gamePosition.grid.y = mouseGrid.y;
+                    pointer.alpha = .5;
+                    setPointer();
+                }else{
+                    animate.update(t);
                 }
+
                 /*
                 // debug grid position
                 var gameGrid = gameApp.get('pixiRoot').position.grid,
@@ -183,9 +189,19 @@ define(['config', 'logger', 'gamePosition', 'pixi', 'eventDispatcher', 'gameApp'
                 */
             });
 
-            dispatcher.game.mouseup(function showPointer(){
+            // update pointer on mouse up and down
+            dispatcher.game.mouseDown(setPointer);
+            dispatcher.game.mouseUp(function showPointer(){
+                setPointer();
                 animate.to({alpha: 0}, 2000).start();
             });
+
+
+            function setPointer(){
+                var mouseGrid = gameApp.get('mouse').position.grid;
+                pointer.gamePosition.grid.x = mouseGrid.x;
+                pointer.gamePosition.grid.y = mouseGrid.y;
+            }
 
 
         }

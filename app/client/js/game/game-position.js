@@ -39,7 +39,7 @@ define(['config', 'logger'],
          * @param p1
          * @private
          */
-        function _createCalculators(p1) {
+        function calculators(p1) {
             /**
              * calculate if p1 and p2 is same
              * @param p2 {{x, y}}
@@ -95,33 +95,16 @@ define(['config', 'logger'],
             // max x, y range: 0 to tileSize
             var tile = {
                 get x() {
-                    return self.x - grid.x * tileSize;
+                    return self.x - gridPos.x + tileSize / 2;
                 },
                 get y() {
-                    return self.y - grid.y * tileSize;
+                    return self.y - gridPos.y + tileSize / 2;
                 },
                 set x(x) {
-                    x = Math.max(0, Math.min(x, tileSize));
-                    self.x = x + grid.x * tileSize;
+                    self.x = gridPos.x + Math.max(0, Math.min(x, tileSize)) - tileSize / 2;
                 },
                 set y(y) {
-                    y = Math.max(0, Math.min(y, tileSize));
-                    self.y = y + grid.y * tileSize;
-                }
-            };
-
-            var tilePos = {
-                get x (){
-                    return self.x - gridPos.x;
-                },
-                get y (){
-                    return self.y - gridPos.y;
-                },
-                set x (x){
-                    self.x = gridPos.y + Math.max(0, Math.min(x, tileSize));
-                },
-                set y (y){
-                    self.y = gridPos.y + Math.max(0, Math.min(y, tileSize));
+                    self.y = gridPos.y + Math.max(0, Math.min(y, tileSize)) - tileSize / 2;
                 }
             };
 
@@ -151,58 +134,6 @@ define(['config', 'logger'],
                 }
             };
 
-            // chunk position in chunk
-            var chunk = {
-                get x() {
-                    return Math.round(self.x / tileSize / chunkSize) - 1;
-                },
-                get y() {
-                    return Math.round(self.y / tileSize / chunkSize) - 1;
-                },
-                set x(x) {
-                    self.x = x * tileSize * chunkSize;
-                },
-                set y(y) {
-                    self.y = y * tileSize * chunkSize;
-                }
-            };
-
-            // chunk position in px
-            var chunkPos = {
-                get x(){
-                    return chunk.x * tileSize * chunkSize;
-                },
-                get y(){
-                    return chunk.y * tileSize * chunkSize;
-                }
-            };
-
-            // tiles position inside chunk in grid
-            var chunkTile = {
-                get x() {
-                    return Math.round((self.x - chunk.x * tileSize * chunkSize) / tileSize);
-                },
-                get y() {
-                    return Math.round((self.y - chunk.y * tileSize * chunkSize) / tileSize);
-                },
-                set x(x) {
-                    self.x = chunk.x * tileSize * chunkSize + x * tileSize;
-                },
-                set x(y) {
-                    self.y = chunk.y * tileSize * chunkSize + y * tileSize;
-                }
-            };
-
-            // tiles position inside chunk in px
-            var chunkTilePos = {
-                get x() {
-                    return chunkTile.x * tileSize;
-                },
-                get y() {
-                    return chunkTile.y * tileSize;
-                }
-            };
-
             var pos = {
                 get x() {
                     return self.x;
@@ -217,42 +148,34 @@ define(['config', 'logger'],
                     self.y = y;
                 },
                 get tile() {
-                    return tile;
-                },
-                get tilePos(){
-                    return tilePos;
+                    return tile; // position inside tile in px
                 },
                 get grid() {
-                    return grid;
+                    return grid; // tile id in grid
                 },
                 get gridPos() {
-                    return gridPos;
-                } /*,
-                get chunk() {
-                    return chunk;
+                    return gridPos; // global grid position in px
                 },
-                get chunkPos(){
-                    return chunkPos;
-                },
-                get chunkTile() {
-                    return chunkTile;
-                },
-                get chunkTilePos() {
-                    return chunkTilePos;
+                get socket(){
+                    return {
+                        x: self.x,
+                        y: self.y,
+                        grid: {
+                            x: grid.x,
+                            y: grid.y
+                        },
+                        tile: {
+                            x: tile.x,
+                            y: tile.y
+                        }
+                    }
                 }
-                */
             };
 
-            _createCalculators(pos);
-            _createCalculators(tile);
-            _createCalculators(tilePos);
-            _createCalculators(grid);
-            _createCalculators(gridPos);
-            /*
-            _createCalculators(chunk);
-            _createCalculators(chunkTile);
-            _createCalculators(chunkTilePos);
-             */
+            calculators(pos);
+            calculators(tile);
+            calculators(grid);
+            calculators(gridPos);
 
             return pos;
         }
@@ -276,22 +199,12 @@ define(['config', 'logger'],
                 }
             };
 
-            var tilePos = {
+            var tile = {
                 get x (){
-                    return pos.x - gridPos.x;
+                    return pos.x - gridPos.x + tileSize / 2;
                 },
                 get y (){
-                    return pos.y - gridPos.y;
-                }
-            };
-
-
-            var tile = {
-                get x() {
-                    return Math.round(pos.x - grid.x * tileSize);
-                },
-                get y() {
-                    return Math.round(pos.y - grid.y * tileSize);
+                    return pos.y - gridPos.y + tileSize / 2;
                 }
             };
 
@@ -313,24 +226,6 @@ define(['config', 'logger'],
                 }
             };
 
-            var chunk = {
-                get x() {
-                    return Math.round(grid.x / chunkSize);
-                },
-                get y() {
-                    return Math.round(grid.y / chunkSize);
-                }
-            };
-
-            var chunkPos = {
-                get x(){
-                    return chunk.x * tileSize * chunkSize;
-                },
-                get y(){
-                    return chunk.y * tileSize * chunkSize;
-                }
-            };
-
             var position = {
                 get x(){
                     return pos.x;
@@ -341,27 +236,32 @@ define(['config', 'logger'],
                 get tile() {
                     return tile;
                 },
-                get tilePos(){
-                    return tilePos;
-                },
                 get grid() {
                     return grid;
                 },
                 get gridPos() {
                     return gridPos;
                 },
-                get chunk() {
-                    return chunk;
-                },
-                get chunkPos(){
-                    return chunkPos;
+                get socket(){
+                    return {
+                        x: pos.x,
+                        y: pos.y,
+                        grid: {
+                            x: grid.x,
+                            y: grid.y
+                        },
+                        tile: {
+                            x: tile.x,
+                            y: tile.y
+                        }
+                    }
                 }
             };
 
-            _createCalculators(pos);
-            _createCalculators(tile);
-            _createCalculators(grid);
-            _createCalculators(chunk);
+            calculators(pos);
+            calculators(tile);
+            calculators(grid);
+            calculators(gridPos);
 
             return position;
         }

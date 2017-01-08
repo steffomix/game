@@ -144,7 +144,7 @@ define(__slaveModuleID__,
                 logger.setLevel(config.logger.workerSlave);
                 socketContainer.logger = logger;
 
-            })
+            });
             require([slaveScript], function(){});
             job.send('***worker started***');
         }

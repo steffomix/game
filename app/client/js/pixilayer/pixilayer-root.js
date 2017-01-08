@@ -47,9 +47,16 @@ define(['config', 'logger', 'jquery', 'gameRouter', 'gameSocket', 'gamePosition'
             pixi.Container.call(this);
 
             var self = this,
+                dispatchMouseMove = dispatcher.game.mouseMove.claimTrigger(this),
+                dispatchMouseUp = dispatcher.game.mouseUp.claimTrigger(this),
+                dispatchMouseDown = dispatcher.game.mouseDown.claimTrigger(this),
                 debug = new DebugInfo(this, -200, 0).debug,
                 // last raw mousemove position
                 lastMouseMove = {
+                    x: 0,
+                    y: 0
+                },
+                lastMouseMoveWorker = {
                     x: 0,
                     y: 0
                 },
@@ -100,41 +107,36 @@ define(['config', 'logger', 'jquery', 'gameRouter', 'gameSocket', 'gamePosition'
             function onMouseMove(e) {
                 lastMouseMove.x = e.data.global.x;
                 lastMouseMove.y = e.data.global.y;
-                dispatcher.game.mousemove.trigger(mousePosition, e);
+                dispatchMouseMove(mousePosition, e);
             }
 
 
             function onMouseDown(e) {
-                socket.send('mainPlayer.mouseDown', mousePositionSocket());
+                socket.send('mainPlayer.mouseDown', positionSocket());
                 mouseDown = true;
-                dispatcher.game.mousedown.trigger(mousePosition, e);
+                dispatchMouseDown(mousePosition, e);
             }
 
             function onMouseUp(e) {
-                socket.send('mainPlayer.mouseUp', mousePositionSocket());
+                socket.send('mainPlayer.mouseUp', positionSocket());
                 mouseDown = false;
-                dispatcher.game.mouseup.trigger(mousePosition, e);
+                dispatchMouseUp(mousePosition, e);
             }
 
             dispatcher.game.workerTick(function(){
-                socket.send('mainPlayer.mouseMove', {
-                    position: mousePositionSocket(),
-                    idDown: mouseDown
-                });
-            })
+                if(gameApp.get('mainPlayer') && (lastMouseMoveWorker.x != lastMouseMove.x || lastMouseMoveWorker.y != lastMouseMove.y)){
+                    lastMouseMoveWorker.x = lastMouseMove.x;
+                    lastMouseMoveWorker.y = lastMouseMove.y;
+                    socket.send('mainPlayer.mouseMove', positionSocket());
+                }
+            });
 
-            function mousePositionSocket(){
+            function positionSocket(){
                 return {
-                    x: mousePosition.x,
-                    y: mousePosition.y,
-                    tile: {
-                        x: mousePosition.tile.x,
-                        y: mousePosition.tile.y
-                    },
-                    tilePos: {
-                        x: mousePosition.tilePos.x,
-                        y: mousePosition.tilePos.y
-                    }
+                    gamePosition: gamePosition.socket,
+                    mousePosition: mousePosition.socket,
+                    playerPosition: gameApp.get('mainPlayer').gamePosition.socket,
+                    isDown: mouseDown
                 }
             }
 
@@ -151,7 +153,7 @@ define(['config', 'logger', 'jquery', 'gameRouter', 'gameSocket', 'gamePosition'
                 var mainPlayer = gameApp.get('mainPlayer') || {x: 0, y: 0};
                 moveTo.x = mainPlayer.x * -1;
                 moveTo.y = mainPlayer.y * -1;
-                var diff = gamePosition.diff(moveTo, .1, .1);
+                var diff = gamePosition.diff(moveTo, .2, .2);
 
                 self.x += diff.x / moveSpeed;
                 self.y += diff.y / moveSpeed;
