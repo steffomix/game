@@ -112,7 +112,8 @@ define(['config', 'logger', 'jquery', 'gameRouter', 'gameSocket', 'gamePosition'
 
 
             function onMouseDown(e) {
-                socket.send('mainPlayer.mouseDown', positionSocket());
+                updatePath();
+                socket.send('mainPlayer.mouseMove', positionSocket());
                 mouseDown = true;
                 dispatchMouseDown(mousePosition, e);
             }
@@ -123,13 +124,15 @@ define(['config', 'logger', 'jquery', 'gameRouter', 'gameSocket', 'gamePosition'
                 dispatchMouseUp(mousePosition, e);
             }
 
-            dispatcher.game.workerTick(function(){
+            //dispatcher.game.workerTick(updatePath);
+
+            function updatePath(){
                 if(gameApp.get('mainPlayer') && (lastMouseMoveWorker.x != lastMouseMove.x || lastMouseMoveWorker.y != lastMouseMove.y)){
                     lastMouseMoveWorker.x = lastMouseMove.x;
                     lastMouseMoveWorker.y = lastMouseMove.y;
                     socket.send('mainPlayer.mouseMove', positionSocket());
                 }
-            });
+            }
 
             function positionSocket(){
                 return {

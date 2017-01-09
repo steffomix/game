@@ -21,9 +21,9 @@ define(['config', 'logger', 'pixi', 'gamePosition'],
         var logger = Logger.getLogger('gameTile');
         logger.setLevel(config.logger.gameTile || 0);
 
-        function GameTile(texture) {
+        function GameTile(tileDefinition) {
             pixi.Container.call(this);
-            var sprite = new pixi.Sprite(pixi.Texture.fromImage('assets/tiles/' + texture+ '.png'));
+            var sprite = new pixi.Sprite(pixi.Texture.fromImage('assets/tiles/' + tileDefinition.texture + '.png'));
             sprite.anchor.set(.5, .5);
             this.addChild(sprite);
             //sprite.scale.set(1, 1.1);

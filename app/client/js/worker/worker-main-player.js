@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'workerSocket', 'workerRouter', 'pathfinding', 'workerDispatcher', 'worldGenerator'],
-    function (config, Logger, socket, router, pathfinding, dispatcher, worldGenerator) {
+define(['config', 'logger', 'underscore', 'workerSocket', 'workerRouter', 'pathfinding', 'workerDispatcher', 'worldGenerator', 'tileDefinitions'],
+    function (config, Logger, _, socket, router, pathfinding, dispatcher, worldGenerator, tileDefinitions) {
 
         var instance,
             logger = Logger.getLogger('workerMainPlayer');
@@ -68,7 +68,10 @@ define(['config', 'logger', 'workerSocket', 'workerRouter', 'pathfinding', 'work
                 mouseMove: function (job) {
                     var move = addMouseHistory(job.data);
                     if (history.mouseGridMoved()) {
-                        var path = findPath(move.playerPosition.grid, move.mousePosition.grid);
+                        //var path = findPath(move.playerPosition.grid, move.mousePosition.grid);
+                        //socket.send('tilesGrid.showPath', path);
+
+                        var path = new Finder(move.playerPosition.grid, move.mousePosition.grid).find();
                         socket.send('tilesGrid.showPath', path);
                         mouseGridMove(move, history);
 
@@ -87,16 +90,17 @@ define(['config', 'logger', 'workerSocket', 'workerRouter', 'pathfinding', 'work
 
             /**
              *
-             * @param p1 Player position
-             * @param p2 Mouse position
+             * @param p1 {{x, y}} Player position
+             * @param p2 {{x, y}} Mouse position
+             * @param extend *{int} extend matrix for pathfinder
              */
-            function Finder(p1, p2){
+            function Finder(p1, p2, extend) {
 
                 // enlarge grid around min and max values
-                var extendGrid = 8;
+                var extendGrid = extend || 8;
 
                 // matrix bounds
-                var
+                var baseSpeed = worldGenerator.tile(p1.x, p1.y).walkSpeed,
                     xMin = Math.min(p1.x, p2.x),
                     xMax = Math.max(p1.x, p2.x),
                     yMin = Math.min(p1.y, p2.y),
@@ -104,59 +108,181 @@ define(['config', 'logger', 'workerSocket', 'workerRouter', 'pathfinding', 'work
                     width = xMax - xMin,
                     height = yMax - yMin,
                     xOffset = 0,
-                    yOffset = 0;
+                    yOffset = 0,
+                    matrix = [],
+                    walkSpeeds = [],
+                    terrainLayers = [],
+                    paths = [],
+                    mappedPaths = [];
 
                 // calculate offset
                 // shift real grid positions to matrix positions
-                if(xMin < 0 ){
+                if (xMin < 0) {
                     xOffset = xMin * -1 + extendGrid;
                 }
-                if(xMax > width){
+                if (xMax > width) {
                     xOffset = (xMax - width - extendGrid) * -1;
                 }
-                if(yMin < 0){
+                if (yMin < 0) {
                     yOffset = yMin * -1 + extendGrid;
                 }
-                if(yMax > width){
+                if (yMax > height) {
                     yOffset = (yMax - height - extendGrid) * -1;
                 }
 
-                // where the player stands on
-                var baseWeigh = pathWeights[worldGenerator.tile(p1.x, p1.y)];
+                this.find = function () {
+                    matrix = [];
+                    walkSpeeds = [];
+                    createBaseMatrix();
 
-                //
-                var maxWeight;
+                    terrainLayers = [];
+                    createTerrainLayers();
 
+                    paths = [];
+                    findTerrainPaths();
 
+                    mappedPaths = [];
+                    mapPaths();
 
+                    var path = findShortest() || [];
+                    return path;
 
+                };
 
+                function findShortest(){
+                    var speeds = [],
+                        path,
+                        speed;
+                    for(var p = 0; p < mappedPaths.length; p++){
+                        path = mappedPaths[p];
+                        speed = 0;
+                        for(var i = 0; i < path.length; i++){
+                            speed += path[i].speed;
+                        }
+                        speeds.push(speed);
+                    }
+                    var fastest = Infinity,
+                        fastestIndex = 0;
+                    for(var i = 0; i < speeds.length; i++){
+                        if(speeds[i] > fastest){
+                            fastest = speeds[i];
+                            fastestIndex = i;
+                        }
+                    }
+                    return mappedPaths[fastestIndex]
+                }
 
-                function createMatrix(xMin, xMax, yMin, yMax, extendGrid, baseWeight){
+                function mapPaths(){
+                    var node,
+                        path,
+                        mappedRow;
+                    for(var i = 0; i < paths.length; i++){
+                        path = paths[i];
+                        mappedRow = [];
+                        mappedPaths.push(mappedRow);
+                        for(var n = 0; n < path.length; n++){
+                            node = path[n];
+                            mappedRow[n] = {
+                                x: node[0] - xOffset,
+                                y: node[1] - yOffset,
+                                speed: matrix[node[1]][node[0]].walkSpeed,
+                                tile: matrix[node[1]][node[0]]
+                            }
+                        }
+                    }
+                }
 
-                    // create base matrix
-                    var matrix = [], row, weight, maxWeight = 0;
+                function findTerrainPaths(){
+                    var grid,
+                        path,
+                        x1 = p1.x + xOffset, x2 = p2.x + xOffset,
+                        y1 = p1.y + yOffset, y2 = p2.y + yOffset;
+
+                    for(var i = 0; i < terrainLayers.length; i++){
+                        grid = new pathfinding.Grid(terrainLayers[i]);
+                        path = pathfinder.findPath(x1, y1, x2, y2, grid);
+                        path.length && paths.push(path);
+                    }
+                }
+
+                function createTerrainLayers() {
+                    var speed,
+                        layer, tileSpeed;
+                    for (var i = 0; i < walkSpeeds.length; i++) {
+                        speed = walkSpeeds[i];
+                        layer = [];
+                        for (var y = 0; y < matrix.length; y++) {
+                            layer[y] = [];
+                            for (var x = 0; x < matrix[0].length; x++) {
+                                // 0 walkable
+                                // 1 blocked
+                                tileSpeed = matrix[y][x].walkSpeed;
+                                layer[y][x] = speed > tileSpeed ? 1 : 0;
+                            }
+                        }
+                        terrainLayers.push(layer);
+                    }
+                }
+
+                function createBaseMatrix() {
+
+                    // create base matrix and collect walk speeds
+                    var speeds = {},
+                        tile,
+                        row;
                     for (var y = yMin - extendGrid; y <= yMax + extendGrid; y++) {
                         row = [];
                         for (var x = xMin - extendGrid; x <= xMax + extendGrid; x++) {
-                            weight = pathWeights[worldGenerator.tile(x, y)] - baseWeight;
-                            if (weight < Infinity) {
-                                maxWeight = Math.max(maxWeight, weight);
-                            }
-                            row.push(Math.max(0, weight));
+                            tile = worldGenerator.tile(x, y);
+                            speeds[tile.walkSpeed] = tile.walkSpeed;
+                            row.push(tile);
                         }
                         matrix.push(row);
                     }
-                    return matrix;
+                    logger.info('matrix dimensions: ', matrix[0].length, matrix.length);
+                    // sort collected walkSpeeds into array
+                    walkSpeeds = [];
+                    _.each(speeds, function (v) {
+                        // don't add faster speeds which are walkable anyway,
+                        // they give the same result
+                        v <= baseSpeed && walkSpeeds.push(v);
+                    });
+                    walkSpeeds.sort(function (a, b) {
+                        return a - b;
+                    });
+
                 }
+
 
             }
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             function findPath(p1, p2) {
                 //logger.info(p1, p2);
-                try{
+                try {
                     var extendGrid = 8,
                         // get bounds of real grid
                         xMin = Math.min(p1.x, p2.x),
@@ -166,7 +292,7 @@ define(['config', 'logger', 'workerSocket', 'workerRouter', 'pathfinding', 'work
                         width = xMax - xMin,
                         height = yMax - yMin,
                         // where the player actually stands
-                        baseWeight = pathWeights[worldGenerator.tile(p1.x, p1.y)];
+                        baseWeight = worldGenerator.tile(p1.x, p1.y).walkSpeed;
 
                     if (baseWeight == Infinity) {
                         // no path found from within water or wall
@@ -178,7 +304,7 @@ define(['config', 'logger', 'workerSocket', 'workerRouter', 'pathfinding', 'work
                     for (var y = yMin - extendGrid; y <= yMax + extendGrid; y++) {
                         row = [];
                         for (var x = xMin - extendGrid; x <= xMax + extendGrid; x++) {
-                            weight = pathWeights[worldGenerator.tile(x, y)] - baseWeight;
+                            weight = worldGenerator.tile(x, y).walkSpeed - baseWeight;
                             if (weight < Infinity) {
                                 maxWeight = Math.max(maxWeight, weight);
                             }
@@ -205,7 +331,7 @@ define(['config', 'logger', 'workerSocket', 'workerRouter', 'pathfinding', 'work
 
                     // create paths
                     // add weights to paths
-                    var grid, paths = [], weights = [], path, tileWeight = 0;
+                    var tile, grid, paths = [], weights = [], path, tileWeight = 0;
                     do {
                         // create path
                         grid = new pathfinding.Grid(matrix);
@@ -216,12 +342,12 @@ define(['config', 'logger', 'workerSocket', 'workerRouter', 'pathfinding', 'work
                         weight = 0;
                         for (var i = 0; i < path.length; i++) {
                             // calculate weight and shift positions back to its origin
-                            tileWeight = worldGenerator.tile(path[i][0]  - xOffset, path[i][1] - yOffset);
+                            tile = worldGenerator.tile(path[i][0] - xOffset, path[i][1] - yOffset);
                             path[i] = {
                                 x: path[i][0] - xOffset,
                                 y: path[i][1] - yOffset,
-                                weight: pathWeights[tileWeight],
-                                tile: tileWeight
+                                weight: tile.walkSpeed,
+                                tile: tile
                             };
                             weight += path[i].weight;
                         }
@@ -250,14 +376,13 @@ define(['config', 'logger', 'workerSocket', 'workerRouter', 'pathfinding', 'work
                     };
                     // logger.info(path);
                     return path;
-                }catch(e){
+                } catch (e) {
                     logger.info(e);
                     return [];
                 }
 
 
             }
-
 
 
             function reduceMatrixWeight(matrix) {

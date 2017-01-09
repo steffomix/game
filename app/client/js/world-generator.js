@@ -15,16 +15,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'noise'],
-    function (config, Logger, noise) {
+define(['config', 'logger', 'noise', 'tileDefinitions'],
+    function (config, Logger, noise, tileDefinitions) {
 
         var instance,
-            conf = config.game.worldGenerator,
-            scale = conf.scale,
-            noiseRanges = conf.noiseRanges,
-            textures = conf.textures,
             logger = Logger.getLogger('worldGenerator');
         logger.setLevel(config.logger.worldGenerator || 0);
+
+
+        var scale = 10,
+            noiseRanges = [
+                0,
+                100, // Water
+                115, // sand
+                160, // grass
+                190, // wood
+                220, // stone
+                256 // snow
+            ],
+            tiles = tileDefinitions.worldGenerator();
 
         function scaleNoise(s) {
             return s * scale;
@@ -46,7 +55,7 @@ define(['config', 'logger', 'noise'],
 
                 for (var i = 0; i < noiseRanges.length - 1; i++) {
                     if (value >= noiseRanges[i] && value < noiseRanges[i + 1]) {
-                        return textures[i];
+                        return tiles[i];
                     }
                 }
                 logger.error('GameFloor::drawTile not in Range', value, noiseRanges);

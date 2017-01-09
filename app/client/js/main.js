@@ -110,6 +110,7 @@
         ['workerMaster', 'worker-master', 3],
         ['commandRouter', 'command-router', 3],
         ['worldGenerator', 'world-generator', 0],
+        ['tileDefinitions', 'tile-definitions', 0],
 
         // interface
         // ['interface', 'interface/interface', 0],

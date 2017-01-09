@@ -197,7 +197,7 @@ define(['config', 'logger', 'gameRouter', 'gamePosition', 'pixi', 'eventDispatch
 
             router.addModule('tilesGrid', this, {
                 showPath: function(job){
-                    path.drawPath(job.data);
+                    job.data.length && path.drawPath(job.data);
                 }
             })
 
