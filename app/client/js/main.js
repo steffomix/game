@@ -129,6 +129,7 @@
         ['workerMainPlayer', 'worker/worker-main-player', 0],
         ['workerEvents', 'worker/worker-events', 0],
         ['workerDispatcher', 'worker/worker-dispatcher', 0],
+        ['workerPathfinder', 'worker/worker-pathfinder', 0],
 
         // cache and matrix renderer
         ['workerMain', 'worker/worker-main', 0],

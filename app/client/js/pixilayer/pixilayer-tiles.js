@@ -154,7 +154,7 @@ define(['config', 'logger', 'gameRouter', 'gamePosition', 'pixi', 'eventDispatch
 
             function addText(step){
                 var t = new pixi.Text();
-                t.text = step.tile;//JSON.stringify(step);
+                t.text = step.tile.texture.split('/')[1]; // JSON.stringify(step, null, 2);
                 t.x = step.x * tileSize;
                 t.y = step.y * tileSize;
                 self.addChild(t);
