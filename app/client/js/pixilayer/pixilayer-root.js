@@ -33,7 +33,7 @@ define(['config', 'logger', 'jquery', 'gameRouter', 'gameSocket', 'gamePosition'
         logger.setLevel(config.logger.pixiRoot || 0);
 
 
-        function createInteractive() {
+        function createGlobalHitbox() {
             var ct = new pixi.Container(),
                 gr = new pixi.Graphics(),
                 x = 30 * tileSize - tileSize / 2;
@@ -70,12 +70,6 @@ define(['config', 'logger', 'jquery', 'gameRouter', 'gameSocket', 'gamePosition'
                         return (self.y / scale) - $body.height() / 2 / scale;
                     }
                 }),
-                moveTo = {
-                    x: 0,
-                    y: 0
-                },
-                // the heigher the slower
-                moveSpeed = 100,
                 playerOffset = {
                     get x() {
                         return gamePosition.x - moveTo.x;
@@ -88,7 +82,7 @@ define(['config', 'logger', 'jquery', 'gameRouter', 'gameSocket', 'gamePosition'
             // add layers
             this.addChild(playerContainer);
             this.addChild(tilesContainer);
-            this.addChild(createInteractive());
+            this.addChild(createGlobalHitbox());
 
             // catch all mouse events
             this.interactive = true;
@@ -126,15 +120,15 @@ define(['config', 'logger', 'jquery', 'gameRouter', 'gameSocket', 'gamePosition'
 
             //dispatcher.game.workerTick(updatePath);
 
-            function updatePath(){
-                if(gameApp.get('mainPlayer') && (lastMouseMoveWorker.x != lastMouseMove.x || lastMouseMoveWorker.y != lastMouseMove.y)){
+            function updatePath() {
+                if (gameApp.get('mainPlayer') && (lastMouseMoveWorker.x != lastMouseMove.x || lastMouseMoveWorker.y != lastMouseMove.y)) {
                     lastMouseMoveWorker.x = lastMouseMove.x;
                     lastMouseMoveWorker.y = lastMouseMove.y;
                     socket.send('mainPlayer.mouseMove', positionSocket());
                 }
             }
 
-            function positionSocket(){
+            function positionSocket() {
                 return {
                     gamePosition: gamePosition.socket,
                     mousePosition: mousePosition.socket,
@@ -150,16 +144,74 @@ define(['config', 'logger', 'jquery', 'gameRouter', 'gameSocket', 'gamePosition'
                 }
             });
 
+            /**
+             *
+             * @param self {{x, y}}
+             * @param smooth {number}
+             * @returns {{x, y}}
+             */
+            function smoothie(self, smooth) {
+                return {
+                    get x() {
+                        return self.x;
+                    },
+                    set x(x) {
+                        self.x += (x - self.x) / smooth;
+                    },
+                    get y() {
+                        return self.y;
+                    },
+                    set y(y) {
+                        self.y += (y - self.y) / smooth;
+                    },
+                    /**
+                     * @param pos {{x, y}}
+                     */
+                    move: function (pos) {
+                        this.x = pos.x;
+                        this.y = pos.y;
+                    }
+
+                }
+            }
+
+            var moveTarget = {x: 0, y: 0},
+                // the heigher the slower
+                move = smoothie(this, 100);
 
             // move container to center of mainPlayer
             dispatcher.game.frameTick(function () {
+                return;
+                var mainPlayer = gameApp.get('mainPlayer') || {x: 0, y: 0};
+                moveTarget.x = mainPlayer.x * -1;
+                moveTarget.y = mainPlayer.y * -1;
+                moveAcc.move(gamePosition.diff(moveTarget, .2, .2));
+                move.move(moveAcc);
+                debug(moveTarget);
+
+                renderer.render(self);
+            });
+
+
+            var moveTo = {
+                    x: 0,
+                    y: 0
+                },
+                moveAcc = smoothie({x: 0, y: 0}, 10),
+                // the heigher the slower
+                moveSpeed = 100;
+
+            // move container to center of mainPlayer
+            dispatcher.game.frameTick(function () {
+
                 var mainPlayer = gameApp.get('mainPlayer') || {x: 0, y: 0};
                 moveTo.x = mainPlayer.x * -1;
                 moveTo.y = mainPlayer.y * -1;
                 var diff = gamePosition.diff(moveTo, .2, .2);
+                moveAcc.move(diff);
 
-                self.x += diff.x / moveSpeed;
-                self.y += diff.y / moveSpeed;
+                self.x += moveAcc.x / moveSpeed;
+                self.y += moveAcc.y / moveSpeed;
 
                 renderer.render(self);
             });

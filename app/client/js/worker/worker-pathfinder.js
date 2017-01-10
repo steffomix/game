@@ -34,7 +34,7 @@ define(['config', 'logger', 'underscore', 'pathfinding', 'worldGenerator'],
         function WorkerPathfinder(p1, p2, extend) {
 
             // enlarge grid around min and max values
-            var extendGrid = extend || 8;
+            var extendGrid = 10;
 
             // matrix bounds
             var baseSpeed = worldGenerator.tile(p1.x, p1.y).walkSpeed,
@@ -55,16 +55,16 @@ define(['config', 'logger', 'underscore', 'pathfinding', 'worldGenerator'],
             // calculate offset
             // shift real grid positions to matrix positions
             if (xMin < 0) {
-                xOffset = xMin * -1 + extendGrid;
+                xOffset = xMin * -1;
             }
             if (xMax > width) {
-                xOffset = (xMax - width - extendGrid) * -1;
+                xOffset = (xMax - width) * -1;
             }
             if (yMin < 0) {
-                yOffset = yMin * -1 + extendGrid;
+                yOffset = yMin * -1;
             }
             if (yMax > height) {
-                yOffset = (yMax - height - extendGrid) * -1;
+                yOffset = (yMax - height) * -1;
             }
 
             this.find = function () {
@@ -119,8 +119,8 @@ define(['config', 'logger', 'underscore', 'pathfinding', 'worldGenerator'],
                     for (var n = 0; n < path.length; n++) {
                         node = path[n];
                         mappedRow[n] = {
-                            x: node[0] - xOffset,
-                            y: node[1] - yOffset,
+                            x: node[0] - xOffset - extendGrid,
+                            y: node[1] - yOffset - extendGrid,
                             speed: matrix[node[1]][node[0]].walkSpeed,
                             tile: matrix[node[1]][node[0]]
                         }
@@ -131,8 +131,8 @@ define(['config', 'logger', 'underscore', 'pathfinding', 'worldGenerator'],
             function findTerrainPaths() {
                 var grid,
                     path,
-                    x1 = p1.x + xOffset, x2 = p2.x + xOffset,
-                    y1 = p1.y + yOffset, y2 = p2.y + yOffset;
+                    x1 = p1.x + xOffset + extendGrid, x2 = p2.x + xOffset + extendGrid,
+                    y1 = p1.y + yOffset + extendGrid, y2 = p2.y + yOffset + extendGrid;
 
                 for (var i = 0; i < terrainLayers.length; i++) {
                     grid = new pathfinding.Grid(terrainLayers[i]);
@@ -169,6 +169,9 @@ define(['config', 'logger', 'underscore', 'pathfinding', 'worldGenerator'],
                 for (var y = yMin - extendGrid; y <= yMax + extendGrid; y++) {
                     row = [];
                     for (var x = xMin - extendGrid; x <= xMax + extendGrid; x++) {
+                        if(x == -1){
+                            var slfj = 0;
+                        }
                         tile = worldGenerator.tile(x, y);
                         speeds[tile.walkSpeed] = tile.walkSpeed;
                         row.push(tile);

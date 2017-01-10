@@ -140,7 +140,7 @@ define(['config', 'logger', 'gameRouter', 'gamePosition', 'pixi', 'eventDispatch
                 });
 
                 addText(p1);
-                graph.lineStyle(6, 0xcc0000, 1);
+                graph.lineStyle(6, 0xcc0000, .5);
                 graph.moveTo(p1.x * tileSize, p1.y * tileSize);
                 for(var i = 1; i < path.length; i++){
                     var p = path[i];
@@ -154,7 +154,18 @@ define(['config', 'logger', 'gameRouter', 'gamePosition', 'pixi', 'eventDispatch
 
             function addText(step){
                 var t = new pixi.Text();
-                t.text = step.tile.texture.split('/')[1]; // JSON.stringify(step, null, 2);
+                var txt = step.tile.texture.split('/')[1]
+                +  '\n' + step.x + ', ' + step.y;
+                /*
+                t.text = JSON.stringify({
+                    t: step.tile.texture.split('/')[1],
+                    x: step.x,
+                    y: step.y
+                }, null, 2);
+                */
+                t.text = txt;
+                t.anchor.set(.5);
+                 // JSON.stringify(step, null, 2);
                 t.x = step.x * tileSize;
                 t.y = step.y * tileSize;
                 self.addChild(t);
