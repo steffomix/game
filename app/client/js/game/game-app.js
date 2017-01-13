@@ -57,7 +57,11 @@ define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'gamePos
         });
 
         logger.info('Gameworker started, initialize game...', performance.now())
-        dispatcher.gameWorker.ready(dispatcher.game.initialize.claimTrigger('main.js'));
+        dispatcher.gameWorker.ready(function(){
+            dispatcher.game.initialize.claimTrigger('main.js')();
+        });
+
+
 
 
         function GameApp() {

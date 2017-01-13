@@ -17,7 +17,15 @@
 
 define(['underscore', 'events'], function (_, Events) {
 
-    return function (template) {
+
+    return factory;
+
+    /**
+     * Converts a list of named categories with a list of named events into event-dispatcher
+     * @param template
+     * @returns { {categories: { events: {}, ... }, ... }}
+     */
+    function factory(template) {
 
         var e = function(callback) {},
             eventHandler = {};
@@ -26,11 +34,16 @@ define(['underscore', 'events'], function (_, Events) {
             var handler = eventHandler[category] = _.extend({}, Events);
             handler.name = category;
             var categoryEvents = {
-                // turn off listener from <category>.<**all events**> with given _this or callback or both:
-                // off() complete purge of category and all its events.
-                // off(callback) turn off all with given callback, no matter what this is
-                // off(null, this) turn off all with given this, no matter what callback is
-                // off(callback, this) turn off all with given callback and this
+                /**
+                 *  turn off listener from <category>.<**all events**> with given _this or callback or both:
+                 *  off() complete purge of category and all its events.
+                 *  off(callback) turn off all with given callback, no matter what this is
+                 *  off(null, this) turn off all with given this, no matter what callback is
+                 *  off(callback, this) turn off all with given callback and this
+                 *
+                 * @param callback
+                 * @param _this
+                 */
                 off: function (callback, _this) {
                     if (!callback && _this) {
                         handler.off();
@@ -43,26 +56,50 @@ define(['underscore', 'events'], function (_, Events) {
             };
             events.all = e;
             _.each(events, function (value, event) {
-                // create new Listener <event> in <category>
-                // e.g.: template.global.onSomething(this, fn);
+                
+                /**
+                 * create new Listener <event> in <category>
+                 * e.g.: template.global.onSomething(this, fn);
+                 * @param _this
+                 * @param callback
+                 * @returns {*}
+                 */
                 categoryEvents[event] = function (_this, callback) {
                     if(!_.isFunction(callback ? callback : _this)){
                         return console.error('Event callback must be a function: ', category, event, _this, callback);
                     }
                     callback ? _this.listenTo(handler, event, callback) : handler.listenTo(handler, event, _this);
                 };
-                // create new Listener <event> in <category> for only one trigger
-                // e.g.: template.global.onSomething(this, fn);
+                
+                /**
+                 * add Events instance for direct access
+                 * @type {Object}
+                 */
+                categoryEvents[event].dispatcher = handler;
+                
+                /**
+                 * create new Listener <event> in <category> for only one trigger
+                 * e.g.: template.global.onSomething(this, fn);
+                 * @param _this
+                 * @param callback
+                 */
                 categoryEvents[event].once = function (_this, callback) {
+                    if(!_.isFunction(callback ? callback : _this)){
+                        return console.error('Event callback must be a function: ', category, event, _this, callback);
+                    }
                     callback ? _this.listenToOnce(handler, event, callback) : handler.listenToOnce(handler, event, _this);
                 };
-                // trigger listener
-                // e.g.: template.global.onSomething.trigger();
+                
+                /**
+                 * trigger listener
+                 * e.g.: template.global.onSomething.trigger(data [, ...]);
+                 */
                 categoryEvents[event].trigger = function () {
                     var args = Array.prototype.slice.call(arguments);
                     //console.info('**Event** ' + category + '.' + event, args);
                     handler.trigger.apply(handler, [event].concat(args));
                 };
+                
                 /**
                  * send data to given worker
                  * @param worker Worker
@@ -75,6 +112,7 @@ define(['underscore', 'events'], function (_, Events) {
                         data: data
                     });
                 };
+                
                 /**
                  * Returns trigger and destroy orig Trigger to prevent abuse
                  * @param claimer {*}
@@ -88,6 +126,7 @@ define(['underscore', 'events'], function (_, Events) {
                     };
                     return fn;
                 };
+                
                 /**
                  * turn off listener from <category>.<event> with given _this or callback or both:
                  * off() complete purge of category.event

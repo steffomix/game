@@ -35,20 +35,25 @@ define(['eventFactory'], function (eventFactory) {
         }
 
         var events = {
-            server: {
-                connect: e,
-                disconnect: e,
-                login: e,
-                logout: e
-            },
             global: {
                 windowResize: e
             },
-            interface: {
-                hideAll: e
+            server: {
+                send: e,
+                connect: e,
+                disconnect: e,
+                login: e,
+                logout: e,
+                register: e,
+                chatMessage: e,
+                broadcastMessage: e,
+                onUpdateFloor: e,
+                onUpdateTile: e,
+                playerLocations: e
             },
             game: {
                 initialize: e,
+                loginSuccess: e,
                 // fps frame-tick (game-app.js)
                 frameTick: e,
                 // slowTick every .5 seconds
@@ -60,15 +65,19 @@ define(['eventFactory'], function (eventFactory) {
                 mouseGridMove: e,
                 screenGridMove: e
             },
+            gameWorker: {
+                ready: e
+            },
             gameMainPlayer: {
-                walk: e
+                walk: e,
+                showWalkPath: e
+            },
+            interface: {
+                hideAll: e,
             },
             workerMainPlayer: {
                 mouseGridMove: e,
                 walk: e
-            },
-            gameWorker: {
-                ready: e
             }
         };
 

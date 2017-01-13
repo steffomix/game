@@ -16,10 +16,8 @@
  */
 
 
-var worker = self;
-
-define(['config', 'logger', 'underscore', 'workerSocket', 'workerRouter', 'workerDispatcher', 'workerPathfinder'],
-    function (config, Logger, _, socket, router, dispatcher, Pathfinder) {
+define(['config', 'logger', 'workerApp', 'eventDispatcher', 'pathfinder'],
+    function (config, Logger, gameApp, dispatcher, Pathfinder) {
 
         var instance,
             logger = Logger.getLogger('workerMainPlayer');
@@ -33,8 +31,8 @@ define(['config', 'logger', 'underscore', 'workerSocket', 'workerRouter', 'worke
             if (moveQueue.length) {
                 var move = moveQueue.shift();
                 try {
-                    //dispatcher.gameMainPlayer.walk.worker(worker, move);
-                    socket.send('mainPlayer.walk', move);
+                    gameApp.send(dispatcher.gameMainPlayer.walk, move);
+                    //socket.send('mainPlayer.walk', move);
                     setTimeout(movePlayer, move.speed * 5);
                 } catch (e) {
                     setTimeout(movePlayer, 100);
@@ -78,31 +76,23 @@ define(['config', 'logger', 'underscore', 'workerSocket', 'workerRouter', 'worke
         }
 
 
+
+
         function WorkerMainPlayer() {
             // register router module
-            router.addModule('mainPlayer', this, {
 
-                mouseGridMove: function (job) {
-                    var move = addMouseHistory(job.data);
-                    if (history.mouseGridMoved()) {
-                        var path = findPath(move);
-                        socket.send('tilesGrid.showPath', path);
+            dispatcher.workerMainPlayer.mouseGridMove(function(pos){
+                var move = addMouseHistory(pos);
+                if (history.mouseGridMoved()) {
+                    var path = findPath(move);
+                    gameApp.send(dispatcher.gameMainPlayer.showWalkPath, path);
 
-                    }
-                },
-
-                walk: function(job){
-                    moveQueue = findPath(job.data);
-                },
-
-                screenGridMove: function(job){
-
-                },
-
-
-
+                }
             });
 
+            dispatcher.workerMainPlayer.walk(function(pos){
+                moveQueue = findPath(pos);
+            });
 
             function findPath(move){
                 var path = new Pathfinder(move.playerPosition.grid, move.mousePosition.grid).find();

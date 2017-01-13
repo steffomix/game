@@ -16,8 +16,8 @@
  */
 
 
-define(['config', 'logger', 'backbone', 'underscore', 'jquery', 'interfaceApp', 'eventDispatcher'],
-    function (config, Logger, Backbone, _, $, App, dispatcher) {
+define(['config', 'logger', 'backbone', 'underscore', 'jquery', 'interfaceApp', 'gameApp', 'eventDispatcher'],
+    function (config, Logger, Backbone, _, $, App, gameApp, dispatcher) {
 
         var instance,
             logger = Logger.getLogger('interfaceConnect');
@@ -52,25 +52,16 @@ define(['config', 'logger', 'backbone', 'underscore', 'jquery', 'interfaceApp', 
                     dispatcher.global.windowResize(this, this.centerWindow);
                     dispatcher.interface.hideAll(this, this.hide);
 
-                    dispatcher.server.disconnect(this, this.onShow);
+                    dispatcher.server.disconnect(this, function(){
+                        dispatcher.interface.hideAll.trigger();
+                        this.onShow();
+                    });
                     dispatcher.server.connect(this, this.hide);
 
-                    this.router.addModule('interfaceConnect', this, {
-                        connect: function () {
-                            dispatcher.server.connect.trigger();
-
-                        },
-                        disconnect: function () {
-                            setTimeout(function () {
-                                dispatcher.interface.hideAll.trigger();
-                                dispatcher.server.disconnect.trigger();
-                            }, 2000);
-                        }
-                    });
                     this.onShow();
                 },
                 connect: function () {
-                    this.socket.send('server.connect');
+                    gameApp.work(dispatcher.server.connect);
                     this.hideButton();
                 },
                 onShow: function () {

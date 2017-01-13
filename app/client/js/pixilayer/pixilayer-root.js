@@ -15,10 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'jquery', 'gameRouter', 'gameSocket', 'gamePosition', 'debugInfo', 'pixi', 'tween', 'eventDispatcher', 'gameApp',
+define(['config', 'logger', 'jquery', 'gamePosition', 'debugInfo', 'pixi', 'tween', 'eventDispatcher', 'gameApp',
         'pixiTiles',
         'pixiPlayers'],
-    function (config, Logger, $, router, socket, position, DebugInfo, pixi, tween, dispatcher, gameApp,
+    function (config, Logger, $, position, DebugInfo, pixi, tween, dispatcher, gameApp,
               playerContainer,
               tilesContainer) {
 
@@ -161,7 +161,7 @@ define(['config', 'logger', 'jquery', 'gameRouter', 'gameSocket', 'gamePosition'
              */
             function onMouseGridMove(){
                 if(gameApp.get('mainPlayer')){
-                    socket.send('mainPlayer.mouseGridMove', positionSocket());
+                    gameApp.work(dispatcher.workerMainPlayer.mouseGridMove, positionSocket());
                 }
                 positionSocket();
                 triggerMouseGridMove(mousePosition);
@@ -170,7 +170,8 @@ define(['config', 'logger', 'jquery', 'gameRouter', 'gameSocket', 'gamePosition'
             function onScreenGridMove(){
 
                 if(gameApp.get('mainPlayer')){
-                    socket.send('mainPlayer.screenGridMove', positionSocket());
+
+                    //socket.send('mainPlayer.screenGridMove', positionSocket());
                 }
                 triggerScreenGridMove(gamePosition);
             }
@@ -183,7 +184,7 @@ define(['config', 'logger', 'jquery', 'gameRouter', 'gameSocket', 'gamePosition'
             function onMouseUp(e) {
 
                 if(gameApp.get('mainPlayer')){
-                    socket.send('mainPlayer.walk', positionSocket());
+                    gameApp.work(dispatcher.workerMainPlayer.walk, positionSocket());
                 }
                 mouseDown = false;
                 triggerMouseUp(mousePosition, e);

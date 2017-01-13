@@ -42,24 +42,25 @@ define(['config', 'logger', 'backbone', 'underscore', 'jquery', 'interfaceApp', 
             },
             initialize: function () {
                 // grap template
+                var self = this;
                 this.grabTemplate();
 
                 this.viewData = this.translateKeys('chat', ['chat']);
 
                 dispatcher.global.windowResize(this, this.pos);
                 dispatcher.interface.hideAll(this, this.hide);
-                dispatcher.server.login(this, this.onShow);
+                dispatcher.game.loginSuccess(this, this.onShow);
 
-                this.router.addModule('interfaceChat', this, {
-                    broadcastMessage: function (job) {
-                        this.addMessage(this.translate('chat.context_' + job.data.context, {user: job.data.name}));
-                    },
-                    chatMessage: function(job){
-                        var name = job.data.name,
-                            msg = job.data.msg;
-                        this.addMessage(name + ': ' + msg);
-                    }
+                dispatcher.server.broadcastMessage(function(post){
+                    self.addMessage(self.translate('chat.context_' + post.context, {user: post.name}));
                 });
+
+                dispatcher.server.chatMessage(function(post){
+                    var name = post.name,
+                        msg = post.msg;
+                    self.addMessage(name + ': ' + msg);
+                });
+
             },
             addMessage: function(msg){
                 var node = this.$(this.el_msg);

@@ -3,24 +3,88 @@
  */
 
 
-
 importScripts('/js/lib/require.js');
 importScripts('/js/config.js');
 
-self.postMessage({
-    event: ['gameWorker', 'ready'],
-    data: ''
-})
-require(['eventDispatcher'], function (events) {
+/**
+ * collect modules to preload
+ */
+require(['config', 'eventDispatcher'], function (config, events) {
+
+    var groups = ['worker'],
+        preloadModules = ['eventDispatcher', 'underscore', 'workerMainPlayer'];
+
+
+    for (var module in config.paths) {
+        if (config.paths.hasOwnProperty(module)) {
+            var path = config.paths[module];
+            groups.forEach(function (group) {
+                if (path.indexOf(group + '/') === 0) {
+                    preloadModules.push(module);
+                }
+            })
+        }
+    }
+
+// preload some modules and connect event events to window
+    define('modulesLoader', preloadModules, function (events) {
+
+        console.info('Worker preload modules: ', preloadModules);
+        var args = arguments;
+        return args;
+    });
+
+});
+
+/**
+ * main worker app
+ */
+define('workerApp', [], function () {
+
+    var modules = {},
+        gameApp = {
+            get send() {
+                return send;
+            },
+            get addModule() {
+                return addModule;
+            }
+        };
+
+    return gameApp;
+
+    function send(event, data) {
+        event.worker(self, data);
+    }
+
+    function addModule(name, module) {
+        if (!gameApp[name]) {
+            Object.defineProperty(modules, name, module);
+        }
+    }
+
+});
+
+/**
+ * start worker app
+ */
+require(['workerApp', 'eventDispatcher', 'modulesLoader'], function (workerApp, events, loader) {
 
     self.addEventListener('message', function (e) {
         try {
-            dispatcher[e.data.event[0]][e.data.event[1]].trigger(e.data.data);
+            if (e.data.event) {
+                if (events[e.data.event[0]] && events[e.data.event[0]][e.data.event[1]]) {
+                    events[e.data.event[0]][e.data.event[1]].trigger(e.data.data);
+                } else {
+                    console.error('Dispatch Message form Worker not found: ', e.data.event, e.data);
+                }
+            } else {
+                console.error('Dispatch Message from Worker has no event', e.data);
+            }
         } catch (ex) {
-            console.error('Dispatch message from Window: ', ex, e.data);
+            console.error('Dispatch Message from Worker: ', ex, e.data);
         }
     });
-
-    events.gameWorker.ready.claimTrigger()();
+    workerApp.send(events.gameWorker.ready);
 
 });

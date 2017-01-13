@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'gameSocket', 'gameRouter', 'i18n', 'backbone', 'underscore', 'jquery', 'util', 'eventDispatcher'],
-    function (config, Logger, socket, router, i18n, Backbone, _, $, util, dispatcher) {
+define(['config', 'logger', 'gameApp', 'i18n', 'backbone', 'underscore', 'jquery', 'util', 'eventDispatcher'],
+    function (config, Logger, gameApp, i18n, Backbone, _, $, util, dispatcher) {
 
         var user = {},
             interfaces = {},
@@ -64,11 +64,9 @@ define(['config', 'logger', 'gameSocket', 'gameRouter', 'i18n', 'backbone', 'und
 
         function _autoLogin(){
             logger.info('Autologin user:user');
-            dispatcher.server.connect(_.extend({}, Backbone.Events), function(){
-                socket.send('server.login', {user: 'user', pass: 'user'});
+            dispatcher.server.connect(function(){
+                gameApp.work(dispatcher.server.login, {user: 'user', pass: 'user'});
             });
-
-            socket.send('server.connect');
         }
 
 
@@ -163,8 +161,6 @@ define(['config', 'logger', 'gameSocket', 'gameRouter', 'i18n', 'backbone', 'und
             this.hide = hide;
             this.grabTemplate = grabTemplate;
             this.render = render;
-            this.socket = socket;
-            this.router = router;
             this.translate = i18n.translate;
             this.translateKeys = i18n.translateKeys;
             this.util = util;

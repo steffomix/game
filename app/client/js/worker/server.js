@@ -16,10 +16,11 @@
  */
 
 
-define('server', ['config', 'logger', 'io', 'workerSlaveSocket', 'workerRouter'],
-    function (config, Logger, io, socket, router) {
+define('server', ['config', 'logger', 'workerApp', 'io', 'eventDispatcher'],
+    function (config, Logger, gameApp, io, events) {
 
-        var instance,
+        var connection,
+            instance,
             logger = Logger.getLogger('server');
         logger.setLevel(config.logger.server || 0);
 
@@ -32,128 +33,107 @@ define('server', ['config', 'logger', 'io', 'workerSlaveSocket', 'workerRouter']
             return instance;
         }
 
+
         function ServerSocket() {
-            var connection;
 
-            router.addModule('server', this, {
-                send: function (job) {
-                    var cmd = job.data.cmd,
-                        data = job.data;
-                    send(cmd, data);
-                },
-                connect: function (job) {
-                    connect();
-                },
-                disconnect: function () {
-                    connection.disconnect();
-                    logger.warn('Server disconnected by client.');
-                },
-                login: function (job) {
-                    send('login', job.data);
-                },
-                logout: function(job){
-                    send('logout');
-                },
-                register: function(job){
-                    send('register', job.data);
-                },
-                chatMessage: function(job){
-                    send('chatMessage', job.data);
-                },
-                sendGameState: function(job){
-                    send('gameState', job.data);
+            events.server.send(send);
+            events.server.connect(connect);
+            events.server.disconnect(disconnect);
 
-                }
+            events.server.login(function (data) {
+                send('login', data);
             });
 
-            function send(cmd, data) {
-                if (connection && connection.connected) {
-                    connection.emit(cmd, data);
-                }
+            events.server.logout(function () {
+                send('logout');
+            });
+
+            events.server.register(function (data) {
+                send('register', data);
+            });
+
+            events.server.chatMessage(function (data) {
+                send('chatMessage', data);
+            });
+
+            connect();
+        }
+
+        function connect() {
+            disconnect();
+            connection = io();
+            setupListener();
+        }
+
+        function disconnect() {
+            try {
+                connection.disconnect();
+                connection = null;
+            } catch (e) {
+                logger.warn('Server disconnected by client.', e);
             }
+        }
 
-            function disconnect() {
-                try{
-                    send('logout');
-                }catch(e){
-                    // ignore
-                }
-                try {
-                    logger.warn('Server disconnected by client.');
-                    connection.disconnect();
-                    connection = null;
-                    socket.send('interfaceConnect.disconnect');
-                } catch (e) {
-                    // ignore
-                }
+        function send(cmd, data) {
+            if (connection && connection.connected) {
+                connection.emit(cmd, data);
             }
+        }
 
-            function connect() {
-                disconnect();
-                connection = io();
-                setupListener();
-            }
+        /**
+         * setup handler for incoming messages
+         */
+        function setupListener() {
 
-            function setupListener(){
+            connection.on('connect', function () {
+                logger.info('Server: onConnect');
+                gameApp.send(events.server.connect);
+                //socket.send('interfaceConnect.connect');
+            });
+            connection.on('disconnect', function () {
+                logger.info('Server: onDisconnect');
+                gameApp.send(events.server.disconnect);
+                //socket.send('interfaceConnect.disconnect');
+            });
 
-                connection.on('connect', function () {
-                    logger.info('Server: onConnect');
-                    socket.send('interfaceConnect.connect');
-                });
-                connection.on('disconnect', function () {
-                    logger.info('Server: onDisconnect');
-                    socket.send('interfaceConnect.disconnect');
-                });
+            connection.on('register', function (data) {
+                logger.info('Server: onRegister', data);
+                gameApp.send(events.server.register);
+                //socket.send('interfaceLogin.register', data);
+            });
 
-                connection.on('login', function (data) {
-                    logger.info('Server: onLogin', data);
-                    socket.send('interfaceLogin.login', data);
-                });
+            connection.on('login', function (data) {
+                logger.info('Server: onLogin', data);
+                gameApp.send(events.server.login, data);
+                //socket.send('interfaceLogin.login', data);
+            });
 
-                connection.on('register', function(data){
-                    logger.info('Server: onRegister', data);
-                    socket.send('interfaceLogin.register', data);
-                });
+            connection.on('logout', function (data) {
+                logger.info('Server: Logout by Server', data);
+                gameApp.send(events.server.logout);
+                //socket.send('interfaceLogin.logout', data || {});
+            });
 
-                connection.on('logout', function(data){
-                    logger.info('Server: Logout by Server', data);
-                    socket.send('interfaceLogin.logout', data || {});
-                });
+            connection.on('broadcastMessage', function (data) {
+                var cmd = data.cmd;
+                logger.info('Server: broadcastMessage', data);
 
-                connection.on('broadcastMessage', function (data) {
-                    var cmd = data.cmd;
-                    logger.info('Server: broadcastMessage', data);
-                    socket.send('interfaceChat.broadcastMessage', {
-                        context: cmd,
-                        name: data.name,
-                        msg: data.msg || ''
-                    });
-                });
+                gameApp.send(events.server.broadcastMessage, data);
+                /*
+                 socket.send('interfaceChat.broadcastMessage', {
+                 context: cmd,
+                 name: data.name,
+                 msg: data.msg || ''
+                 });
+                 */
+            });
 
-                connection.on('chatMessage', function(data){
-                    logger.info('Server: chatMessage', data);
-                    socket.send('interfaceChat.chatMessage', data);
-                });
+            connection.on('chatMessage', function (data) {
+                logger.info('Server: chatMessage', data);
+                gameApp(events.interfaceChat.serverChatMessage, data);
+                //socket.send('interfaceChat.chatMessage', data);
+            });
 
-                connection.on('onUpdateFloor', function(data){
-                    logger.info('Server: onUpdateFloor', data);
-                    //router.command('cache.onUpdateFloor', data);
-                });
 
-                connection.on('onUpdateTile', function(data){
-                    logger.info('Server: onUpdateTile', data);
-                    router.command('cache.onUpdateTile', data);
-                });
-
-                connection.on('playerLocations', function(data){
-                    // logger.info('Server: userLocation', data);
-                    //socket.send('game.playerLocations', data);
-                });
-
-                connection.on('command', function (data) {
-                    logger.info('Server: onCommand ' + data.cmd, data.data);
-                    router.command(data.cmd, data.data);
-                });
-            }
         }
     });

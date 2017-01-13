@@ -56,6 +56,7 @@ define(['config', 'logger', 'jquery', 'underscore', 'backbone', 'interfaceApp', 
                 },
                 initialize: function () {
                     // grap template
+                    var self = this;
                     this.grabTemplate();
                     this.viewData = this.translateKeys('login', [
                         'login', 'register', 'username', 'password'
@@ -63,49 +64,48 @@ define(['config', 'logger', 'jquery', 'underscore', 'backbone', 'interfaceApp', 
                     // custom events
                     dispatcher.global.windowResize(this, this.centerWindow);
                     dispatcher.interface.hideAll(this, this.hide);
-                    dispatcher.server.connect(this, this.show);
-                    dispatcher.server.logout(this, this.show);
-                    dispatcher.server.login(this, this.hide);
 
-                    /**
-                     * router:
-                     * interfaceLogin.login
-                     */
-                    this.router.addModule('interfaceLogin', this, {
-                        login: function (job) {
+                    dispatcher.server.connect(this, this.show);
+
+                    dispatcher.server.logout(this, function(msg){
+                        dispatcher.interface.hideAll.trigger();
+                        $(this.el_msg).html(msg);
+                        self.show();
+                    });
+                    dispatcher.server.login(this, function(login){
+                        if(login){
                             try {
-                                if (job.data.success) {
+                                if (login.success) {
                                     logger.info('Login success');
-                                    dispatcher.server.login.trigger(job.data.user);
+                                    dispatcher.game.loginSuccess.trigger(login.user);
+                                    self.hide();
                                     dispatcher.global.windowResize.trigger();
-                                    $(this.el_msg).html(this.translate('login.login success'));
+
+                                    $(self.el_msg).html(this.translate('login.login success'));
                                 } else {
-                                    $(this.el_msg).html(job.data.msg || this.translate('login.login failed'));
+                                    $(self.el_msg).html(login.msg || this.translate('login.login failed'));
                                 }
                             } catch (e) {
-                                logger.error(e, job);
+                                logger.error(e, login);
                             }
-                        },
-                        register: function (job) {
-                            if (job.data.success) {
-                                if ($(this.el_reg).is(':checked')) {
-                                    $(this.el_reg).click();
-                                    this.switchRegister();
-                                }
-                                $(this.el_msg).html(this.translate('login.register success'));
-                            } else {
-                                $(this.el_msg).html(job.data.msg || this.translate('login.register failed'));
-                            }
-                        },
-                        logout: function (job) {
+                        }else{
                             dispatcher.interface.hideAll.trigger();
-                            dispatcher.server.logout.trigger();
-                            $(this.el_msg).html(job.data.message);
+                            self.show();
                         }
                     });
-                }
+                    dispatcher.server.register(function(trial){
+                        if (trial.success) {
+                                if ($(self.el_reg).is(':checked')) {
+                                    $(self.el_reg).click();
+                                    self.switchRegister();
+                                }
+                                $(self.el_msg).html(this.translate('login.register success'));
+                            } else {
+                                $(self.el_msg).html(trial.msg || this.translate('login.register failed'));
+                            }
+                    });
 
-                ,
+                },
                 login: function () {
                     this.resetMessage();
                     var user = ($(this.el_user).val() || '');

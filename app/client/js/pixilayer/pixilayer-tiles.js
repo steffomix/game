@@ -203,11 +203,9 @@ define(['config', 'logger', 'gameRouter', 'gamePosition', 'pixi', 'eventDispatch
             this.addChild(cursor);
             this.addChild(pointer);
 
-            router.addModule('tilesGrid', this, {
-                showPath: function (job) {
-                    job.data.length && path.drawPath(job.data);
 
-                }
+            dispatcher.gameMainPlayer.showWalkPath(function(p){
+                p.length && path.drawPath(p);
             });
 
 

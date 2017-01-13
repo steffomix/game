@@ -41,7 +41,8 @@
             events: 'lib/events',
             eventFactory: 'lib/event-factory',
             tick: 'lib/tick',
-            i18n: 'lib/i18n'
+            i18n: 'lib/i18n',
+            pathfinder: 'lib/pathfinder'
 
         },
         logger: {},
@@ -92,22 +93,9 @@
         ['interfaceChat', 'interface/interface-chat', 0],
         ['interfaceGame', 'interface/interface-game', 0],
 
-        // worker: Server - Client Middleware
-        ['workerSlave', '/js/worker/worker-slave.js', 3], // must be full path
+        // worker:
         ['server', 'worker/server', 0],
-        ['workerSocket', 'worker/worker-socket', 4],
-        ['workerRouter', 'worker/worker-router', 4],
         ['workerMainPlayer', 'worker/worker-main-player', 0],
-        ['workerEvents', 'worker/worker-events', 0],
-        ['workerDispatcher', 'worker/worker-dispatcher', 0],
-        ['workerPathfinder', 'worker/worker-pathfinder', 0],
-
-        // cache and matrix renderer
-        ['workerMain', 'worker/worker-main', 0],
-        ['workerCache', 'worker/cache/cache', 0],
-        //['pathfinder', 'worker/cache/pathfinder', 0], // used by gamecache
-        ['cacheFloorManager', 'worker/cache/cache-floor-manager', 0],
-        ['cacheFloor', 'worker/cache/cache-floor', 0],
 
         // game
         ['gameApp', 'game/game-app', 0],

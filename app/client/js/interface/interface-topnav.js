@@ -53,9 +53,8 @@ define([
 
                 dispatcher.global.windowResize(this, this.pos);
                 dispatcher.interface.hideAll(this, this.hide);
-                dispatcher.server.login(this, this.onShow);
+                dispatcher.game.loginSuccess(this, this.onShow);
 
-                this.router.addModule('interfaceTopnav', this, {});
             },
             onLogout: function(){
                 this.socket.send('server.logout');

@@ -26,7 +26,7 @@ require(['config', 'eventDispatcher'], function(config, events){
         if (config.paths.hasOwnProperty(module)) {
             var path = config.paths[module];
             groups.forEach(function (group) {
-                if (path.indexOf(group + '/') != -1) {
+                if (path.indexOf(group + '/') === 0) {
                     preloadModules.push(module);
                 }
             })
@@ -37,13 +37,11 @@ require(['config', 'eventDispatcher'], function(config, events){
 
     define('rottingUniverse', preloadModules, function (backbone, $, dispatcher) {
         backbone.$ = $;
-        console.log('Trigger game initialize');
-
-
     });
 
+    console.log('game start...', performance.now())
     require(['rottingUniverse'], function () {
-        console.log('game start...', performance.now())
+
     });
 });
 

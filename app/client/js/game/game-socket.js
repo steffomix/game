@@ -38,6 +38,7 @@ define('gameSocket', ['config', 'logger', 'workerMaster', 'commandRouter'],
          * @constructor
          */
         function GameSocket () {
+            return;
             var socket,
                 socketReady = false,
                 router = commandRouter.getRouter('GameRouter'),

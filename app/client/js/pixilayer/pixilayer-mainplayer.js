@@ -27,7 +27,7 @@ define(['config', 'logger', 'eventDispatcher', 'pixi', 'gameMainPlayer'],
 
             var self = this;
 
-            dispatcher.server.login(function (user) {
+            dispatcher.game.loginSuccess(function (user) {
                 self.removeChildren().forEach(function(child){
                     child.destroy();
                 });
