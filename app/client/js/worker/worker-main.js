@@ -15,7 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'workerCache'],
-    function (config, Logger, cache) {
+
+
+
+
+
+define(['config', 'logger', 'workerCache'], function (config, Logger, cache) {
 
     });

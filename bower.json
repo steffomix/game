@@ -1,0 +1,32 @@
+{
+  "name": "rotting-universe",
+  "authors": [
+    "steffomix <steffomix@gmail.com>"
+  ],
+  "description": "game",
+  "main": "index.html",
+  "license": "GPL v3",
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "babel-polyfill": "^0.0.1",
+    "requirejs": "^2.3.2",
+    "backbone": "^1.3.3",
+    "underscore": "^1.8.3",
+    "jquery": "^3.1.1",
+    "machina": "^2.0.0",
+    "tween.js": "tweenjs#^16.3.5",
+    "seedrandom": "^2.4.2",
+    "easystarjs": "easystar.js#^0.3.1",
+    "loglevel": "^1.4.1",
+    "socket.io-client": "^1.7.2",
+    "pixi.js": "^4.3.2",
+    "lodash": "^4.17.4"
+  }
+}

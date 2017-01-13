@@ -22,39 +22,64 @@ define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'gamePos
             logger = Logger.getLogger('gameApp');
         logger.setLevel(config.logger.gameApp || 0);
 
+        var self = this,
+            modules = {},
+            frameTick = new Tick(dispatcher.game.frameTick.claimTrigger(this)),
+            workerTick = new Tick(dispatcher.game.workerTick.claimTrigger(this));
+
+        frameTick.fps = config.game.frameTick;
+        workerTick.fps = config.game.workerTick;
+
+        dispatcher.game.initialize(function () {
+            // start ticker after initialize is finished
+            setTimeout(function () {
+                frameTick.start();
+                workerTick.start();
+            }, 100);
+
+        });
+
+        var gameWorker = new Worker(config.game.worker.gameWorker);
+        gameWorker.addEventListener('message', function (e) {
+            try {
+                if (e.data.event) {
+                    if (dispatcher[e.data.event[0]] && dispatcher[e.data.event[0]][e.data.event[1]]) {
+                        dispatcher[e.data.event[0]][e.data.event[1]].trigger(e.data.data);
+                    } else {
+                        console.error('Dispatch Message form Worker not found: ', e.data.event, e.data);
+                    }
+                } else {
+                    console.error('dispatch Message from Worker has no event', e.data);
+                }
+            } catch (ex) {
+                console.error('Dispatch message from Worker: ', ex, e.data);
+            }
+        });
+
+        logger.info('Gameworker started, initialize game...', performance.now())
+        dispatcher.gameWorker.ready(dispatcher.game.initialize.claimTrigger('main.js'));
+
 
         function GameApp() {
 
-            var self = this,
-                modules = {},
-                frameTick = new Tick(dispatcher.game.frameTick.claimTrigger(this)),
-                workerTick = new Tick(dispatcher.game.workerTick.claimTrigger(this));
+            // wrapper to events....worker
+            this.work = function(event, data){
+                event.worker(gameWorker, data);
+            };
 
-            frameTick.fps = config.game.frameTick;
-            workerTick.fps = config.game.workerTick;
-
-            this.set = function(id, module){
+            this.set = function (id, module) {
                 modules[id] = module;
             };
 
-            this.get = function(id){
+            this.get = function (id) {
                 return modules[id];
             };
 
-            dispatcher.game.initialize(function () {
-                // start ticker after initialize is finished
-                setTimeout(function(){
-                    frameTick.start();
-                    workerTick.start();
-                }, 100);
-
-            });
         }
 
         function getInstance() {
             if (!instance) {
                 instance = new GameApp();
-                dispatcher.game.initialize.trigger();
             }
             return instance;
         }

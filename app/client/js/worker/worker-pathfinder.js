@@ -34,7 +34,7 @@ define(['config', 'logger', 'underscore', 'pathfinding', 'worldGenerator'],
         function WorkerPathfinder(p1, p2, extend) {
 
             // enlarge grid around min and max values
-            var extendGrid = 10;
+            var extendGrid = extend || 10;
 
             // matrix bounds
             var baseSpeed = worldGenerator.tile(p1.x, p1.y).walkSpeed,
@@ -123,9 +123,16 @@ define(['config', 'logger', 'underscore', 'pathfinding', 'worldGenerator'],
                             y: node[1] - yOffset - extendGrid,
                             speed: matrix[node[1]][node[0]].walkSpeed,
                             tile: matrix[node[1]][node[0]]
+                        };
+                        if(n > 0){
+                            mappedRow[n].speed *= distance(mappedRow[n], mappedRow[n - 1]);
                         }
                     }
                 }
+            }
+
+            function distance (p1, p2){
+                return Math.sqrt(Math.pow(Math.abs(p1.x - p2.x), 2) + Math.pow(Math.abs(p1.y - p2.y), 2));
             }
 
             function findTerrainPaths() {

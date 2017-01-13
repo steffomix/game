@@ -9,6 +9,7 @@ define(['config', 'logger', 'gameRouter', 'gamePlayer', 'debugInfo', 'eventDispa
         var logger = Logger.getLogger('gamePlayer');
         logger.setLevel(config.logger.gamePlayer || 0);
 
+        var tileSize = config.game.tiles.size;
 
         function MainPlayer(user) {
             Player.call(this, user);
@@ -16,14 +17,24 @@ define(['config', 'logger', 'gameRouter', 'gamePlayer', 'debugInfo', 'eventDispa
                 animate = new tween.Tween(this.gamePosition),
                 debug = new DebugInfo(this, 50, -100).debug;
 
-            animate.easing(tween.Easing.Cubic.Out);
+            //animate.easing(tween.Easing.Quintic.InOut);
 
             this.debug = debug;
 
             router.addModule('mainPlayer', this, {
                 walk: function(job){
-                    walk(job.data);
+                    var pos = job.data;
+                    pos.x *= tileSize;
+                    pos.y *= tileSize;
+                    walk(pos);
                 }
+            });
+
+            dispatcher.gameMainPlayer.walk(function(pos){
+                walk({
+                    x: pos.x * tileSize,
+                    y: pos.y * tileSize
+                })
             });
 
             gameApp.set('mainPlayer', this);
@@ -32,8 +43,7 @@ define(['config', 'logger', 'gameRouter', 'gamePlayer', 'debugInfo', 'eventDispa
             dispatcher.game.frameTick(function (t, l) {
                 animate.update(t);
 
-                var root = gameApp.get('pixiRoot'),
-                    mouse = gameApp.get('mouse'),
+                var mouse = gameApp.get('mouse'),
                     screen = gameApp.get('screen');
 /*
                 debug({
@@ -41,39 +51,25 @@ define(['config', 'logger', 'gameRouter', 'gamePlayer', 'debugInfo', 'eventDispa
                     load: Math.round(l),
                     chunk: root.position.chunk,
                     screen: screen,
-                    pixiRootPos: root.position.grid,
+                    screenPos: root.position.grid,
                     mousePos: mouse.position.tile
                 });
 */
-                if (mouse.isDown) {
-                    var pos = mouse.position.gridPos;
-                    if(!mouse.position.grid.eq(self.gamePosition.grid)){
-                        walk({
-                            x: pos.x,
-                            y: pos.y
-                        });
-                    }
-
-                }
             });
 
             function walk(pos) {
-                animate.to(pos, self.gamePosition.gridPos.dist(gameApp.get('mouse').position.gridPos) * 5).start();
+                animate.to({
+                    x: pos.x,
+                    y: pos.y
+                },
+                pos.speed * 5).start();
             }
 
             dispatcher.game.mouseUp(function (mousePosition) {
-                walk({
-                    x: mousePosition.gridPos.x,
-                    y: mousePosition.gridPos.y
-                });
             });
 
 
             dispatcher.game.mouseDown(function (mousePosition) {
-                walk({
-                    x: mousePosition.gridPos.x,
-                    y: mousePosition.gridPos.y
-                });
             });
 
 

@@ -15,6 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+var worker = self;
+
 define(['config', 'logger', 'underscore', 'workerSocket', 'workerRouter', 'workerDispatcher', 'workerPathfinder'],
     function (config, Logger, _, socket, router, dispatcher, Pathfinder) {
 
@@ -22,8 +25,28 @@ define(['config', 'logger', 'underscore', 'workerSocket', 'workerRouter', 'worke
             logger = Logger.getLogger('workerMainPlayer');
         logger.setLevel(config.logger.workerMainPlayer || 0);
 
-        var mouseQueue = [],
+        var history = new MouseHistory(),
+            mouseQueue = [],
             moveQueue = [];
+
+        function movePlayer() {
+            if (moveQueue.length) {
+                var move = moveQueue.shift();
+                try {
+                    //dispatcher.gameMainPlayer.walk.worker(worker, move);
+                    socket.send('mainPlayer.walk', move);
+                    setTimeout(movePlayer, move.speed * 5);
+                } catch (e) {
+                    setTimeout(movePlayer, 100);
+                    logger.error('Worker move mainPlayer', e, move);
+                }
+            } else {
+                setTimeout(movePlayer, 100);
+            }
+
+        }
+
+        movePlayer();
 
         function addMouseHistory(move) {
             mouseQueue.push(move);
@@ -54,33 +77,38 @@ define(['config', 'logger', 'underscore', 'workerSocket', 'workerRouter', 'worke
             }
         }
 
-        function WorkerMainPlayer() {
-            var history = new MouseHistory(),
-                mouseGridMove = dispatcher.mainPlayer.mouseGridMove.claimTrigger(this),
-                mouseUp = dispatcher.mainPlayer.mouseUp.claimTrigger(this),
-                mouseDown = dispatcher.mainPlayer.mouseDown.claimTrigger(this),
-                pathWeights = config.game.worldGenerator.pathWeights;
 
+        function WorkerMainPlayer() {
             // register router module
             router.addModule('mainPlayer', this, {
-                mouseMove: function (job) {
+
+                mouseGridMove: function (job) {
                     var move = addMouseHistory(job.data);
                     if (history.mouseGridMoved()) {
-                        var path = new Pathfinder(move.playerPosition.grid, move.mousePosition.grid).find();
+                        var path = findPath(move);
                         socket.send('tilesGrid.showPath', path);
 
                     }
                 },
-                mouseUp: function (job) {
-                    var move = addMouseHistory(job.data);
-                    mouseDown(move, history);
+
+                walk: function(job){
+                    moveQueue = findPath(job.data);
                 },
-                mouseDown: function (job) {
-                    var move = addMouseHistory(job.data);
-                    mouseUp(move, history);
-                }
+
+                screenGridMove: function(job){
+
+                },
+
+
+
             });
 
+
+            function findPath(move){
+                var path = new Pathfinder(move.playerPosition.grid, move.mousePosition.grid).find();
+                path.shift();
+                return path;
+            }
 
         }
 

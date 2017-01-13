@@ -51,9 +51,9 @@ define(['config', 'logger', 'gameRouter', 'gamePosition', 'pixi', 'eventDispatch
             }
             this.hitArea = new pixi.Rectangle(-x, -x, x * 2, x * 2);
         }
-        Grid.prototype = Object.create(pixi.Graphics.prototype);
-        Grid.prototype.constructor =  Grid;
 
+        Grid.prototype = Object.create(pixi.Graphics.prototype);
+        Grid.prototype.constructor = Grid;
 
 
         /**
@@ -74,8 +74,9 @@ define(['config', 'logger', 'gameRouter', 'gamePosition', 'pixi', 'eventDispatch
             }
             this.hitArea = new pixi.Rectangle(-x, -x, x * 2, x * 2);
         }
+
         Chunk.prototype = Object.create(pixi.Graphics.prototype);
-        Chunk.prototype.constructor =  Chunk;
+        Chunk.prototype.constructor = Chunk;
 
         /**
          * Cursor
@@ -91,9 +92,10 @@ define(['config', 'logger', 'gameRouter', 'gamePosition', 'pixi', 'eventDispatch
             this.lineTo(x, x);
             this.lineTo(-x, x);
             this.lineTo(-x, -x);
-            
+
 
         }
+
         Cursor.prototype = Object.create(pixi.Graphics.prototype);
         Cursor.prototype.constructor = Cursor;
 
@@ -101,78 +103,73 @@ define(['config', 'logger', 'gameRouter', 'gamePosition', 'pixi', 'eventDispatch
          * Pointer
          * @constructor
          */
-        function Pointer(){
+        function Pointer() {
 
-            pixi.Graphics.call(this);
+            pixi.Container.call(this);
             var x = tileSize / 2,
                 alpha = .5;
 
             this.gamePosition = gamePosition.factory(this);
 
-            this.lineStyle(6, 0xcc0000, alpha);
-            this.moveTo(-x, -x);
-            this.lineTo(x, -x);
-            this.lineTo(x, x);
-            this.lineTo(-x, x);
-            this.lineTo(-x, -x);
+            var gr = new pixi.Graphics();
+            gr.lineStyle(6, 0xcc0000, alpha);
+            gr.moveTo(-x, -x);
+            gr.lineTo(x, -x);
+            gr.lineTo(x, x);
+            gr.lineTo(-x, x);
+            gr.lineTo(-x, -x);
 
-            this.fadeOut = function(){
+            this.addChild(gr);
+
+            var text = new pixi.Text();
+
+
+            this.fadeOut = function () {
                 this.alpha = Math.max(0, this.alpha - fade);
             };
 
-            this.show = function(){
+            this.show = function () {
                 this.alpha = alpha;
             }
         }
-        Pointer.prototype = Object.create(pixi.Graphics.prototype);
+
+        Pointer.prototype = Object.create(pixi.Container.prototype);
         Pointer.prototype.constructor = Pointer;
 
-        function Path(){
+        function Path() {
             pixi.Container.call(this);
-            var self = this;
-
-            this.drawPath = function(path){
-                var graph = new pixi.Graphics(),
-                    p1 = path[0];
-
-                self.removeChildren().forEach(function(child){
-                    child.destroy();
+            var graph = new pixi.Graphics(),
+                animate = new tween.Tween({
+                    get alpha() {
+                        return graph.alpha
+                    },
+                    set alpha(a) {
+                        graph.alpha = a;
+                    }
                 });
 
-                addText(p1);
-                graph.lineStyle(6, 0xcc0000, .5);
-                graph.moveTo(p1.x * tileSize, p1.y * tileSize);
-                for(var i = 1; i < path.length; i++){
+            this.addChild(graph);
+
+            dispatcher.game.frameTick(function (t) {
+                animate.update(t);
+            });
+
+            this.drawPath = function (path) {
+                graph.clear();
+                graph.alpha = .5;
+
+                for (var i = 0; i < path.length; i++) {
                     var p = path[i];
-                    addText(p, path);
-                    graph.lineTo(p.x * tileSize, p.y * tileSize);
+                    graph.beginFill(0xababab);
+                    graph.drawCircle(p.x * tileSize, p.y * tileSize, 5);
+                    graph.endFill();
                 }
 
-                self.addChild(graph);
+                animate.to({alpha: 0}, 2000).start();
 
-            }
-
-            function addText(step){
-                var t = new pixi.Text();
-                var txt = step.tile.texture.split('/')[1]
-                +  '\n' + step.x + ', ' + step.y;
-                /*
-                t.text = JSON.stringify({
-                    t: step.tile.texture.split('/')[1],
-                    x: step.x,
-                    y: step.y
-                }, null, 2);
-                */
-                t.text = txt;
-                t.anchor.set(.5);
-                 // JSON.stringify(step, null, 2);
-                t.x = step.x * tileSize;
-                t.y = step.y * tileSize;
-                self.addChild(t);
-            }
-
-
+            };
         }
+
         Path.prototype = Object.create(pixi.Container.prototype);
         Path.prototype.constructor = Path;
 
@@ -189,11 +186,11 @@ define(['config', 'logger', 'gameRouter', 'gamePosition', 'pixi', 'eventDispatch
                 cursor = new Cursor(),
                 pointer = new Pointer(),
                 tilesGrid = new GameFloor(),
-                animate = new tween.Tween({
-                    get alpha (){
+                animatePointer = new tween.Tween({
+                    get alpha() {
                         return pointer.alpha
                     },
-                    set alpha (a){
+                    set alpha(a) {
                         pointer.alpha = a;
                     }
                 });
@@ -207,48 +204,53 @@ define(['config', 'logger', 'gameRouter', 'gamePosition', 'pixi', 'eventDispatch
             this.addChild(pointer);
 
             router.addModule('tilesGrid', this, {
-                showPath: function(job){
+                showPath: function (job) {
                     job.data.length && path.drawPath(job.data);
+
                 }
-            })
+            });
 
 
             this.interactive = true;
 
-            dispatcher.game.frameTick(function(t){
+            dispatcher.game.frameTick(function (t) {
                 var mouse = gameApp.get('mouse');
-                var mouseGrid = mouse.position.grid;
-                cursor.gamePosition.grid.x = mouseGrid.x;
-                cursor.gamePosition.grid.y = mouseGrid.y;
+                if(mouse){
+                    var mouseGrid = mouse.position.grid;
+                    cursor.gamePosition.grid.x = mouseGrid.x;
+                    cursor.gamePosition.grid.y = mouseGrid.y;
 
-                if(mouse.isDown){
-                    pointer.alpha = .5;
-                    setPointer();
-                }else{
-                    animate.update(t);
+                    if (mouse.isDown) {
+                        pointer.alpha = .5;
+                        setPointer();
+                    } else {
+                        animatePointer.update(t);
+                    }
                 }
 
-                /*
-                // debug grid position
-                var gameGrid = gameApp.get('pixiRoot').position.grid,
-                chunkGrid = gameApp.get('pixiRoot').position.chunk;
 
-                grid.gamePosition.grid.x = gameGrid.x *-1;
-                grid.gamePosition.grid.y = gameGrid.y *-1;
-                chunk.gamePosition.chunk.x = chunkGrid.x *-1  -1;
-                chunk.gamePosition.chunk.y = chunkGrid.y *-1  -1;
-                */
+
+                /*
+                 // debug grid position
+                 var gameGrid = gameApp.get('screen').position.grid,
+                 chunkGrid = gameApp.get('screen').position.chunk;
+
+                 grid.gamePosition.grid.x = gameGrid.x *-1;
+                 grid.gamePosition.grid.y = gameGrid.y *-1;
+                 chunk.gamePosition.chunk.x = chunkGrid.x *-1  -1;
+                 chunk.gamePosition.chunk.y = chunkGrid.y *-1  -1;
+                 */
             });
 
             // update pointer on mouse up and down
             dispatcher.game.mouseDown(setPointer);
-            dispatcher.game.mouseUp(function showPointer(){
+            dispatcher.game.mouseUp(function showPointer() {
                 setPointer();
-                animate.to({alpha: 0}, 2000).start();
+                animatePointer.to({alpha: 0}, 2000).start();
             });
 
 
-            function setPointer(){
+            function setPointer() {
                 var mouseGrid = gameApp.get('mouse').position.grid;
                 pointer.gamePosition.grid.x = mouseGrid.x;
                 pointer.gamePosition.grid.y = mouseGrid.y;

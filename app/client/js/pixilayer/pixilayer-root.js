@@ -43,28 +43,64 @@ define(['config', 'logger', 'jquery', 'gameRouter', 'gameSocket', 'gamePosition'
 
         }
 
+
+        /**
+         *
+         * @param self {{x, y}}
+         * @param smooth {number}
+         * @returns {{x, y}}
+         */
+        function smoothMove(self, smooth) {
+            return {
+                get x() {
+                    return self.x;
+                },
+                set x(x) {
+                    self.x += (x - self.x) / smooth;
+                },
+                get y() {
+                    return self.y;
+                },
+                set y(y) {
+                    self.y += (y - self.y) / smooth;
+                },
+                /**
+                 * @param pos {{x, y}}
+                 */
+                move: function (pos) {
+                    this.x = pos.x;
+                    this.y = pos.y;
+                }
+
+            }
+        }
+
         function PixiRootLayer() {
             pixi.Container.call(this);
 
             var self = this,
-                dispatchMouseMove = dispatcher.game.mouseMove.claimTrigger(this),
-                dispatchMouseUp = dispatcher.game.mouseUp.claimTrigger(this),
-                dispatchMouseDown = dispatcher.game.mouseDown.claimTrigger(this),
-                debug = new DebugInfo(this, -200, 0).debug,
-                // last raw mousemove position
-                lastMouseMove = {
-                    x: 0,
-                    y: 0
-                },
-                lastMouseMoveWorker = {
-                    x: 0,
-                    y: 0
-                },
-                mouseDown = false,
+                triggerMouseMove = dispatcher.game.mouseMove.claimTrigger(this),
+                triggerMouseUp = dispatcher.game.mouseUp.claimTrigger(this),
+                triggerMouseDown = dispatcher.game.mouseDown.claimTrigger(this),
+                triggerMouseGridMove = dispatcher.game.mouseGridMove.claimTrigger(this),
+                triggerScreenGridMove = dispatcher.game.screenGridMove.claimTrigger(this),
+                debug = new DebugInfo(this, 400, 400).debug,
+
+                /**
+                 * do not use lastMouseMove directly
+                 */
+                lastMouseMove = position.factory({x: 0,y: 0}),
                 mousePosition = position.factory(self, lastMouseMove),
+
+                lastMouseGridMove = position.factory({x: 0, y: 0}),
+                lastScreenGridMove = position.factory({x: 0, y: 0}),
+
+                lastPlayerMove = position.factory({x: 0, y: 0}),
+
+                mouseDown = false,
                 gamePosition = position.factory({
                     get x() {
-                        return (self.x / scale) - $body.width() / 2 / scale;
+                        return ((self.x / scale) - $body.width() / 2 / scale) + tileSize / 2;
                     },
                     get y() {
                         return (self.y / scale) - $body.height() / 2 / scale;
@@ -77,7 +113,22 @@ define(['config', 'logger', 'jquery', 'gameRouter', 'gameSocket', 'gamePosition'
                     get y() {
                         return gamePosition.y - moveTo.y;
                     }
-                };
+                },
+                moveTo = {
+                    x: 0,
+                    y: 0
+                },
+                moveAcc = smoothMove({x: 0, y: 0}, 10),
+                // the heigher the slower
+                moveSpeed = 100;
+
+
+            // add mouse button state to mouse position
+            Object.defineProperty(mousePosition, 'isDown', {
+                get: function () {
+                    return mouseDown;
+                }
+            });
 
             // add layers
             this.addChild(playerContainer);
@@ -88,130 +139,93 @@ define(['config', 'logger', 'jquery', 'gameRouter', 'gameSocket', 'gamePosition'
             this.interactive = true;
             this.setTransform(0, 0, scale, scale);
 
-            // mouse events
-            this.on('mousemove', onMouseMove)
-                .on('mousedown', onMouseDown)
-                .on('mouseup', onMouseUp)
-                // touch events
-                .on('touchmove', onMouseMove)
-                .on('touchstart', onMouseDown)
-                .on('touchend', onMouseUp);
-
 
             function onMouseMove(e) {
                 lastMouseMove.x = e.data.global.x;
                 lastMouseMove.y = e.data.global.y;
-                dispatchMouseMove(mousePosition, e);
+                triggerMouseMove(mousePosition, e);
+
+                var move = mousePosition.grid,
+                    lastMove = lastMouseGridMove.grid;
+
+                if(!move.eq(lastMove)){
+                    lastMove.x = move.x;
+                    lastMove.y = move.y;
+                    onMouseGridMove();
+                }
+
             }
 
+            /**
+             * subtrigger of onMouseMove
+             */
+            function onMouseGridMove(){
+                if(gameApp.get('mainPlayer')){
+                    socket.send('mainPlayer.mouseGridMove', positionSocket());
+                }
+                positionSocket();
+                triggerMouseGridMove(mousePosition);
+            }
+
+            function onScreenGridMove(){
+
+                if(gameApp.get('mainPlayer')){
+                    socket.send('mainPlayer.screenGridMove', positionSocket());
+                }
+                triggerScreenGridMove(gamePosition);
+            }
 
             function onMouseDown(e) {
-                updatePath();
-                socket.send('mainPlayer.mouseMove', positionSocket());
                 mouseDown = true;
-                dispatchMouseDown(mousePosition, e);
+                triggerMouseDown(mousePosition, e);
             }
 
             function onMouseUp(e) {
-                socket.send('mainPlayer.mouseUp', positionSocket());
-                mouseDown = false;
-                dispatchMouseUp(mousePosition, e);
-            }
 
-            //dispatcher.game.workerTick(updatePath);
-
-            function updatePath() {
-                if (gameApp.get('mainPlayer') && (lastMouseMoveWorker.x != lastMouseMove.x || lastMouseMoveWorker.y != lastMouseMove.y)) {
-                    lastMouseMoveWorker.x = lastMouseMove.x;
-                    lastMouseMoveWorker.y = lastMouseMove.y;
-                    socket.send('mainPlayer.mouseMove', positionSocket());
+                if(gameApp.get('mainPlayer')){
+                    socket.send('mainPlayer.walk', positionSocket());
                 }
+                mouseDown = false;
+                triggerMouseUp(mousePosition, e);
             }
+
 
             function positionSocket() {
                 return {
-                    gamePosition: gamePosition.socket,
-                    mousePosition: mousePosition.socket,
-                    playerPosition: gameApp.get('mainPlayer').gamePosition.socket,
-                    isDown: mouseDown
-                }
+                        gamePosition: gamePosition.socket,
+                        mousePosition: mousePosition.socket,
+                        playerPosition: gameApp.get('mainPlayer').gamePosition.socket,
+                        isDown: mouseDown
+                    }
             }
 
-            // mouse down event
-            Object.defineProperty(mousePosition, 'isDown', {
-                get: function () {
-                    return mouseDown;
-                }
-            });
 
-            /**
-             *
-             * @param self {{x, y}}
-             * @param smooth {number}
-             * @returns {{x, y}}
-             */
-            function smoothie(self, smooth) {
-                return {
-                    get x() {
-                        return self.x;
-                    },
-                    set x(x) {
-                        self.x += (x - self.x) / smooth;
-                    },
-                    get y() {
-                        return self.y;
-                    },
-                    set y(y) {
-                        self.y += (y - self.y) / smooth;
-                    },
-                    /**
-                     * @param pos {{x, y}}
-                     */
-                    move: function (pos) {
-                        this.x = pos.x;
-                        this.y = pos.y;
+            // move container to center of mainPlayer
+            dispatcher.game.frameTick(function () {
+
+                var mainPlayer = gameApp.get('mainPlayer');
+                if(mainPlayer){
+
+                    moveTo.x = mainPlayer.x * -1;
+                    moveTo.y = mainPlayer.y * -1;
+                    var diff = gamePosition.diff(moveTo, .2, .2);
+                    moveAcc.move(diff);
+
+                    self.x += moveAcc.x / moveSpeed;
+                    self.y += moveAcc.y / moveSpeed;
+
+                    var playerGrid = mainPlayer.gamePosition.grid,
+                        lastPlayerGrid = lastPlayerMove.grid;
+
+                    if(!playerGrid.eq(lastPlayerGrid)){
+                        lastPlayerGrid.x = playerGrid.x;
+                        lastPlayerGrid.y = playerGrid.y;
+                        onScreenGridMove();
                     }
 
+
+                    gameApp.get('mainPlayer').debug(playerGrid);
                 }
-            }
-
-            var moveTarget = {x: 0, y: 0},
-                // the heigher the slower
-                move = smoothie(this, 100);
-
-            // move container to center of mainPlayer
-            dispatcher.game.frameTick(function () {
-                return;
-                var mainPlayer = gameApp.get('mainPlayer') || {x: 0, y: 0};
-                moveTarget.x = mainPlayer.x * -1;
-                moveTarget.y = mainPlayer.y * -1;
-                moveAcc.move(gamePosition.diff(moveTarget, .2, .2));
-                move.move(moveAcc);
-                debug(moveTarget);
-
-                renderer.render(self);
-            });
-
-
-            var moveTo = {
-                    x: 0,
-                    y: 0
-                },
-                moveAcc = smoothie({x: 0, y: 0}, 10),
-                // the heigher the slower
-                moveSpeed = 100;
-
-            // move container to center of mainPlayer
-            dispatcher.game.frameTick(function () {
-
-                var mainPlayer = gameApp.get('mainPlayer') || {x: 0, y: 0};
-                moveTo.x = mainPlayer.x * -1;
-                moveTo.y = mainPlayer.y * -1;
-                var diff = gamePosition.diff(moveTo, .2, .2);
-                moveAcc.move(diff);
-
-                self.x += moveAcc.x / moveSpeed;
-                self.y += moveAcc.y / moveSpeed;
 
                 renderer.render(self);
             });
@@ -219,17 +233,18 @@ define(['config', 'logger', 'jquery', 'gameRouter', 'gameSocket', 'gamePosition'
             dispatcher.game.initialize(function () {
                 $gameStage.html(renderer.view);
                 logger.info('Game initialize pixiRoot');
-                gameApp.set('pixiRoot', {
-                    position: gamePosition
-                });
                 gameApp.set('mouse', {
-                    position: mousePosition,
+                    get position(){
+                        return mousePosition;
+                    },
                     get isDown() {
                         return mouseDown;
                     }
                 });
                 gameApp.set('screen', {
-
+                    get position(){
+                        return gamePosition;
+                    },
                     get width() {
                         return $body.width();
                     },
@@ -239,7 +254,15 @@ define(['config', 'logger', 'jquery', 'gameRouter', 'gameSocket', 'gamePosition'
                     get playerOffset() {
                         return playerOffset;
                     }
-                })
+                });
+                // activate mouse events
+                self.on('mousemove', onMouseMove)
+                    .on('mousedown', onMouseDown)
+                    .on('mouseup', onMouseUp)
+                    // touch events
+                    .on('touchmove', onMouseMove)
+                    .on('touchstart', onMouseDown)
+                    .on('touchend', onMouseUp);
             });
 
             // resize stage
