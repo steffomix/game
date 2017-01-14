@@ -38,7 +38,7 @@
 
             // own libs
             noise: 'lib/noise',
-            events: 'lib/events',
+            backboneEvents: 'lib/backbone-events',
             eventFactory: 'lib/event-factory',
             tick: 'lib/tick',
             i18n: 'lib/i18n',
@@ -77,7 +77,7 @@
         // game/shared
         ['util', 'util', 3],
         ['translation', 'translation', 3],
-        ['eventDispatcher', 'event-dispatcher', 3],
+        ['gameEvents', 'events', 3],
         ['debugInfo', 'debug-info', 0],
         ['workerMaster', 'worker-master', 3],
         ['commandRouter', 'command-router', 3],

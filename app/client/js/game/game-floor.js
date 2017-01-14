@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'underscore', 'eventDispatcher', 'pixi', 'noise', 'gameApp', 'worldGenerator', 'gameTile'],
-    function (config, Logger, _, dispatcher, pixi, noise, gameApp, worldGenerator, GameTile) {
+define(['config', 'logger', 'underscore', 'gameEvents', 'pixi', 'noise', 'gameApp', 'worldGenerator', 'gameTile'],
+    function (config, Logger, _, events, pixi, noise, gameApp, worldGenerator, GameTile) {
 
         var logger = Logger.getLogger('gameFloor');
         logger.setLevel(config.logger.gameFloor || 0);
@@ -42,7 +42,7 @@ define(['config', 'logger', 'underscore', 'eventDispatcher', 'pixi', 'noise', 'g
                 maxY = -Infinity;
 
             // update gameFloor
-            dispatcher.game.frameTick(function () {
+            events.game.frameTick(function () {
                 var mainPlayer = gameApp.get('mainPlayer');
                 try{
                     if (mainPlayer) {

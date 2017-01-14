@@ -16,10 +16,10 @@
  */
 
 
-require(['config', 'eventDispatcher'], function(config, events){
+require(['config', 'gameEvents'], function(config, events){
 
     var groups = ['bower', 'lib', 'game', 'pixilayer', 'interface'],
-        preloadModules = ['backbone', 'jquery', 'eventDispatcher'];
+        preloadModules = ['backbone', 'jquery', 'gameEvents'];
 
     // collect list of modules to preload
     for (var module in config.paths) {
@@ -35,7 +35,7 @@ require(['config', 'eventDispatcher'], function(config, events){
 
     console.log('Preload modules: ', preloadModules);
 
-    define('rottingUniverse', preloadModules, function (backbone, $, dispatcher) {
+    define('rottingUniverse', preloadModules, function (backbone, $, events) {
         backbone.$ = $;
     });
 

@@ -68,15 +68,15 @@ define(['eventFactory'], function (eventFactory) {
             gameWorker: {
                 ready: e
             },
-            gameMainPlayer: {
+            mainPlayer: {
                 walk: e,
-                showWalkPath: e
+                showWalkPath: e,
+                mouseGridMove: e,
             },
             interface: {
                 hideAll: e,
             },
             workerMainPlayer: {
-                mouseGridMove: e,
                 walk: e
             }
         };

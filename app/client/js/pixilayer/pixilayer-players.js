@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'eventDispatcher', 'pixi', 'gameApp', 'pixiMainPlayer'],
-    function (config, Logger, dispatcher, pixi, gameApp, PixiMainPlayer) {
+define(['config', 'logger', 'gameEvents', 'pixi', 'gameApp', 'pixiMainPlayer'],
+    function (config, Logger, events, pixi, gameApp, PixiMainPlayer) {
 
         var instance,
             logger = Logger.getLogger('pixiPlayers');
