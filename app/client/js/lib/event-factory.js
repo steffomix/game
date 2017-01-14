@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['underscore', 'events'], function (_, Events) {
+define(['underscore', 'backboneEvents'], function (_, Events) {
 
 
     return factory;

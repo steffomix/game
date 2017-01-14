@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'gameRouter', 'gamePosition', 'pixi', 'gameEvents', 'gameApp', 'tween', 'gameFloor'],
-    function (config, Logger, router, gamePosition, pixi, dispatcher, gameApp, tween, GameFloor) {
+define(['config', 'logger', 'gamePosition', 'pixi', 'gameEvents', 'gameApp', 'tween', 'gameFloor'],
+    function (config, Logger, gamePosition, pixi, events, gameApp, tween, GameFloor) {
 
         var instance,
             logger = Logger.getLogger('pixiTiles');
@@ -150,7 +150,7 @@ define(['config', 'logger', 'gameRouter', 'gamePosition', 'pixi', 'gameEvents', 
 
             this.addChild(graph);
 
-            dispatcher.game.frameTick(function (t) {
+            events.game.frameTick(function (t) {
                 animate.update(t);
             });
 
@@ -204,14 +204,14 @@ define(['config', 'logger', 'gameRouter', 'gamePosition', 'pixi', 'gameEvents', 
             this.addChild(pointer);
 
 
-            dispatcher.mainPlayer.showWalkPath(function(p){
+            events.mainPlayer.showWalkPath(function(p){
                 p.length && path.drawPath(p);
             });
 
 
             this.interactive = true;
 
-            dispatcher.game.frameTick(function (t) {
+            events.game.frameTick(function (t) {
                 var mouse = gameApp.get('mouse');
                 if(mouse){
                     var mouseGrid = mouse.position.grid;
@@ -241,8 +241,8 @@ define(['config', 'logger', 'gameRouter', 'gamePosition', 'pixi', 'gameEvents', 
             });
 
             // update pointer on mouse up and down
-            dispatcher.game.mouseDown(setPointer);
-            dispatcher.game.mouseUp(function showPointer() {
+            events.game.mouseDown(setPointer);
+            events.game.mouseUp(function showPointer() {
                 setPointer();
                 animatePointer.to({alpha: 0}, 2000).start();
             });

@@ -34,14 +34,14 @@
             tween: 'bower/tween.js/src/Tween',
             pixi: 'bower/pixi.js/dist/pixi',
             pathfinding: 'lib/pathfinding',
-            easystar: 'bower/easystarjs/bin/easystar-0.3.1.min',
 
-            // own libs
+            // own or modified libs
             noise: 'lib/noise',
             backboneEvents: 'lib/backbone-events',
             eventFactory: 'lib/event-factory',
             tick: 'lib/tick',
             i18n: 'lib/i18n',
+            easystar: 'lib/easystar-0.3.1',
             pathfinder: 'lib/pathfinder'
 
         },
@@ -101,8 +101,6 @@
         ['gameApp', 'game/game-app', 0],
         ['gameLocation', 'game/game-location', 0],
         ['gamePosition', 'game/game-position', 0],
-        ['gameRouter', 'game/game-router', 3],
-        ['gameSocket', 'game/game-socket', 3],
         //['gameFloorManager', 'game/game-floor-manager', 0],
         ['gameFloor', 'game/game-floor', 0],
         ['gameTile', 'game/game-tile', 0],

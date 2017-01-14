@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'gameSocket', 'gameRouter', 'underscore', 'gameEvents', 'gameMainPlayer', 'gamePlayer', 'pixiPlayers', 'gameApp'],
-    function (config, Logger, socket, router, _, events, MainPlayer, Player, playerContainer, gameApp) {
+define(['config', 'logger', 'underscore', 'gameEvents', 'gameMainPlayer', 'gamePlayer', 'pixiPlayers', 'gameApp'],
+    function (config, Logger, _, events, MainPlayer, Player, playerContainer, gameApp) {
 
         var instance,
             logger = Logger.getLogger('gamePlayerManager');
@@ -35,12 +35,6 @@ define(['config', 'logger', 'gameSocket', 'gameRouter', 'underscore', 'gameEvent
 
             var mainPlayer = '',
                 players = {};
-
-            router.addModule('players', this, {
-                walk: function(){
-
-                }
-            });
 
             events.game.initialize(function(){
                 logger.info('Game initialize PlayerManager');
