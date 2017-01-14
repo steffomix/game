@@ -16,8 +16,8 @@
  */
 
 
-define(['config', 'logger', 'jquery', 'underscore', 'backbone', 'interfaceApp', 'gameEvents'],
-    function (config, Logger, $, _, Backbone, interfaceApp, events) {
+define(['config', 'logger', 'jquery', 'underscore', 'backbone', 'interfaceApp', 'eventDispatcher'],
+    function (config, Logger, $, _, Backbone, interfaceApp, dispatcher) {
 
         var instance,
             logger = Logger.getLogger('interfaceLogin');
@@ -62,24 +62,24 @@ define(['config', 'logger', 'jquery', 'underscore', 'backbone', 'interfaceApp', 
                         'login', 'register', 'username', 'password'
                     ]);
                     // custom events
-                    events.global.windowResize(this, this.centerWindow);
-                    events.interface.hideAll(this, this.hide);
+                    dispatcher.global.windowResize(this, this.centerWindow);
+                    dispatcher.interface.hideAll(this, this.hide);
 
-                    events.server.connect(this, this.show);
+                    dispatcher.server.connect(this, this.show);
 
-                    events.server.logout(this, function(msg){
-                        events.interface.hideAll.trigger();
+                    dispatcher.server.logout(this, function(msg){
+                        dispatcher.interface.hideAll.trigger();
                         $(this.el_msg).html(msg);
                         self.show();
                     });
-                    events.server.login(this, function(login){
+                    dispatcher.server.login(this, function(login){
                         if(login){
                             try {
                                 if (login.success) {
                                     logger.info('Login success');
-                                    events.game.loginSuccess.trigger(login.user);
+                                    dispatcher.game.loginSuccess.trigger(login.user);
                                     self.hide();
-                                    events.global.windowResize.trigger();
+                                    dispatcher.global.windowResize.trigger();
 
                                     $(self.el_msg).html(this.translate('login.login success'));
                                 } else {
@@ -89,11 +89,11 @@ define(['config', 'logger', 'jquery', 'underscore', 'backbone', 'interfaceApp', 
                                 logger.error(e, login);
                             }
                         }else{
-                            events.interface.hideAll.trigger();
+                            dispatcher.interface.hideAll.trigger();
                             self.show();
                         }
                     });
-                    events.server.register(function(trial){
+                    dispatcher.server.register(function(trial){
                         if (trial.success) {
                                 if ($(self.el_reg).is(':checked')) {
                                     $(self.el_reg).click();

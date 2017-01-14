@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'gameEvents', 'pixi', 'gameMainPlayer'],
-    function (config, Logger, events, pixi, MainPlayer) {
+define(['config', 'logger', 'eventDispatcher', 'pixi', 'gameMainPlayer'],
+    function (config, Logger, dispatcher, pixi, MainPlayer) {
 
         var logger = Logger.getLogger('pixiMainPlayer');
         logger.setLevel(config.logger.pixiMainPlayer || 0);
@@ -27,7 +27,7 @@ define(['config', 'logger', 'gameEvents', 'pixi', 'gameMainPlayer'],
 
             var self = this;
 
-            events.game.loginSuccess(function (user) {
+            dispatcher.game.loginSuccess(function (user) {
                 self.removeChildren().forEach(function(child){
                     child.destroy();
                 });

@@ -37,8 +37,8 @@
              * orig: this.listenTo(this.eventHandler, 'event', this.callback);
              * wrap: <event>.listenTo(<eventContext>, <callback> [, <callbackContext (defaults to eventContext)>]);
              *
-             * result in usage register: events.global.myEvent(this, callback);
-             * result in usage trigger: events.global.myEvent.trigger();
+             * result in usage register: dispatcher.global.myEvent(this, callback);
+             * result in usage trigger: dispatcher.global.myEvent.trigger();
              *
              * @param callback {object} orig this
              *

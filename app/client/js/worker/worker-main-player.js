@@ -16,8 +16,8 @@
  */
 
 
-define(['config', 'logger', 'workerApp', 'gameEvents', 'pathfinder'],
-    function (config, Logger, gameApp, events, Pathfinder) {
+define(['config', 'logger', 'workerApp', 'eventDispatcher', 'pathfinder'],
+    function (config, Logger, gameApp, dispatcher, Pathfinder) {
 
         var instance,
             logger = Logger.getLogger('workerMainPlayer');
@@ -31,7 +31,7 @@ define(['config', 'logger', 'workerApp', 'gameEvents', 'pathfinder'],
             if (moveQueue.length) {
                 var move = moveQueue.shift();
                 try {
-                    gameApp.send(events.mainPlayer.walk, move);
+                    gameApp.send(dispatcher.gameMainPlayer.walk, move);
                     //socket.send('mainPlayer.walk', move);
                     setTimeout(movePlayer, move.speed * 5);
                 } catch (e) {
@@ -81,16 +81,16 @@ define(['config', 'logger', 'workerApp', 'gameEvents', 'pathfinder'],
         function WorkerMainPlayer() {
             // register router module
 
-            events.mainPlayer.mouseGridMove(function(pos){
+            dispatcher.workerMainPlayer.mouseGridMove(function(pos){
                 var move = addMouseHistory(pos);
                 if (history.mouseGridMoved()) {
                     var path = findPath(move);
-                    gameApp.send(events.mainPlayer.showWalkPath, path);
+                    gameApp.send(dispatcher.gameMainPlayer.showWalkPath, path);
 
                 }
             });
 
-            events.mainPlayer.walk(function(pos){
+            dispatcher.workerMainPlayer.walk(function(pos){
                 moveQueue = findPath(pos);
             });
 

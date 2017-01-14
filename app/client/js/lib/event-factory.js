@@ -15,13 +15,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['underscore', 'backboneEvents'], function (_, Events) {
+define(['underscore', 'events'], function (_, Events) {
 
 
     return factory;
 
     /**
-     * Converts a list of named categories with a list of named events into event-events
+     * Converts a list of named categories with a list of named events into event-dispatcher
      * @param template
      * @returns { {categories: { events: {}, ... }, ... }}
      */
@@ -75,7 +75,7 @@ define(['underscore', 'backboneEvents'], function (_, Events) {
                  * add Events instance for direct access
                  * @type {Object}
                  */
-                categoryEvents[event].events = handler;
+                categoryEvents[event].dispatcher = handler;
                 
                 /**
                  * create new Listener <event> in <category> for only one trigger

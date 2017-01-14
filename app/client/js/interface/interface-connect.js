@@ -16,8 +16,8 @@
  */
 
 
-define(['config', 'logger', 'backbone', 'underscore', 'jquery', 'interfaceApp', 'gameApp', 'gameEvents'],
-    function (config, Logger, Backbone, _, $, App, gameApp, events) {
+define(['config', 'logger', 'backbone', 'underscore', 'jquery', 'interfaceApp', 'gameApp', 'eventDispatcher'],
+    function (config, Logger, Backbone, _, $, App, gameApp, dispatcher) {
 
         var instance,
             logger = Logger.getLogger('interfaceConnect');
@@ -49,19 +49,19 @@ define(['config', 'logger', 'backbone', 'underscore', 'jquery', 'interfaceApp', 
                         'connect', 'connectToGame'
                     ]);
 
-                    events.global.windowResize(this, this.centerWindow);
-                    events.interface.hideAll(this, this.hide);
+                    dispatcher.global.windowResize(this, this.centerWindow);
+                    dispatcher.interface.hideAll(this, this.hide);
 
-                    events.server.disconnect(this, function(){
-                        events.interface.hideAll.trigger();
+                    dispatcher.server.disconnect(this, function(){
+                        dispatcher.interface.hideAll.trigger();
                         this.onShow();
                     });
-                    events.server.connect(this, this.hide);
+                    dispatcher.server.connect(this, this.hide);
 
                     this.onShow();
                 },
                 connect: function () {
-                    gameApp.work(events.server.connect);
+                    gameApp.work(dispatcher.server.connect);
                     this.hideButton();
                 },
                 onShow: function () {

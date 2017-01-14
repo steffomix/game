@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'gameRouter', 'gamePosition', 'pixi', 'gameEvents', 'gameApp', 'tween', 'gameFloor'],
+define(['config', 'logger', 'gameRouter', 'gamePosition', 'pixi', 'eventDispatcher', 'gameApp', 'tween', 'gameFloor'],
     function (config, Logger, router, gamePosition, pixi, dispatcher, gameApp, tween, GameFloor) {
 
         var instance,
@@ -204,7 +204,7 @@ define(['config', 'logger', 'gameRouter', 'gamePosition', 'pixi', 'gameEvents', 
             this.addChild(pointer);
 
 
-            dispatcher.mainPlayer.showWalkPath(function(p){
+            dispatcher.gameMainPlayer.showWalkPath(function(p){
                 p.length && path.drawPath(p);
             });
 

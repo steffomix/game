@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'gameSocket', 'gameRouter', 'underscore', 'gameEvents', 'gameMainPlayer', 'gamePlayer', 'pixiPlayers', 'gameApp'],
-    function (config, Logger, socket, router, _, events, MainPlayer, Player, playerContainer, gameApp) {
+define(['config', 'logger', 'gameSocket', 'gameRouter', 'underscore', 'eventDispatcher', 'gameMainPlayer', 'gamePlayer', 'pixiPlayers', 'gameApp'],
+    function (config, Logger, socket, router, _, dispatcher, MainPlayer, Player, playerContainer, gameApp) {
 
         var instance,
             logger = Logger.getLogger('gamePlayerManager');
@@ -42,30 +42,30 @@ define(['config', 'logger', 'gameSocket', 'gameRouter', 'underscore', 'gameEvent
                 }
             });
 
-            events.game.initialize(function(){
+            dispatcher.game.initialize(function(){
                 logger.info('Game initialize PlayerManager');
                 gameApp.set('playerManager', this);
             });
 
-            events.server.logout(function(){
+            dispatcher.server.logout(function(){
                 reset();
                 mainPlayer = '';
             });
 
-            events.game.frameTick(function(t, l){
+            dispatcher.game.frameTick(function(t, l){
                 _.each(players, function(p){
                     p.frameTick(t, l);
                 })
             });
 
-            events.game.workerTick(function(t, l){
+            dispatcher.game.workerTick(function(t, l){
                 _.each(players, function(p){
                     p.workerTick(t, l);
                 })
             });
 
             /*
-            events.server.tick(function (gameState) {
+            dispatcher.server.tick(function (gameState) {
 
                 var mobiles = gameState.received.mobiles;
 

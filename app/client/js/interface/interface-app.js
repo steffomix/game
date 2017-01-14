@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'gameApp', 'i18n', 'backbone', 'underscore', 'jquery', 'util', 'gameEvents'],
-    function (config, Logger, gameApp, i18n, Backbone, _, $, util, events) {
+define(['config', 'logger', 'gameApp', 'i18n', 'backbone', 'underscore', 'jquery', 'util', 'eventDispatcher'],
+    function (config, Logger, gameApp, i18n, Backbone, _, $, util, dispatcher) {
 
         var user = {},
             interfaces = {},
@@ -43,29 +43,29 @@ define(['config', 'logger', 'gameApp', 'i18n', 'backbone', 'underscore', 'jquery
             window.addEventListener('resize', function (e) {
                 var w = $body.width(),
                     h = $body.height();
-                events.global.windowResize.trigger();
+                dispatcher.global.windowResize.trigger();
                 // elements may need a second resize after rearranging all interface elements
                 setTimeout(function(){
                     var w2 = $body.width(),
                         h2 = $body.height();
                     if(w != w2 || h != h2){
                         logger.warn('window postresized: ', w - w2, h - h2);
-                        events.global.windowResize.trigger();
+                        dispatcher.global.windowResize.trigger();
                     }
                 }, 10);
             });
 
-            events.server.disconnect.trigger();
+            dispatcher.server.disconnect.trigger();
             $('#game-container').show();
-            //setTimeout(events.global.windowResize.trigger);
+            //setTimeout(dispatcher.global.windowResize.trigger);
 
             setTimeout(_autoLogin, 1000);
         })();
 
         function _autoLogin(){
             logger.info('Autologin user:user');
-            events.server.connect(function(){
-                gameApp.work(events.server.login, {user: 'user', pass: 'user'});
+            dispatcher.server.connect(function(){
+                gameApp.work(dispatcher.server.login, {user: 'user', pass: 'user'});
             });
         }
 

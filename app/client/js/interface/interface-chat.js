@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'backbone', 'underscore', 'jquery', 'interfaceApp', 'gameEvents'], function (config, Logger, Backbone, _, $, App, events) {
+define(['config', 'logger', 'backbone', 'underscore', 'jquery', 'interfaceApp', 'eventDispatcher'], function (config, Logger, Backbone, _, $, App, dispatcher) {
 
     var instance, logger = Logger.getLogger('interfaceChat');
     logger.setLevel(config.logger.interfaceChat || 0);
@@ -47,15 +47,15 @@ define(['config', 'logger', 'backbone', 'underscore', 'jquery', 'interfaceApp', 
 
                 this.viewData = this.translateKeys('chat', ['chat']);
 
-                events.global.windowResize(this, this.pos);
-                events.interface.hideAll(this, this.hide);
-                events.game.loginSuccess(this, this.onShow);
+                dispatcher.global.windowResize(this, this.pos);
+                dispatcher.interface.hideAll(this, this.hide);
+                dispatcher.game.loginSuccess(this, this.onShow);
 
-                events.server.broadcastMessage(function(post){
+                dispatcher.server.broadcastMessage(function(post){
                     self.addMessage(self.translate('chat.context_' + post.context, {user: post.name}));
                 });
 
-                events.server.chatMessage(function(post){
+                dispatcher.server.chatMessage(function(post){
                     var name = post.name,
                         msg = post.msg;
                     self.addMessage(name + ': ' + msg);

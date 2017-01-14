@@ -3,11 +3,11 @@
  */
 
 
-define(['config', 'logger', 'gamePlayer', 'debugInfo', 'gameEvents', 'tween', 'gameApp'],
-    function (config, Logger, Player, DebugInfo, events, tween, gameApp) {
+define(['config', 'logger', 'gameRouter', 'gamePlayer', 'debugInfo', 'eventDispatcher', 'tween', 'gameApp'],
+    function (config, Logger, router, Player, DebugInfo, dispatcher, tween, gameApp) {
 
-        var logger = Logger.getLogger('gameMainPlayer');
-        logger.setLevel(config.logger.gameMainPlayer || 0);
+        var logger = Logger.getLogger('gamePlayer');
+        logger.setLevel(config.logger.gamePlayer || 0);
 
         var tileSize = config.game.tiles.size;
 
@@ -21,13 +21,26 @@ define(['config', 'logger', 'gamePlayer', 'debugInfo', 'gameEvents', 'tween', 'g
 
             this.debug = debug;
 
-            events.mainPlayer.walk(walk);
+            router.addModule('mainPlayer', this, {
+                walk: function(job){
+                    var pos = job.data;
+                    pos.x *= tileSize;
+                    pos.y *= tileSize;
+                    walk(pos);
+                }
+            });
+
+            dispatcher.gameMainPlayer.walk(function(pos){
+                walk({
+                    x: pos.x * tileSize,
+                    y: pos.y * tileSize
+                })
+            });
 
             gameApp.set('mainPlayer', this);
 
 
-            events.game.frameTick(function (t, l) {
-                var s = self;
+            dispatcher.game.frameTick(function (t, l) {
                 animate.update(t);
 
                 var mouse = gameApp.get('mouse'),
@@ -44,23 +57,19 @@ define(['config', 'logger', 'gamePlayer', 'debugInfo', 'gameEvents', 'tween', 'g
 */
             });
 
-            /**
-             * animate player to given position
-             * @param pos {{x: int, y: int, speed: int}}
-             */
             function walk(pos) {
                 animate.to({
-                    x: pos.x * tileSize,
-                    y: pos.y * tileSize
+                    x: pos.x,
+                    y: pos.y
                 },
                 pos.speed * 5).start();
             }
 
-            events.game.mouseUp(function (mousePosition) {
+            dispatcher.game.mouseUp(function (mousePosition) {
             });
 
 
-            events.game.mouseDown(function (mousePosition) {
+            dispatcher.game.mouseDown(function (mousePosition) {
             });
 
 
