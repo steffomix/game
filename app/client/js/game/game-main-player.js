@@ -3,11 +3,11 @@
  */
 
 
-define(['config', 'logger', 'gameRouter', 'gamePlayer', 'debugInfo', 'eventDispatcher', 'tween', 'gameApp'],
-    function (config, Logger, router, Player, DebugInfo, dispatcher, tween, gameApp) {
+define(['config', 'logger', 'gamePlayer', 'debugInfo', 'gameEvents', 'tween', 'gameApp'],
+    function (config, Logger, Player, DebugInfo, events, tween, gameApp) {
 
-        var logger = Logger.getLogger('gamePlayer');
-        logger.setLevel(config.logger.gamePlayer || 0);
+        var logger = Logger.getLogger('gameMainPlayer');
+        logger.setLevel(config.logger.gameMainPlayer || 0);
 
         var tileSize = config.game.tiles.size;
 
@@ -21,26 +21,13 @@ define(['config', 'logger', 'gameRouter', 'gamePlayer', 'debugInfo', 'eventDispa
 
             this.debug = debug;
 
-            router.addModule('mainPlayer', this, {
-                walk: function(job){
-                    var pos = job.data;
-                    pos.x *= tileSize;
-                    pos.y *= tileSize;
-                    walk(pos);
-                }
-            });
-
-            dispatcher.gameMainPlayer.walk(function(pos){
-                walk({
-                    x: pos.x * tileSize,
-                    y: pos.y * tileSize
-                })
-            });
+            events.mainPlayer.walk(walk);
 
             gameApp.set('mainPlayer', this);
 
 
-            dispatcher.game.frameTick(function (t, l) {
+            events.game.frameTick(function (t, l) {
+                var s = self;
                 animate.update(t);
 
                 var mouse = gameApp.get('mouse'),
@@ -57,19 +44,23 @@ define(['config', 'logger', 'gameRouter', 'gamePlayer', 'debugInfo', 'eventDispa
 */
             });
 
+            /**
+             * animate player to given position
+             * @param pos {{x: int, y: int, speed: int}}
+             */
             function walk(pos) {
                 animate.to({
-                    x: pos.x,
-                    y: pos.y
+                    x: pos.x * tileSize,
+                    y: pos.y * tileSize
                 },
                 pos.speed * 5).start();
             }
 
-            dispatcher.game.mouseUp(function (mousePosition) {
+            events.game.mouseUp(function (mousePosition) {
             });
 
 
-            dispatcher.game.mouseDown(function (mousePosition) {
+            events.game.mouseDown(function (mousePosition) {
             });
 
 

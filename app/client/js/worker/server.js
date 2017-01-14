@@ -16,7 +16,7 @@
  */
 
 
-define('server', ['config', 'logger', 'workerApp', 'io', 'eventDispatcher'],
+define('server', ['config', 'logger', 'workerApp', 'io', 'gameEvents'],
     function (config, Logger, gameApp, io, events) {
 
         var connection,
@@ -70,7 +70,7 @@ define('server', ['config', 'logger', 'workerApp', 'io', 'eventDispatcher'],
                 connection.disconnect();
                 connection = null;
             } catch (e) {
-                logger.warn('Server disconnected by client.', e);
+                //logger.warn('Server disconnected by client.', e);
             }
         }
 
@@ -130,7 +130,7 @@ define('server', ['config', 'logger', 'workerApp', 'io', 'eventDispatcher'],
 
             connection.on('chatMessage', function (data) {
                 logger.info('Server: chatMessage', data);
-                gameApp(events.interfaceChat.serverChatMessage, data);
+                gameApp(events.server.chatMessage, data);
                 //socket.send('interfaceChat.chatMessage', data);
             });
 

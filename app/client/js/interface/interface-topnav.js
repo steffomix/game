@@ -16,8 +16,8 @@
  */
 
 define([
-    'config', 'logger', 'backbone', 'underscore', 'jquery', 'interfaceApp', 'eventDispatcher'
-], function (config, Logger, Backbone, _, $, App, dispatcher) {
+    'config', 'logger', 'backbone', 'underscore', 'jquery', 'interfaceApp', 'gameEvents'
+], function (config, Logger, Backbone, _, $, App, events) {
 
     var instance, logger = Logger.getLogger('interfaceTopnav');
     logger.setLevel(config.logger.interfaceTopnav || 0);
@@ -51,9 +51,9 @@ define([
                     'logout'
                 ]);
 
-                dispatcher.global.windowResize(this, this.pos);
-                dispatcher.interface.hideAll(this, this.hide);
-                dispatcher.game.loginSuccess(this, this.onShow);
+                events.global.windowResize(this, this.pos);
+                events.interface.hideAll(this, this.hide);
+                events.game.loginSuccess(this, this.onShow);
 
             },
             onLogout: function(){

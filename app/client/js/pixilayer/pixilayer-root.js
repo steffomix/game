@@ -15,10 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['config', 'logger', 'jquery', 'gamePosition', 'debugInfo', 'pixi', 'tween', 'eventDispatcher', 'gameApp',
+define(['config', 'logger', 'jquery', 'gamePosition', 'debugInfo', 'pixi', 'tween', 'gameEvents', 'gameApp',
         'pixiTiles',
         'pixiPlayers'],
-    function (config, Logger, $, position, DebugInfo, pixi, tween, dispatcher, gameApp,
+    function (config, Logger, $, position, DebugInfo, pixi, tween, events, gameApp,
               playerContainer,
               tilesContainer) {
 
@@ -79,11 +79,11 @@ define(['config', 'logger', 'jquery', 'gamePosition', 'debugInfo', 'pixi', 'twee
             pixi.Container.call(this);
 
             var self = this,
-                triggerMouseMove = dispatcher.game.mouseMove.claimTrigger(this),
-                triggerMouseUp = dispatcher.game.mouseUp.claimTrigger(this),
-                triggerMouseDown = dispatcher.game.mouseDown.claimTrigger(this),
-                triggerMouseGridMove = dispatcher.game.mouseGridMove.claimTrigger(this),
-                triggerScreenGridMove = dispatcher.game.screenGridMove.claimTrigger(this),
+                triggerMouseMove = events.game.mouseMove.claimTrigger(this),
+                triggerMouseUp = events.game.mouseUp.claimTrigger(this),
+                triggerMouseDown = events.game.mouseDown.claimTrigger(this),
+                triggerMouseGridMove = events.game.mouseGridMove.claimTrigger(this),
+                triggerScreenGridMove = events.game.screenGridMove.claimTrigger(this),
                 debug = new DebugInfo(this, 400, 400).debug,
 
                 /**
@@ -161,7 +161,7 @@ define(['config', 'logger', 'jquery', 'gamePosition', 'debugInfo', 'pixi', 'twee
              */
             function onMouseGridMove(){
                 if(gameApp.get('mainPlayer')){
-                    gameApp.work(dispatcher.workerMainPlayer.mouseGridMove, positionSocket());
+                    gameApp.work(events.mainPlayer.mouseGridMove, positionSocket());
                 }
                 positionSocket();
                 triggerMouseGridMove(mousePosition);
@@ -184,7 +184,7 @@ define(['config', 'logger', 'jquery', 'gamePosition', 'debugInfo', 'pixi', 'twee
             function onMouseUp(e) {
 
                 if(gameApp.get('mainPlayer')){
-                    gameApp.work(dispatcher.workerMainPlayer.walk, positionSocket());
+                    gameApp.work(events.mainPlayer.walk, positionSocket());
                 }
                 mouseDown = false;
                 triggerMouseUp(mousePosition, e);
@@ -202,7 +202,7 @@ define(['config', 'logger', 'jquery', 'gamePosition', 'debugInfo', 'pixi', 'twee
 
 
             // move container to center of mainPlayer
-            dispatcher.game.frameTick(function () {
+            events.game.frameTick(function () {
 
                 var mainPlayer = gameApp.get('mainPlayer');
                 if(mainPlayer){
@@ -231,7 +231,7 @@ define(['config', 'logger', 'jquery', 'gamePosition', 'debugInfo', 'pixi', 'twee
                 renderer.render(self);
             });
 
-            dispatcher.game.initialize(function () {
+            events.game.initialize(function () {
                 $gameStage.html(renderer.view);
                 logger.info('Game initialize pixiRoot');
                 gameApp.set('mouse', {
@@ -267,7 +267,7 @@ define(['config', 'logger', 'jquery', 'gamePosition', 'debugInfo', 'pixi', 'twee
             });
 
             // resize stage
-            dispatcher.global.windowResize(function () {
+            events.global.windowResize(function () {
                 renderer.resize($body.width(), $body.height());
             });
 

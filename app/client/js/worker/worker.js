@@ -9,10 +9,10 @@ importScripts('/js/config.js');
 /**
  * collect modules to preload
  */
-require(['config', 'eventDispatcher'], function (config, events) {
+require(['config', 'gameEvents'], function (config, events) {
 
     var groups = ['worker'],
-        preloadModules = ['eventDispatcher', 'underscore', 'workerMainPlayer'];
+        preloadModules = ['gameEvents', 'underscore', 'workerMainPlayer'];
 
 
     for (var module in config.paths) {
@@ -68,7 +68,7 @@ define('workerApp', [], function () {
 /**
  * start worker app
  */
-require(['workerApp', 'eventDispatcher', 'modulesLoader'], function (workerApp, events, loader) {
+require(['workerApp', 'gameEvents', 'modulesLoader'], function (workerApp, events, loader) {
 
     self.addEventListener('message', function (e) {
         try {

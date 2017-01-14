@@ -21,7 +21,7 @@ define(['underscore', 'events'], function (_, Events) {
     return factory;
 
     /**
-     * Converts a list of named categories with a list of named events into event-dispatcher
+     * Converts a list of named categories with a list of named events into event-events
      * @param template
      * @returns { {categories: { events: {}, ... }, ... }}
      */
@@ -75,7 +75,7 @@ define(['underscore', 'events'], function (_, Events) {
                  * add Events instance for direct access
                  * @type {Object}
                  */
-                categoryEvents[event].dispatcher = handler;
+                categoryEvents[event].events = handler;
                 
                 /**
                  * create new Listener <event> in <category> for only one trigger
