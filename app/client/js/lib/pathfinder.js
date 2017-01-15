@@ -32,7 +32,7 @@ define(['config', 'logger', 'underscore', 'easystar', 'pathfinding', 'worldGener
 
 
             // enlarge grid around min and max values
-            var extendGrid = extend || 0;
+            var extendGrid = extend || 10;
 
             // matrix bounds
             var baseSpeed = worldGenerator.tile(p1.x, p1.y).walkSpeed,
@@ -91,44 +91,34 @@ define(['config', 'logger', 'underscore', 'easystar', 'pathfinding', 'worldGener
                     speed1, speed2,
                     distance;
 
-                if(path || path.length){
+                for(var i = 1; i < path.length; i++){
+                    step1 = path[i - 1];
+                    step2 = path[i];
 
-                    finalPath.push({
-                        x: path
-                    })
+                    x1 = path[i - 1].x;
+                    y1 = path[i - 1].y;
 
-                    for(var i = 1; i < path.length; i++){
-                        step1 = path[i - 1];
-                        step2 = path[i];
+                    x2 = path[i].x;
+                    y2 = path[i].y;
 
-                        x1 = path[i - 1].x;
-                        y1 = path[i - 1].y;
-
-                        x2 = path[i].x;
-                        y2 = path[i].y;
-
-                        try{
-                            speed1 = matrix[y1][x1];
-                            speed2 = matrix[y2][x2];
-                        }catch(e){
-                            logger.error(e);
-                        }
-
-                        distance = Math.abs(step1.x - step2.x) + Math.abs(step1.y - step2.y);
-                        finalPath.push({
-                            x: path[i].x - xOffset - extendGrid,
-                            y: path[i].y - yOffset - extendGrid,
-                            speed: distance < 2
-                                ? (speed1 + speed2) / 2 // straight
-                                : ((speed1 + speed2) / 2) * 1.4, // diagonal
-                            origSpeed: speed1
-                        });
-
+                    try{
+                        speed1 = matrix[y1][x1];
+                        speed2 = matrix[y2][x2];
+                    }catch(e){
+                        logger.error(e);
                     }
+
+                    distance = Math.abs(step1.x - step2.x) + Math.abs(step1.y - step2.y);
+                    finalPath.push({
+                        x: path[i].x - xOffset - extendGrid,
+                        y: path[i].y - yOffset - extendGrid,
+                        speed: distance < 2
+                            ? (speed1 + speed2) / 2 // straight
+                            : ((speed1 + speed2) / 2) * 1.4, // diagonal
+                        origSpeed: speed1
+                    });
+
                 }
-
-
-                logger.info(c, finalPath);
                 return finalPath;
             }
 

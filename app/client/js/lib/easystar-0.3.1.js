@@ -78,7 +78,6 @@ var EasyStar =
 	    var iterationsPerCalculation = Number.MAX_VALUE;
 	    var acceptableTiles;
 	    var diagonalsEnabled = false;
-		var wallId = 'x';
 
 	    /**
 	    * Sets the collision grid that EasyStar uses.
@@ -96,14 +95,6 @@ var EasyStar =
 	            acceptableTiles = [tiles];
 	        }
 	    };
-
-		/**
-		 * A tile with this kind of 'number' block the way in any case.
-		 * @param id {any} default: 'x' (lower case x)
-		 */
-		function setWallId(id){
-			wallId = id;
-		}
 
 	    /**
 	    * Enables sync mode for this EasyStar instance..
@@ -290,7 +281,7 @@ var EasyStar =
 
 	        // No acceptable tiles were set
 	        if (acceptableTiles === undefined) {
-	            // throw new Error("You can't set a path without first calling setAcceptableTiles() on EasyStar.");
+	            throw new Error("You can't set a path without first calling setAcceptableTiles() on EasyStar.");
 	        }
 	        // No grid was set
 	        if (collisionGrid === undefined) {
@@ -310,17 +301,13 @@ var EasyStar =
 
 	        // End point is not an acceptable tile.
 	        var endTile = collisionGrid[endY][endX];
-	        //var isAcceptable = false;
-            var isAcceptable = endTile !== wallId;
-            /*
-
-             for (var i = 0; i < acceptableTiles.length; i++) {
-             if (endTile === acceptableTiles[i]) {
-             isAcceptable = true;
-             break;
-             }
-             }
-             */
+	        var isAcceptable = false;
+	        for (var i = 0; i < acceptableTiles.length; i++) {
+	            if (endTile === acceptableTiles[i]) {
+	                isAcceptable = true;
+	                break;
+	            }
+	        }
 
 	        if (isAcceptable === false) {
 	            callbackWrapper(null);
@@ -352,7 +339,7 @@ var EasyStar =
 	    * easystar.setIteratonsPerCalculation().
 	    **/
 	    this.calculate = function () {
-	        if (instances.length === 0 || collisionGrid === undefined/* || acceptableTiles === undefined */) {
+	        if (instances.length === 0 || collisionGrid === undefined || acceptableTiles === undefined) {
 	            return;
 	        }
 	        for (iterationsSoFar = 0; iterationsSoFar < iterationsPerCalculation; iterationsSoFar++) {
@@ -495,16 +482,13 @@ var EasyStar =
 	            };
 	            if (!directionIncluded()) return false;
 	        }
-	        /*
 	        for (var i = 0; i < acceptableTiles.length; i++) {
 	            if (collisionGrid[y][x] === acceptableTiles[i]) {
 	                return true;
 	            }
 	        }
-	        */
 
-	        return collisionGrid[y][x] !== wallId;
-	        //return false;
+	        return false;
 	    };
 
 	    /**
@@ -518,8 +502,7 @@ var EasyStar =
 	    };
 
 	    var getTileCost = function (x, y) {
-            return collisionGrid[y][x];
-	        //return pointsToCost[x + '_' + y] || costMap[collisionGrid[y][x]];
+	        return pointsToCost[x + '_' + y] || costMap[collisionGrid[y][x]];
 	    };
 
 	    var coordinateToNode = function (instance, x, y, parent, cost) {
@@ -991,6 +974,6 @@ var EasyStar =
 /***/ }
 /******/ ]);
 
-requirejs && define([], function(){
-    return EasyStar;
+requirejs && define([], function () {
+	return EasyStar;
 });

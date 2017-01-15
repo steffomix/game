@@ -41,7 +41,7 @@
             eventFactory: 'lib/event-factory',
             tick: 'lib/tick',
             i18n: 'lib/i18n',
-            easystar: 'lib/easystar-0.3.1',
+            easystar: 'lib/easystar-dynmaps-0.3.1',
             pathfinder: 'lib/pathfinder'
 
         },

@@ -156,16 +156,19 @@ define(['config', 'logger', 'gamePosition', 'pixi', 'gameEvents', 'gameApp', 'tw
 
             this.drawPath = function (path) {
                 graph.clear();
-                graph.alpha = .5;
+                graph.alpha = .7;
 
                 for (var i = 0; i < path.length; i++) {
                     var p = path[i];
+                    graph.beginFill(0);
+                    graph.drawCircle(p.x * tileSize, p.y * tileSize, 7);
+                    graph.endFill();
                     graph.beginFill(0xababab);
                     graph.drawCircle(p.x * tileSize, p.y * tileSize, 5);
                     graph.endFill();
                 }
 
-                animate.to({alpha: 0}, 2000).start();
+                animate.to({alpha: .2}, 2000).start();
 
             };
         }

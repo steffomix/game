@@ -41,7 +41,6 @@ define(['config', 'logger', 'workerApp', 'gameEvents', 'pathfinder'],
             } else {
                 setTimeout(movePlayer, 100);
             }
-
         }
 
         movePlayer();
@@ -75,9 +74,6 @@ define(['config', 'logger', 'workerApp', 'gameEvents', 'pathfinder'],
             }
         }
 
-
-
-
         function WorkerMainPlayer() {
             // register router module
 
@@ -95,8 +91,11 @@ define(['config', 'logger', 'workerApp', 'gameEvents', 'pathfinder'],
             });
 
             function findPath(move){
+                var t = performance.now();
                 var path = new Pathfinder(move.playerPosition.grid, move.mousePosition.grid).find();
-                path.shift();
+                t = performance.now() - t;
+
+                console.log(t, path);
                 return path;
             }
 

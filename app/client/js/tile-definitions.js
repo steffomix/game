@@ -43,12 +43,12 @@ define(['config', 'logger'],
                 // min value is 0, max is Infinity
                 // 100 = default speed
                 worldGenerator: {
-                    water: new TileDefinition('world-generator/water', 3000),
+                    water: new TileDefinition('world-generator/water', 1000),
                     grass: new TileDefinition('world-generator/grass', 100),
-                    sand: new TileDefinition('world-generator/sand', 600),
-                    forest: new TileDefinition('world-generator/forest', 400),
-                    stone: new TileDefinition('world-generator/stone', 90),
-                    snow: new TileDefinition('world-generator/snow', 150)
+                    sand: new TileDefinition('world-generator/sand', 150),
+                    forest: new TileDefinition('world-generator/forest', 200),
+                    stone: new TileDefinition('world-generator/stone', 80),
+                    snow: new TileDefinition('world-generator/snow', 300)
                 }
             };
 
