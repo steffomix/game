@@ -19,49 +19,48 @@
 (function () {
     var conf = {
         debug: true, // show debug info on screen
-        baseUrl: '/js/',
-        urlArgs: "c=" + (new Date().getTime()),
-        paths: {
-            // third party libs
-            logger: 'bower/loglevel/dist/loglevel.min',
-            seedrandom: 'bower/seedrandom/seedrandom',
-            underscore: 'bower/underscore/underscore-min', // mapped (defined) as lodash
-            lodash: 'bower/lodash/dist/lodash.min',
-            backbone: 'bower/backbone/backbone-min',
-            jquery: 'bower/jquery/dist/jquery.min',
-            io: 'bower/socket.io-client/dist/socket.io',
-            machina: 'bower/machina/lib/machina.min',
-            tween: 'bower/tween.js/src/Tween',
-            pixi: 'bower/pixi.js/dist/pixi',
-            pathfinding: 'lib/pathfinding',
+        requirejs: {
+            baseUrl: '/js/',
+            urlArgs: "c=" + (new Date().getTime()),
+            paths: {
+                // third party libs
+                logger: 'bower/loglevel/dist/loglevel.min',
+                seedrandom: 'bower/seedrandom/seedrandom',
+                underscore: 'bower/underscore/underscore-min', // mapped (defined) as lodash
+                lodash: 'bower/lodash/dist/lodash.min',
+                backbone: 'bower/backbone/backbone-min',
+                jquery: 'bower/jquery/dist/jquery.min',
+                io: 'bower/socket.io-client/dist/socket.io',
+                machina: 'bower/machina/lib/machina.min',
+                tween: 'bower/tween.js/src/Tween',
+                pixi: 'bower/pixi.js/dist/pixi',
+                pathfinding: 'lib/pathfinding',
 
-            // own or modified libs
-            noise: 'lib/noise',
-            backboneEvents: 'lib/backbone-events',
-            eventFactory: 'lib/event-factory',
-            tick: 'lib/tick',
-            i18n: 'lib/i18n',
-            easystar: 'lib/easystar-dynmaps-0.3.1',
-            pathfinder: 'lib/pathfinder'
-
+                // own or modified libs
+                noise: 'lib/noise',
+                backboneEvents: 'lib/backbone-events',
+                eventFactory: 'lib/event-factory',
+                tick: 'lib/tick',
+                i18n: 'lib/i18n',
+                easystar: 'lib/easystar-dynmaps-0.3.1',
+                pathfinder: 'lib/pathfinder'
+            }
         },
-        logger: {},
         game: {
             frameTick: 35, // ticks per second. Game calculations and pixi render per second...
             workerTick: 2, // ticks per second. Send mouse position to worker...
             tiles: {
                 size: 120, // tile size in px
-                scale: .5// scale tiles
+                scale: .5, // scale tiles
+                speedAcc: .2 // move speed
             },
             chunks: {
-                size: 5 // draw tiles per chunk: 5 = 5*5 tiles
-            },
-            worker: {
-                gameWorker: 'js/worker/worker.js' // started in game/game-app.js
+                size: 8 // chunks are not used in this game but needed in GamePosition
             }
         },
-        worker: {}
-
+        worker: {
+            gameWorker: 'js/worker/worker.js' // started in game/game-app.js
+        }
     };
 
 
@@ -119,33 +118,33 @@
 
     // setup config for paths and logger
     // The logger is modified to prefix module name on loglevel trace
+    conf.logger = {};
     modules.forEach(function (item) {
         var module = item[0],
             path = item[1],
             logLevel = item[2];
 
-        conf.paths[module] = path;
+        conf.requirejs.paths[module] = path;
         conf.logger[module] = logLevel;
 
 
-        // conf.logger[module] = 1; // all trace
-        // conf.logger[module] = 2; // all info
-        // conf.logger[module] = 3; // all warn
-        // conf.logger[module] = 4; // all error
-        // conf.logger[module] = 5; // all off
+        // conf.requirejs.logger[module] = 1; // all trace
+        // conf.requirejs.logger[module] = 2; // all info
+        // conf.requirejs.logger[module] = 3; // all warn
+        // conf.requirejs.logger[module] = 4; // all error
+        // conf.requirejs.logger[module] = 5; // all off
 
     });
 
     // setup requirejs
     requirejs.config({
-        paths: conf.paths,
-        baseUrl: conf.baseUrl,
-        depths: {}
+        paths: conf.requirejs.paths,
+        baseUrl: conf.requirejs.baseUrl
     });
 
     define('underscore', ['lodash'], function(_){
         return _;
-    })
+    });
 
     // create config module to be loadable
     define('config', [], function () {

@@ -71,13 +71,11 @@ define(['eventFactory'], function (eventFactory) {
             mainPlayer: {
                 walk: e,
                 showWalkPath: e,
-                mouseGridMove: e,
+                gridMoving: e,
+                gridMoved: e
             },
             interface: {
-                hideAll: e,
-            },
-            workerMainPlayer: {
-                walk: e
+                hideAll: e
             }
         };
 

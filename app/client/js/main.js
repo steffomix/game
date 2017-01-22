@@ -18,13 +18,14 @@
 
 require(['config', 'gameEvents'], function(config, events){
 
-    var groups = ['bower', 'lib', 'game', 'pixilayer', 'interface'],
+    var paths = config.requirejs.paths,
+        groups = ['bower', 'lib', 'game', 'pixilayer', 'interface'],
         preloadModules = ['backbone', 'jquery', 'gameEvents'];
 
     // collect list of modules to preload
-    for (var module in config.paths) {
-        if (config.paths.hasOwnProperty(module)) {
-            var path = config.paths[module];
+    for (var module in paths) {
+        if (paths.hasOwnProperty(module)) {
+            var path = paths[module];
             groups.forEach(function (group) {
                 if (path.indexOf(group + '/') === 0) {
                     preloadModules.push(module);

@@ -16,8 +16,8 @@
  */
 
 
-define(['config', 'logger', 'jquery', 'underscore', 'backbone', 'interfaceApp', 'gameEvents'],
-    function (config, Logger, $, _, Backbone, interfaceApp, events) {
+define(['config', 'logger', 'jquery', 'underscore', 'backbone', 'interfaceApp', 'gameEvents', 'gameApp'],
+    function (config, Logger, $, _, Backbone, interfaceApp, events, gameApp) {
 
         var instance,
             logger = Logger.getLogger('interfaceLogin');
@@ -72,16 +72,19 @@ define(['config', 'logger', 'jquery', 'underscore', 'backbone', 'interfaceApp', 
                         $(this.el_msg).html(msg);
                         self.show();
                     });
+
+                    events.game.loginSuccess(function(user){
+                        $(self.el_msg).html(self.translate('login.login success'));
+                        self.hide();
+                        events.global.windowResize.trigger();
+                    });
+
                     events.server.login(this, function(login){
                         if(login){
                             try {
                                 if (login.success) {
                                     logger.info('Login success');
                                     events.game.loginSuccess.trigger(login.user);
-                                    self.hide();
-                                    events.global.windowResize.trigger();
-
-                                    $(self.el_msg).html(this.translate('login.login success'));
                                 } else {
                                     $(self.el_msg).html(login.msg || this.translate('login.login failed'));
                                 }
@@ -112,7 +115,7 @@ define(['config', 'logger', 'jquery', 'underscore', 'backbone', 'interfaceApp', 
                     var pass = ($(this.el_pass).val() || '');
                     if (user && pass) {
                         localStorage['server.login.user'] = user;
-                        this.socket.send('server.login', {user: user, pass: pass});
+                        gameApp.work(events.server.login, {user: user, pass: pass});
                     } else {
                         $(this.el_msg).text(this.translate('login.loginDataIncomplete'));
                     }
@@ -123,7 +126,7 @@ define(['config', 'logger', 'jquery', 'underscore', 'backbone', 'interfaceApp', 
                     var user = $(this.el_user).val(),
                         pass = $(this.el_pass).val();
                     if (this.checkPasswords() && user && pass) {
-                        this.socket.send('server.register', {user: user, pass: pass});
+                        gameApp.work(events.server.register, {user: user, pass: pass});
                     }
                 }
                 ,

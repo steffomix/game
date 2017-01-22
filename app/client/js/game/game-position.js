@@ -156,7 +156,7 @@ define(['config', 'logger'],
                 get gridPos() {
                     return gridPos; // global grid position in px
                 },
-                get socket(){
+                get worker(){
                     return {
                         x: self.x,
                         y: self.y,
@@ -242,7 +242,7 @@ define(['config', 'logger'],
                 get gridPos() {
                     return gridPos;
                 },
-                get socket(){
+                get worker(){
                     return {
                         x: pos.x,
                         y: pos.y,

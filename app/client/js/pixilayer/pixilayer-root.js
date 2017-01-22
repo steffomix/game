@@ -103,7 +103,7 @@ define(['config', 'logger', 'jquery', 'gamePosition', 'debugInfo', 'pixi', 'twee
                         return ((self.x / scale) - $body.width() / 2 / scale) + tileSize / 2;
                     },
                     get y() {
-                        return (self.y / scale) - $body.height() / 2 / scale;
+                        return ((self.y / scale) - $body.height() / 2 / scale) + tileSize / 2;
                     }
                 }),
                 playerOffset = {
@@ -161,19 +161,10 @@ define(['config', 'logger', 'jquery', 'gamePosition', 'debugInfo', 'pixi', 'twee
              */
             function onMouseGridMove(){
                 if(gameApp.get('mainPlayer')){
-                    gameApp.work(events.mainPlayer.mouseGridMove, positionSocket());
+                    gameApp.work(events.game.mouseGridMove, positionWorker());
                 }
-                positionSocket();
+                positionWorker();
                 triggerMouseGridMove(mousePosition);
-            }
-
-            function onScreenGridMove(){
-
-                if(gameApp.get('mainPlayer')){
-
-                    //socket.send('mainPlayer.screenGridMove', positionSocket());
-                }
-                triggerScreenGridMove(gamePosition);
             }
 
             function onMouseDown(e) {
@@ -184,18 +175,18 @@ define(['config', 'logger', 'jquery', 'gamePosition', 'debugInfo', 'pixi', 'twee
             function onMouseUp(e) {
 
                 if(gameApp.get('mainPlayer')){
-                    gameApp.work(events.mainPlayer.walk, positionSocket());
+                    gameApp.work(events.mainPlayer.walk, positionWorker());
                 }
                 mouseDown = false;
                 triggerMouseUp(mousePosition, e);
             }
 
 
-            function positionSocket() {
+            function positionWorker() {
                 return {
-                        gamePosition: gamePosition.socket,
-                        mousePosition: mousePosition.socket,
-                        playerPosition: gameApp.get('mainPlayer').gamePosition.socket,
+                        gamePosition: gamePosition.worker,
+                        mousePosition: mousePosition.worker,
+                        playerPosition: gameApp.get('mainPlayer').gamePosition.worker,
                         isDown: mouseDown
                     }
             }
@@ -207,8 +198,8 @@ define(['config', 'logger', 'jquery', 'gamePosition', 'debugInfo', 'pixi', 'twee
                 var mainPlayer = gameApp.get('mainPlayer');
                 if(mainPlayer){
 
-                    moveTo.x = mainPlayer.x * -1;
-                    moveTo.y = mainPlayer.y * -1;
+                    moveTo.x = mainPlayer.x * -1 + tileSize * scale;
+                    moveTo.y = mainPlayer.y * -1 + tileSize * scale;
                     var diff = gamePosition.diff(moveTo, .2, .2);
                     moveAcc.move(diff);
 
@@ -221,11 +212,9 @@ define(['config', 'logger', 'jquery', 'gamePosition', 'debugInfo', 'pixi', 'twee
                     if(!playerGrid.eq(lastPlayerGrid)){
                         lastPlayerGrid.x = playerGrid.x;
                         lastPlayerGrid.y = playerGrid.y;
-                        onScreenGridMove();
+                        triggerScreenGridMove(gamePosition);
+                        gameApp.work(events.game.screenGridMove, positionWorker());
                     }
-
-
-                    gameApp.get('mainPlayer').debug(playerGrid);
                 }
 
                 renderer.render(self);

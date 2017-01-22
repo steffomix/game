@@ -22,7 +22,7 @@ define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'gamePos
             logger = Logger.getLogger('gameApp');
         logger.setLevel(config.logger.gameApp || 0);
 
-        var self = this,
+        var gameWorker = new Worker(config.worker.gameWorker),
             modules = {},
             frameTick = new Tick(events.game.frameTick.claimTrigger(this)),
             workerTick = new Tick(events.game.workerTick.claimTrigger(this));
@@ -39,7 +39,7 @@ define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'gamePos
 
         });
 
-        var gameWorker = new Worker(config.game.worker.gameWorker);
+        // wrap worker messages to game events
         gameWorker.addEventListener('message', function (e) {
             try {
                 if (e.data.event) {
@@ -56,12 +56,17 @@ define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'gamePos
             }
         });
 
-        logger.info('Gameworker started, initialize game...', performance.now())
         events.gameWorker.ready(function(){
+            logger.info('Gameworker started, initialize game...', performance.now())
             events.game.initialize.claimTrigger('main.js')();
         });
 
-
+        events.server.connect(function(){
+            logger.info('game-app fake login user on connect');
+            setTimeout(function(){
+                events.game.loginSuccess.trigger({user: "user"});
+            }, 200);
+        });
 
 
         function GameApp() {

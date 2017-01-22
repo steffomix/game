@@ -14,47 +14,59 @@ define(['config', 'logger', 'gamePlayer', 'debugInfo', 'gameEvents', 'tween', 'g
         function MainPlayer(user) {
             Player.call(this, user);
             var self = this,
+                playerGridMoved = events.mainPlayer.gridMoved,
+                lastGridMove = {x: 0, y: 0},
                 animate = new tween.Tween(this.gamePosition),
                 debug = new DebugInfo(this, 50, -100).debug;
 
             //animate.easing(tween.Easing.Quintic.InOut);
 
-            this.debug = debug;
+            // make debug display public for abuse
+            //this.debug = debug;
 
-            events.mainPlayer.walk(walk);
-
+            // register mainPlayer to gameApp
             gameApp.set('mainPlayer', this);
 
-
-            events.game.frameTick(function (t, l) {
-                var s = self;
-                animate.update(t);
-
-                var mouse = gameApp.get('mouse'),
-                    screen = gameApp.get('screen');
-/*
-                debug({
-                    time: Math.round(t),
-                    load: Math.round(l),
-                    chunk: root.position.chunk,
-                    screen: screen,
-                    screenPos: root.position.grid,
-                    mousePos: mouse.position.tile
-                });
-*/
-            });
-
+            events.mainPlayer.walk(walk);
             /**
              * animate player to given position
              * @param pos {{x: int, y: int, speed: int}}
              */
             function walk(pos) {
                 animate.to({
-                    x: pos.x * tileSize,
-                    y: pos.y * tileSize
-                },
-                pos.speed * 5).start();
+                        x: pos.x * tileSize,
+                        y: pos.y * tileSize
+                    },
+                    pos.speed * 5).start();
+                gameApp.work(events.mainPlayer.gridMoving, {
+                    mousePosition: gameApp.get('mouse').position.worker,
+                    playerPosition: self.gamePosition.worker
+                })
             }
+
+
+            events.game.frameTick(function (t, l) {
+                animate.update(t);
+
+                var grid = self.gamePosition.grid,
+                    mouse = gameApp.get('mouse'),
+                    screen = gameApp.get('screen');
+
+                if(grid.x != lastGridMove.x || grid.y != lastGridMove.y){
+                    lastGridMove.x = grid.x;
+                    lastGridMove.y = grid.y;
+                    playerGridMoved.trigger(self.gamePosition);
+                    gameApp.work(playerGridMoved, self.gamePosition.worker);
+                }
+
+                debug({
+                    time: Math.round(t),
+                    load: Math.round(l),
+                    screen: screen,
+                    mousePos: mouse.position.tile
+                });
+
+            });
 
             events.game.mouseUp(function (mousePosition) {
             });

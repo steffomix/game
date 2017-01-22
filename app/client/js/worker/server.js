@@ -41,6 +41,7 @@ define('server', ['config', 'logger', 'workerApp', 'io', 'gameEvents'],
             events.server.disconnect(disconnect);
 
             events.server.login(function (data) {
+                console.log('login', data);
                 send('login', data);
             });
 

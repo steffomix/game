@@ -57,19 +57,8 @@ define(['config', 'logger', 'gameApp', 'i18n', 'backbone', 'underscore', 'jquery
 
             events.server.disconnect.trigger();
             $('#game-container').show();
-            //setTimeout(events.global.windowResize.trigger);
 
-            setTimeout(_autoLogin, 1000);
         })();
-
-        function _autoLogin(){
-            logger.info('Autologin user:user');
-            events.server.connect(function(){
-                gameApp.work(events.server.login, {user: 'user', pass: 'user'});
-            });
-        }
-
-
 
         function escapeHtml(text){
             return $('<div/>').text(text).html();

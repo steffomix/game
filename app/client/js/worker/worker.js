@@ -11,13 +11,14 @@ importScripts('/js/config.js');
  */
 require(['config', 'gameEvents'], function (config, events) {
 
-    var groups = ['worker'],
+    var paths = config.requirejs.paths,
+        groups = ['worker'],
         preloadModules = ['gameEvents', 'underscore', 'workerMainPlayer'];
 
 
-    for (var module in config.paths) {
-        if (config.paths.hasOwnProperty(module)) {
-            var path = config.paths[module];
+    for (var module in paths) {
+        if (paths.hasOwnProperty(module)) {
+            var path = paths[module];
             groups.forEach(function (group) {
                 if (path.indexOf(group + '/') === 0) {
                     preloadModules.push(module);
@@ -30,8 +31,7 @@ require(['config', 'gameEvents'], function (config, events) {
     define('modulesLoader', preloadModules, function (events) {
 
         console.info('Worker preload modules: ', preloadModules);
-        var args = arguments;
-        return args;
+        return arguments;
     });
 
 });
@@ -86,5 +86,6 @@ require(['workerApp', 'gameEvents', 'modulesLoader'], function (workerApp, event
         }
     });
     workerApp.send(events.gameWorker.ready);
+    console.info('Worker ready');
 
 });

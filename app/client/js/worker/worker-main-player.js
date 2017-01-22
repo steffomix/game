@@ -23,81 +23,67 @@ define(['config', 'logger', 'workerApp', 'gameEvents', 'pathfinder'],
             logger = Logger.getLogger('workerMainPlayer');
         logger.setLevel(config.logger.workerMainPlayer || 0);
 
-        var history = new MouseHistory(),
-            mouseQueue = [],
+        var speedAcc = config.game.tiles.speedAcc,
+            lastMouseGridPos,
             moveQueue = [];
 
-        function movePlayer() {
+
+        /**
+         * find path by given start- and endpoints
+         * @param move
+         * @returns { [{x: int, y: int, speed: int}, ...] }
+         */
+        function findPath(move){
+            return new Pathfinder(move.playerPosition.grid, move.mousePosition.grid).find();
+        }
+
+        /**
+         * walk received path
+         */
+        (function movePlayer(iv) {
             if (moveQueue.length) {
                 var move = moveQueue.shift();
                 try {
                     gameApp.send(events.mainPlayer.walk, move);
                     //socket.send('mainPlayer.walk', move);
-                    setTimeout(movePlayer, move.speed * 5);
+                    setTimeout(movePlayer, move.speed / speedAcc);
                 } catch (e) {
-                    setTimeout(movePlayer, 100);
+                    setTimeout(movePlayer, iv);
                     logger.error('Worker move mainPlayer', e, move);
                 }
             } else {
-                setTimeout(movePlayer, 100);
+                setTimeout(movePlayer, iv);
             }
+        })(100);
+
+        function showWalkPath(move){
+            gameApp.send(events.mainPlayer.showWalkPath, findPath(move));
         }
 
-        movePlayer();
-
-        function addMouseHistory(move) {
-            mouseQueue.push(move);
-            while (mouseQueue.length > 3) {
-                mouseQueue.shift()
-            }
-            return move;
-        }
-
-        function MouseHistory() {
-
-            // detect mouse changed grid position
-            this.mouseGridMoved = function () {
-                var l = mouseQueue.length - 1;
-                if (l > 0) {
-                    var g1 = mouseQueue[l].mousePosition.grid,
-                        g2 = mouseQueue[l - 1].mousePosition.grid;
-                    if (g1.x != g2.x || g1.y != g2.y) {
-                        return true;
-                    }
-                }
-                return false;
-            };
-
-            // get moves from history: 0 = last
-            this.getMove = function (back) {
-                return mouseQueue[mouseQueue.length - 1 - (back || 0)];
-            }
-        }
-
+        /**
+         *
+         * @constructor
+         */
         function WorkerMainPlayer() {
-            // register router module
 
-            events.mainPlayer.mouseGridMove(function(pos){
-                var move = addMouseHistory(pos);
-                if (history.mouseGridMoved()) {
-                    var path = findPath(move);
-                    gameApp.send(events.mainPlayer.showWalkPath, path);
-
-                }
-            });
-
+            /**
+             * user clicked on tile to walk to
+             */
             events.mainPlayer.walk(function(pos){
                 moveQueue = findPath(pos);
             });
 
-            function findPath(move){
-                var t = performance.now();
-                var path = new Pathfinder(move.playerPosition.grid, move.mousePosition.grid).find();
-                t = performance.now() - t;
+            // mouse moved to another tile
+            events.game.mouseGridMove(function(move){
+                lastMouseGridPos = move;
+                showWalkPath(move);
+            });
 
-                console.log(t, path);
-                return path;
-            }
+            // screen scrolled to another tile
+            events.game.screenGridMove(showWalkPath);
+
+            // mainPlayer received position to move to
+            events.mainPlayer.gridMoving(showWalkPath);
 
         }
 
