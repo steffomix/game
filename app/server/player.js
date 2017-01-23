@@ -1,170 +1,163 @@
 /**
- * Created by stefan on 04.12.16.
+ * Created by stefan on 22.01.17.
  */
 
-var _ = require('underscore'),
-    db = require('./db'),
-    dispatcher = require('./event-dispatcher'),
-    Location = require('./player-location');
 
-exports = module.exports = Player;
+module.exports = Player;
 
+function Player(user, connection){
 
-function Player(socket) {
     var self = this;
-    this.socket = socket;
-    this.user = {};
 
-    socket.on('login', function (data) {
-        console.log('Login: ', data.user);
-        self.onLogin(data.user, data.pass);
-    });
-    socket.on('register', function (data) {
-        console.log('Register new User: ', data.user);
-        self.onRegister(data.user, data.pass);
-    });
-    socket.on('disconnect', function () {
-        console.log('Disconnect: ', self.user.name);
-        this.removeAllListeners();
-        dispatcher.player.disconnect.trigger(self);
-    });
 
-    /**
-     * setup Player onLogin
-     */
-    this.setup = function () {
-        this.location = new Location(this);
 
-        socket.on('logout', function () {
-            console.log('Logout: ', self.user.name);
-            socket.emit('logout');
-            dispatcher.player.logout.trigger(self);
-            setDown();
-        });
-        socket.on('chatMessage', function (data) {
-            console.log('Chat ' + self.user.name + ': ' + data);
-            dispatcher.player.chatMessage.trigger({
-                player: self,
-                msg: data
-            });
-        });
-        socket.on('getFloor', function (data) {
-
-        });
-        socket.on('gameState', function (data) {
-            //console.log('Receive Gamestate', data);
-        });
-
+    // received actions waiting for processing
+    var actions = {
+        // player path
+        moveQueue: []
     };
 
-    function setDown() {
-        _.each(['logout', 'chatMessage', 'getFloor', 'gameState'], socket.removeAllListeners, socket);
-        self.user = {};
+    // allow max 10 actions/sec
+    var lastAction = 0;
+
+    // holds timeout id or false
+    var moving = false;
+
+    // position
+    var gamePosition = {x: 0, y: 0, z: 0};
+
+
+    this.tick = (function(){
+        moving == false && nextMove();
+    }).bind(this);
+
+
+    this.getName = function(){
+        return user.name;
+    };
+
+    connection.on('playerMove', function(data){
+        console.log('Player: onPlayerMove', data);
+        try{
+            var t = parseInt(data.t);
+            if(!isNaN(t) && t - lastAction > 100){
+                lastAction = t;
+                actions.moveQueue = data.d;
+
+            }
+        }catch(e){
+            console.error('onPlayerMove', e, data);
+        }
+    });
+
+
+    function nextMove(){
+        var step = actions.moveQueue.pop();
+        if(step){
+            try{
+                step = move(step);
+            }catch(e){
+                actions.moveQueue = [];
+                moving = false;
+                return;
+            }
+
+            if(step){
+                moving = setTimeout(function(){
+                    moving = false;
+                    nextMove();
+                }, step.speed * 5);
+            }
+
+        }else{
+            moving = false;
+        }
     }
-}
 
 
-Player.prototype = {
-    onRegister: function (name, pass) {
-        var self = this;
-        db.Users.find({name: name}, function (err, users) {
-            if (err || !users.length) {
-                // create user
-                db.Users.create({name: name, pass: pass}, function (err, user) {
-                    // create world of user
-                    if (!err) {
-                        db.Worlds.create({user_id: user.id}, function (err, world) {
-                            // create location of user
-                            db.PlayerLocations.create({
-                                user_id: user.id,
-                                world_id: world.id,
-                                area_id: 1,
-                                x: 0,
-                                y: 0,
-                                z: 0
-                            }, function (err, location) {
-                                if (!err) {
-                                    self.socket.emit('register', {
-                                        success: !err,
-                                        user: {
-                                            id: user.id,
-                                            name: user.name,
-                                            world_id: location.world_id,
-                                            area_id: 1,
-                                            x: 0,
-                                            y: 0,
-                                            z: 0
-                                        }
-                                    });
-                                } else {
-                                    self.socket.emit('register', {
-                                        success: false,
-                                        msg: err
-                                    });
-                                }
+    /**
+     *
+     *
+     * -1,-1    0,-1    1,-1
+     *
+     * -1,0     0,0     1,0
+     *
+     * -1,1     0,1     1,1
+     *
+     * @param step
+     */
+    function move(step){
 
-                            })
-                        })
-                    } else {
-                        self.socket.emit('register', {
-                            success: false,
-                            msg: err
-                        });
-                    }
-                });
+        var x = parseInt(step.x),
+            y = parseInt(step.y),
+            z = 0;//parseInt(step.z);
 
-            } else {
-                self.socket.emit('register', {success: false, msg: 'Username already exists'});
-            }
-        })
+        if(isNaN(x) || isNaN(y) || isNaN(z)){
+            // move stack is damaged
+            // stop walking
+            actions.moveQueue = [];
+            return false;
+        }
 
-    },
-
-    onLogin: function (name, pass) {
-        var self = this,
-            so = this.socket;
-        this.user = {};
-
-        db.Users.find({name: name}, function (err, user) {
-            try {
-                if (user.length && user[0].pass == pass) {
-                    /**
-                     * attach player to connection
-                     */
-                    self.user = user[0];
-
-                    // collect userData for message
-                    var userData = {};
-                    _.each([
-                        'id',
-                        'name'
-                    ], function (k) {
-                        userData[k] = user[0][k];
-                    });
+        // distance and diagonals
+        var dx = Math.abs(x - gamePosition.x),
+            dy = Math.abs(y - gamePosition.y),
+            diag = dx + dy == 2;
 
 
-                    dispatcher.player.login.trigger(self);
+        // distance to far?
+        if(dx > 1 || dy > 1){
+            // stop walking
+            actions.moveQueue = [];
+            return false;
+        }
 
-                } else {
-                    /**
-                     * login fail
-                     */
-                    so.emit('login', {
-                        success: false,
-                        message: ''
-                    });
-                }
-            } catch (e) {
-                /**
-                 * login error
-                 */
-                so.emit('login', {
-                    success: false,
-                    message: e
-                });
-                // todo Logger
-                console.warn('Login User failed: ', e, new Error().stack)
-            }
+        // change floor?
+        if(z != gamePosition.z) {
+            // change floor
+            return changeFloor({x: x, y: y, z: z});
+        }
+
+        // position walkable?
+        var speed = getTileSpeed(x, y, z);
+
+        // normal walk
+        if(speed > 0){
+            gamePosition.x = x;
+            gamePosition.y = y;
+            // notify player to walk
+
+            step = {
+                x: x,
+                y: y,
+                speed: Math.round(getTileSpeed(x, y, z) * (diag ? 1.414 : 1))
+            };
+
+            emit('mainPlayerMove', step);
+            return step;
+        }
+
+        // no move
+        return false;
+
+
+    }
+
+    function getTileSpeed(x, y, z){
+        return 500;
+    }
+
+    function changeFloor(z){
+        console.info('change floor to', z);
+        return true; // if player is moving now
+    }
+
+    function emit(cmd, data){
+        connection.emit(cmd, {
+            t: new Date().getTime(),
+            d: data
         });
     }
+
+
 }

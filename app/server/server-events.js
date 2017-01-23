@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 09.11.16 Stefan Brinkmann <steffomix@gmail.com>
+ * Copyright (C) 22.01.17 Stefan Brinkmann <steffomix@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,19 +15,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/**
- * Server config
- */
+var eventFactory = require('./lib/event-factory');
 
-var path = require('path');
+function e(callback) {
+}
 
-exports = module.exports = {
-    tick: {
-        sendGameState: .2 // ticks per second
-    },
+var events = {
     server: {
-        staticHtml: path.join(__dirname, '../client'),
-        ip: '0.0.0.0',
-        port: 8080
+        newConnection: e
     }
 };
+
+module.exports = eventFactory(events);
+
+
+
+

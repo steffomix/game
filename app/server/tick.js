@@ -15,33 +15,41 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-var config = require('./config');
-
 exports = module.exports = Tick;
 
-function Tick(trigger) {
+function  Tick(trigger){
     var self = this,
         running = false;
-    this.fps = config.tick.sendGameState;
+
+    this.fps = 1;
     this.load = 50;
     this.volatility = 10;
-    this.stop = function () {
+    this.stop = function (){
         running = true;
     };
-    this.start = function () {
+    this.start = function(){
         running = true;
     };
-    this.destroy = function () {
-        tick = function () {
-        };
+    this.destroy = function(){
+        tick = function(){};
     };
     tick();
-    function tick() {
-        var t = new Date().getTime();
-        running && trigger(100 - self.load);
-        var nt = Math.min(Math.max(Math.round(1000 / self.fps) - (new Date().getTime() - t), 0), 3000);
+    function tick(){
+        var t = getTime();
+        try{
+            running && trigger(t, 100 - self.load);
+        }catch(e){
+            console.error('Tick failed: ', e);
+            self.fps /= 2;
+        }
+        var nt = Math.min(Math.max(Math.round(1000 / self.fps) - (getTime() - t), 0), 3000);
         self.load += ((100 * nt / (1000 / self.fps) - self.load) / self.volatility);
         setTimeout(tick, nt);
+    }
+
+    function getTime(){
+        var time = process.hrtime();
+        return time[0] * 1e9 + time[1];
     }
 }
 

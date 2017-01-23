@@ -77,7 +77,10 @@ define('server', ['config', 'logger', 'workerApp', 'io', 'gameEvents'],
 
         function send(cmd, data) {
             if (connection && connection.connected) {
-                connection.emit(cmd, data);
+                connection.emit(cmd, {
+                    t: new Date().getTime(),
+                    d: data
+                });
             }
         }
 
@@ -134,6 +137,14 @@ define('server', ['config', 'logger', 'workerApp', 'io', 'gameEvents'],
                 gameApp(events.server.chatMessage, data);
                 //socket.send('interfaceChat.chatMessage', data);
             });
+
+            connection.on('mainPlayerMove', function(data){
+                var t = data.t,
+                    pos = data.d;
+                gameApp.send(events.mainPlayer.walk, pos);
+                logger.info('server mainPlayerMove', pos);
+
+            })
 
 
         }

@@ -23,9 +23,7 @@ define(['config', 'logger', 'workerApp', 'gameEvents', 'pathfinder'],
             logger = Logger.getLogger('workerMainPlayer');
         logger.setLevel(config.logger.workerMainPlayer || 0);
 
-        var speedAcc = config.game.tiles.speedAcc,
-            lastMouseGridPos,
-            moveQueue = [];
+        var lastMouseGridPos;
 
 
         /**
@@ -37,24 +35,6 @@ define(['config', 'logger', 'workerApp', 'gameEvents', 'pathfinder'],
             return new Pathfinder(move.playerPosition.grid, move.mousePosition.grid).find();
         }
 
-        /**
-         * walk received path
-         */
-        (function movePlayer(iv) {
-            if (moveQueue.length) {
-                var move = moveQueue.shift();
-                try {
-                    gameApp.send(events.mainPlayer.walk, move);
-                    //socket.send('mainPlayer.walk', move);
-                    setTimeout(movePlayer, move.speed / speedAcc);
-                } catch (e) {
-                    setTimeout(movePlayer, iv);
-                    logger.error('Worker move mainPlayer', e, move);
-                }
-            } else {
-                setTimeout(movePlayer, iv);
-            }
-        })(100);
 
         function showWalkPath(move){
             gameApp.send(events.mainPlayer.showWalkPath, findPath(move));
@@ -70,7 +50,10 @@ define(['config', 'logger', 'workerApp', 'gameEvents', 'pathfinder'],
              * user clicked on tile to walk to
              */
             events.mainPlayer.walk(function(pos){
-                moveQueue = findPath(pos);
+                var path = findPath(pos);
+                if(path.length){
+                    events.server.send.trigger('playerMove', path.reverse());
+                }
             });
 
             // mouse moved to another tile

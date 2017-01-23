@@ -1,22 +1,14 @@
 var config = require('./config.js'),
-    _ = require('underscore');
+    events = require('./server-events'),
+    pool = require('./connection-pool')
+    server = require('./server.js');
 
-console.log('Start Server with computed Config: ', {
-    server: config.server,
-    db: config.db
-});
-// load modules and sync sqlite database
-require('./db').connect(function (db) {
-    var lm = config.loadedModules = {};
-    _.each(config.modules, function (v, k) {
-        config.loadedModules[k] = require(v);
-    });
+server.socket.on('connect', pool.addConnection);
 
-    lm.server.socket.on('connect', function (so) {
-        lm.eventDispatcher.io.connect.trigger(so);
-    });
 
-});
+
+
+
 
 
 
