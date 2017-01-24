@@ -1,4 +1,5 @@
-var playerPool = require('./player-pool');
+var playerPool = require('./player-pool'),
+    db = require('./db');
 
 module.exports = Login;
 
@@ -27,27 +28,31 @@ function Login(connection) {
      */
     connection.on('login', function (data) {
         data = data.d;
-        if (!bruteLock && !player) {
+
+        if (!bruteLock && !player && data.user && data.pass) {
             // check login
-            if (data.pass == user.pass) {
-                // try to add player to game
-                player = playerPool.addPlayer(user, connection);
-                if (player) {
-                    // login success, player is in game
-                    connection.emit('login', {
-                        success: true,
-                        user: {
-                            name: user.name
-                        }
-                    });
+            db.login(data.user, data.pass, function(user){
+                if(user){
+                    // try to add player to game
+                    player = playerPool.addPlayer(user, connection);
+                    if (player) {
+                        // login success, player is in game
+                        connection.emit('login', {
+                            success: true,
+                            user: {
+                                name: user.name
+                            }
+                        });
+                        player.initialize();
+                    } else {
+                        // user is already in game
+                        connection.emit('login', {success: false, msg: 'User already in Game.'});
+                    }
                 } else {
-                    // user is already in game
-                    connection.emit('login', {success: false, msg: 'User already in Game.'});
+                    // login data wrong
+                    connection.emit('login', {success: false, msg: ''});
                 }
-            } else {
-                // login data wrong
-                connection.emit('login', {success: false, msg: ''});
-            }
+            })
         }
 
         // lock for 3 sec. to prevent brute force

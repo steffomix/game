@@ -40,19 +40,19 @@ define(['config', 'logger', 'jquery', 'underscore', 'backbone', 'interfaceApp', 
                  */
                 el: $('#window-game-login'),
                 el_user: '#input-game-login-name',
-                el_pass: '#input-game-login-pass',
-                el_pass2: '#input-game-login-pass2',
+                el_pwd: '#input-game-login-pwd',
+                el_pwd2: '#input-game-login-pwd2',
                 el_reg: '#ck-game-register',
                 el_msg: '#game-login-message',
                 el_btLogin: '#button-game-login',
                 el_btRegister: '#button-game-register',
-                el_trPass2: '#row-login-pass2',
+                el_trPass2: '#row-login-pwd2',
                 events: {
                     'click #button-game-login': 'login',
                     'click #button-game-register': 'register',
-                    //'click #input-game-login-name, #input-game-login-pass, #input-game-login-pass2': 'resetMessage',
+                    //'click #input-game-login-name, #input-game-login-pwd, #input-game-login-pwd2': 'resetMessage',
                     'change #ck-game-register': 'switchRegister',
-                    'keyup #input-game-login-pass, #input-game-login-pass2': 'checkPasswords'
+                    'keyup #input-game-login-pwd, #input-game-login-pwd2': 'checkPasswords'
                 },
                 initialize: function () {
                     // grap template
@@ -112,10 +112,10 @@ define(['config', 'logger', 'jquery', 'underscore', 'backbone', 'interfaceApp', 
                 login: function () {
                     this.resetMessage();
                     var user = ($(this.el_user).val() || '');
-                    var pass = ($(this.el_pass).val() || '');
-                    if (user && pass) {
+                    var pwd = ($(this.el_pwd).val() || '');
+                    if (user && pwd) {
                         localStorage['server.login.user'] = user;
-                        gameApp.work(events.server.login, {user: user, pass: pass});
+                        gameApp.work(events.server.login, {user: user, pwd: pwd});
                     } else {
                         $(this.el_msg).text(this.translate('login.loginDataIncomplete'));
                     }
@@ -124,9 +124,9 @@ define(['config', 'logger', 'jquery', 'underscore', 'backbone', 'interfaceApp', 
                 register: function () {
                     this.resetMessage();
                     var user = $(this.el_user).val(),
-                        pass = $(this.el_pass).val();
-                    if (this.checkPasswords() && user && pass) {
-                        gameApp.work(events.server.register, {user: user, pass: pass});
+                        pwd = $(this.el_pwd).val();
+                    if (this.checkPasswords() && user && pwd) {
+                        gameApp.work(events.server.register, {user: user, pwd: pwd});
                     }
                 }
                 ,
@@ -140,12 +140,11 @@ define(['config', 'logger', 'jquery', 'underscore', 'backbone', 'interfaceApp', 
                         $(this.el_btLogin).show();
                         $(this.el_btRegister).hide();
                     }
-                }
-                ,
+                },
                 checkPasswords: function () {
                     if (!$(this.el_reg).is(':checked')) return false;
-                    var p1 = $(this.el_pass).val(),
-                        p2 = $(this.el_pass2).val();
+                    var p1 = $(this.el_pwd).val(),
+                        p2 = $(this.el_pwd2).val();
                     if (!p1 || !p2 || p1 != p2) {
                         $(this.el_msg).text(this.translate('login.passwords not same'));
                         return false;

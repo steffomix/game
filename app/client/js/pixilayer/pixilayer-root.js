@@ -33,16 +33,6 @@ define(['config', 'logger', 'jquery', 'gamePosition', 'debugInfo', 'pixi', 'twee
         logger.setLevel(config.logger.pixiRoot || 0);
 
 
-        function createGlobalHitbox() {
-            var ct = new pixi.Container(),
-                gr = new pixi.Graphics(),
-                x = 30 * tileSize - tileSize / 2;
-            gr.hitArea = new pixi.Rectangle(-x, -x, x * 2, x * 2);
-            ct.addChild(gr);
-            return gr;
-
-        }
-
 
         /**
          *
@@ -133,7 +123,6 @@ define(['config', 'logger', 'jquery', 'gamePosition', 'debugInfo', 'pixi', 'twee
             // add layers
             this.addChild(playerContainer);
             this.addChild(tilesContainer);
-            this.addChild(createGlobalHitbox());
 
             // catch all mouse events
             this.interactive = true;
@@ -197,6 +186,9 @@ define(['config', 'logger', 'jquery', 'gamePosition', 'debugInfo', 'pixi', 'twee
 
                 var mainPlayer = gameApp.get('mainPlayer');
                 if(mainPlayer){
+
+                    // hitBox.x = self.x *-1;
+                    // hitBox.y = self.y *-1;
 
                     moveTo.x = mainPlayer.x * -1 + tileSize * scale;
                     moveTo.y = mainPlayer.y * -1 + tileSize * scale;

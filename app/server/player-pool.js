@@ -14,13 +14,22 @@ function PlayerPool(){
         playerKeys = [],
         playerTicker = new Tick(playerTick);
 
+
     playerTicker.fps = 10;
     playerTicker.start();
 
+    this.onExit = function(){
+            console.log('exit player-pool');
+        allPlayers(function(player){
+            player.onExit();
+        })
+    }
 
     /**
      *
      * @param user
+     * @param connection
+     * @returns {Player}
      */
     this.addPlayer = function(user, connection){
         if(!players[user.name]){
@@ -34,16 +43,22 @@ function PlayerPool(){
 
     this.removePlayer = function(id){
         players[id] = null;
-    }
+    };
 
-    function playerTick(){
+    function allPlayers(fn){
         var player;
         for(var i = 0; i < playerKeys.length; i++){
             player = players[playerKeys[i]];
             if(player){
-                player.tick();
+                fn(player);
             }
         }
+    }
+
+    function playerTick(){
+        allPlayers(function(player){
+            player.tick();
+        });
     }
 
 

@@ -57,7 +57,7 @@ define('server', ['config', 'logger', 'workerApp', 'io', 'gameEvents'],
                 send('chatMessage', data);
             });
 
-            connect();
+            setTimeout(connect, 100);
         }
 
         function connect() {

@@ -2,14 +2,13 @@
  * Created by stefan on 22.01.17.
  */
 
+var db = require('./db');
 
 module.exports = Player;
 
 function Player(user, connection){
 
     var self = this;
-
-
 
     // received actions waiting for processing
     var actions = {
@@ -23,14 +22,21 @@ function Player(user, connection){
     // holds timeout id or false
     var moving = false;
 
-    // position
-    var gamePosition = {x: 0, y: 0, z: 0};
+    /**
+     * player init
+     * set client player to last position
+     */
+    this.initialize = function(){
+        emitPlayerMove(0);
+    };
 
+    this.onExit = function(){
+        user.onExit();
+    };
 
-    this.tick = (function(){
+    this.tick = function(){
         moving == false && nextMove();
-    }).bind(this);
-
+    };
 
     this.getName = function(){
         return user.name;
@@ -50,13 +56,13 @@ function Player(user, connection){
         }
     });
 
-
     function nextMove(){
         var step = actions.moveQueue.pop();
         if(step){
             try{
                 step = move(step);
             }catch(e){
+                console.error('player next move', e);
                 actions.moveQueue = [];
                 moving = false;
                 return;
@@ -74,9 +80,7 @@ function Player(user, connection){
         }
     }
 
-
     /**
-     *
      *
      * -1,-1    0,-1    1,-1
      *
@@ -90,9 +94,10 @@ function Player(user, connection){
 
         var x = parseInt(step.x),
             y = parseInt(step.y),
-            z = 0;//parseInt(step.z);
+            z = step.z === undefined ? user.z : parseInt(step.z);
 
         if(isNaN(x) || isNaN(y) || isNaN(z)){
+            console.error('player step corrupted', user, step);
             // move stack is damaged
             // stop walking
             actions.moveQueue = [];
@@ -100,20 +105,21 @@ function Player(user, connection){
         }
 
         // distance and diagonals
-        var dx = Math.abs(x - gamePosition.x),
-            dy = Math.abs(y - gamePosition.y),
+        var dx = Math.abs(x - user.x),
+            dy = Math.abs(y - user.y),
             diag = dx + dy == 2;
 
 
         // distance to far?
         if(dx > 1 || dy > 1){
+            console.error('player step distance to far', user, step)
             // stop walking
             actions.moveQueue = [];
             return false;
         }
 
         // change floor?
-        if(z != gamePosition.z) {
+        if(z != user.z) {
             // change floor
             return changeFloor({x: x, y: y, z: z});
         }
@@ -123,28 +129,31 @@ function Player(user, connection){
 
         // normal walk
         if(speed > 0){
-            gamePosition.x = x;
-            gamePosition.y = y;
-            // notify player to walk
-
-            step = {
-                x: x,
-                y: y,
-                speed: Math.round(getTileSpeed(x, y, z) * (diag ? 1.414 : 1))
-            };
-
-            emit('mainPlayerMove', step);
-            return step;
+            user.x = x;
+            user.y = y;
+            // update database
+            user.update();
+            // notify client
+            return emitPlayerMove(speed);
         }
 
         // no move
         return false;
+    }
 
-
+    function emitPlayerMove(speed){
+        var step = {
+            x: user.x,
+            y: user.y,
+            z: user.z,
+            speed: speed
+        };
+        emit('mainPlayerMove', step);
+        return step;
     }
 
     function getTileSpeed(x, y, z){
-        return 500;
+        return 100;
     }
 
     function changeFloor(z){

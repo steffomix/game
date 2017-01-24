@@ -35,20 +35,28 @@ define(['config', 'logger', 'underscore', 'easystar', 'pathfinding', 'worldGener
             var extendGrid = extend || 10;
 
             // matrix bounds
-            var baseSpeed = worldGenerator.tile(p1.x, p1.y).walkSpeed,
-                xMin = Math.min(p1.x, p2.x),
+            var xMin = Math.min(p1.x, p2.x),
                 xMax = Math.max(p1.x, p2.x),
                 yMin = Math.min(p1.y, p2.y),
-                yMax = Math.max(p1.y, p2.y),
-                width = xMax - xMin,
+                yMax = Math.max(p1.y, p2.y);
+
+
+            // fix worker stuck on fast moves
+            if((xMax - xMin) * (yMax - yMin) < 2500){
+                this.find = find;
+            }else{
+                // too much tiles may occur on very fast moves or teleports
+                this.find = function(){
+                    return [];
+                }
+                return;
+            }
+
+            var width = xMax - xMin,
                 height = yMax - yMin,
                 xOffset = 0,
                 yOffset = 0,
-                matrix = [],
-                walkSpeeds = [],
-                terrainLayer = [],
-                paths = [],
-                mappedPaths = [];
+                matrix = [];
 
             // calculate offset
             // shift real grid positions to matrix positions
@@ -74,7 +82,7 @@ define(['config', 'logger', 'underscore', 'easystar', 'pathfinding', 'worldGener
             var x1 = p1.x + xOffset + extendGrid, x2 = p2.x + xOffset + extendGrid,
                 y1 = p1.y + yOffset + extendGrid, y2 = p2.y + yOffset + extendGrid;
 
-            this.find = function(){
+            function find(){
 
                 var foundPath = false;
                 finder.findPath(x1, y1, x2, y2, function(path){
@@ -120,7 +128,7 @@ define(['config', 'logger', 'underscore', 'easystar', 'pathfinding', 'worldGener
 
                 }
                 return finalPath;
-            }
+            };
 
 
 
@@ -138,194 +146,6 @@ define(['config', 'logger', 'underscore', 'easystar', 'pathfinding', 'worldGener
                 return matrix;
             }
         };
-
-
-
-
-
-
-
-
-
-
-
-
-
-        /**
-         * Multi-terrain pathfinder
-         * @param p1 {{x, y}} Player position
-         * @param p2 {{x, y}} Mouse position
-         * @param extend *{int} extend matrix for pathfinder
-         */
-        function WorkerPathfinder_old(p1, p2, extend) {
-
-            return new Pathfinder2(p1, p2, extend).find();
-
-            // enlarge grid around min and max values
-            var extendGrid = extend || 10;
-
-            // matrix bounds
-            var baseSpeed = worldGenerator.tile(p1.x, p1.y).walkSpeed,
-                xMin = Math.min(p1.x, p2.x),
-                xMax = Math.max(p1.x, p2.x),
-                yMin = Math.min(p1.y, p2.y),
-                yMax = Math.max(p1.y, p2.y),
-                width = xMax - xMin,
-                height = yMax - yMin,
-                xOffset = 0,
-                yOffset = 0,
-                matrix = [],
-                walkSpeeds = [],
-                terrainLayers = [],
-                paths = [],
-                mappedPaths = [];
-
-            // calculate offset
-            // shift real grid positions to matrix positions
-            if (xMin < 0) {
-                xOffset = xMin * -1;
-            }
-            if (xMax > width) {
-                xOffset = (xMax - width) * -1;
-            }
-            if (yMin < 0) {
-                yOffset = yMin * -1;
-            }
-            if (yMax > height) {
-                yOffset = (yMax - height) * -1;
-            }
-
-            this.find = function () {
-                matrix = [];
-                walkSpeeds = [];
-                createBaseMatrix();
-
-                terrainLayers = [];
-                createTerrainLayers();
-
-                paths = [];
-                findTerrainPaths();
-
-                mappedPaths = [];
-                mapPaths();
-
-                return findShortest() || [];
-
-            };
-
-            function findShortest() {
-                var speeds = [],
-                    path,
-                    speed;
-                for (var p = 0; p < mappedPaths.length; p++) {
-                    path = mappedPaths[p];
-                    speed = 0;
-                    for (var i = 0; i < path.length; i++) {
-                        speed += path[i].speed;
-                    }
-                    speeds.push(speed);
-                }
-                var fastest = Infinity,
-                    fastestIndex = 0;
-                for (var i = 0; i < speeds.length; i++) {
-                    if (speeds[i] < fastest) {
-                        fastest = speeds[i];
-                        fastestIndex = i;
-                    }
-                }
-                return mappedPaths[fastestIndex]
-            }
-
-            function mapPaths() {
-                var node,
-                    path,
-                    mappedRow;
-                for (var i = 0; i < paths.length; i++) {
-                    path = paths[i];
-                    mappedRow = [];
-                    mappedPaths.push(mappedRow);
-                    for (var n = 0; n < path.length; n++) {
-                        node = path[n];
-                        mappedRow[n] = {
-                            x: node[0] - xOffset - extendGrid,
-                            y: node[1] - yOffset - extendGrid,
-                            speed: matrix[node[1]][node[0]].walkSpeed,
-                            tile: matrix[node[1]][node[0]]
-                        };
-                        if(n > 0){
-                            mappedRow[n].speed *= distance(mappedRow[n], mappedRow[n - 1]);
-                        }
-                    }
-                }
-            }
-
-            function distance (p1, p2){
-                return Math.sqrt(Math.pow(Math.abs(p1.x - p2.x), 2) + Math.pow(Math.abs(p1.y - p2.y), 2));
-            }
-
-            function findTerrainPaths() {
-                var grid,
-                    path,
-                    x1 = p1.x + xOffset + extendGrid, x2 = p2.x + xOffset + extendGrid,
-                    y1 = p1.y + yOffset + extendGrid, y2 = p2.y + yOffset + extendGrid;
-
-                for (var i = 0; i < terrainLayers.length; i++) {
-                    grid = new pathfinding.Grid(terrainLayers[i]);
-                    path = pathfinder.findPath(x1, y1, x2, y2, grid);
-                    path.length && paths.push(path);
-                }
-            }
-
-            function createTerrainLayers() {
-                var speed,
-                    layer, tileSpeed;
-                for (var i = 0; i < walkSpeeds.length; i++) {
-                    speed = walkSpeeds[i];
-                    layer = [];
-                    for (var y = 0; y < matrix.length; y++) {
-                        layer[y] = [];
-                        for (var x = 0; x < matrix[0].length; x++) {
-                            // 0 walkable
-                            // 1 blocked
-                            tileSpeed = matrix[y][x].walkSpeed;
-                            layer[y][x] = speed < tileSpeed ? 1 : 0;
-                        }
-                    }
-                    terrainLayers.push(layer);
-                }
-            }
-
-            function createBaseMatrix() {
-
-                // create base matrix and collect walk speeds
-                var speeds = {},
-                    tile,
-                    row;
-                for (var y = yMin - extendGrid; y <= yMax + extendGrid; y++) {
-                    row = [];
-                    for (var x = xMin - extendGrid; x <= xMax + extendGrid; x++) {
-                        if(x == -1){
-                            var slfj = 0;
-                        }
-                        tile = worldGenerator.tile(x, y);
-                        speeds[tile.walkSpeed] = tile.walkSpeed;
-                        row.push(tile);
-                    }
-                    matrix.push(row);
-                }
-                // sort collected walkSpeeds into array
-                walkSpeeds = [];
-                _.each(speeds, function (v) {
-                    // don't add faster speeds which are walkable anyway,
-                    // they give the same result
-                    v >= baseSpeed && walkSpeeds.push(v);
-                });
-                walkSpeeds.sort(function (a, b) {
-                    return a - b;
-                });
-
-            }
-        }
 
 
         return WorkerPathfinder;

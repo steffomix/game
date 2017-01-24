@@ -37,7 +37,7 @@ define(['config', 'logger', 'gamePlayer', 'debugInfo', 'gameEvents', 'tween', 'g
                         x: pos.x * tileSize,
                         y: pos.y * tileSize
                     },
-                    pos.speed * 5).start();
+                    pos.speed).start();
                 gameApp.work(events.mainPlayer.gridMoving, {
                     mousePosition: gameApp.get('mouse').position.worker,
                     playerPosition: self.gamePosition.worker

@@ -184,7 +184,7 @@ define(['config', 'logger', 'gamePosition', 'pixi', 'gameEvents', 'gameApp', 'tw
             pixi.Container.call(this);
 
             var grid = new Grid(),
-                chunk = new Chunk(),
+                //chunk = new Chunk(),
                 path = new Path(),
                 cursor = new Cursor(),
                 pointer = new Pointer(),
@@ -199,7 +199,7 @@ define(['config', 'logger', 'gamePosition', 'pixi', 'gameEvents', 'gameApp', 'tw
                 });
 
 
-            //this.addChild(grid);
+            this.addChild(grid);
             //this.addChild(chunk);
             this.addChild(tilesGrid);
             this.addChild(path);
@@ -207,7 +207,7 @@ define(['config', 'logger', 'gamePosition', 'pixi', 'gameEvents', 'gameApp', 'tw
             this.addChild(pointer);
 
 
-            events.mainPlayer.showWalkPath(function(p){
+            events.mainPlayer.showWalkPath(function (p) {
                 p.length && path.drawPath(p);
             });
 
@@ -216,28 +216,25 @@ define(['config', 'logger', 'gamePosition', 'pixi', 'gameEvents', 'gameApp', 'tw
 
             events.game.frameTick(function (t) {
                 var mouse = gameApp.get('mouse');
-                if(mouse){
-                    var mouseGrid = mouse.position.grid;
-                    cursor.gamePosition.grid.x = mouseGrid.x;
-                    cursor.gamePosition.grid.y = mouseGrid.y;
+                var mouseGrid = mouse.position.grid;
+                cursor.gamePosition.grid.x = mouseGrid.x;
+                cursor.gamePosition.grid.y = mouseGrid.y;
 
-                    if (mouse.isDown) {
-                        pointer.alpha = .5;
-                        setPointer();
-                    } else {
-                        animatePointer.update(t);
-                    }
+                if (mouse.isDown) {
+                    pointer.alpha = .5;
+                    setPointer();
+                } else {
+                    animatePointer.update(t);
                 }
 
-
+                var gameGrid = gameApp.get('screen').position.grid;
+                grid.gamePosition.grid.x = gameGrid.x * -1;
+                grid.gamePosition.grid.y = gameGrid.y * -1;
 
                 /*
                  // debug grid position
-                 var gameGrid = gameApp.get('screen').position.grid,
                  chunkGrid = gameApp.get('screen').position.chunk;
 
-                 grid.gamePosition.grid.x = gameGrid.x *-1;
-                 grid.gamePosition.grid.y = gameGrid.y *-1;
                  chunk.gamePosition.chunk.x = chunkGrid.x *-1  -1;
                  chunk.gamePosition.chunk.y = chunkGrid.y *-1  -1;
                  */

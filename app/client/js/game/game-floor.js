@@ -44,8 +44,8 @@ define(['config', 'logger', 'underscore', 'gameEvents', 'pixi', 'noise', 'gameAp
             // update gameFloor
             events.game.frameTick(function () {
                 var mainPlayer = gameApp.get('mainPlayer');
-                try{
-                    if (mainPlayer) {
+                if (mainPlayer) {
+                    try {
 
                         // get current state
                         var row,
@@ -64,6 +64,11 @@ define(['config', 'logger', 'underscore', 'gameEvents', 'pixi', 'noise', 'gameAp
                         var tilesOffsetX = Math.round(screen.playerOffset.x / tileSize),
                             tilesOffsetY = Math.round(screen.playerOffset.y / tileSize);
 
+                        if(tilesOffsetX > nTilesWidth || tilesOffsetY > nTilesHeight){
+                            // skip render on extrem fast moves
+                            return;
+                        }
+
                         // rectangle to fill with tiles
                         var lx = (px - tilesOffsetX - nTilesWidth) - 1, lxx = lx * tileSize,
                             rx = (px - tilesOffsetX + nTilesWidth) + 1, rxx = rx * tileSize,
@@ -74,8 +79,12 @@ define(['config', 'logger', 'underscore', 'gameEvents', 'pixi', 'noise', 'gameAp
 
                             // remove tiles out of view
                             _.each(tiles, function (t) {
-                                if (t.x < lxx || t.x > rxx || t.y < lyy || t.y > ryy) {
-                                    t.destroy();
+                                try {
+                                    if (t.x < lxx || t.x > rxx || t.y < lyy || t.y > ryy) {
+                                        t.destroy();
+                                    }
+                                } catch (e) {
+                                    throw(e);
                                 }
                             });
 
@@ -123,11 +132,11 @@ define(['config', 'logger', 'underscore', 'gameEvents', 'pixi', 'noise', 'gameAp
                         }
                         // replace tiles register
                         tiles = nTiles;
+                    } catch (e) {
+                        logger.error(e);
                     }
-                }catch(e){
-                    logger.error('GameFloor::frameTick: ', e);
-                }
 
+                }
 
             });
 
@@ -167,7 +176,6 @@ define(['config', 'logger', 'underscore', 'gameEvents', 'pixi', 'noise', 'gameAp
                 tile.setTransform(x * tileSize, y * tileSize);
                 rows[y].addChild(tile);
             }
-
 
 
         }
