@@ -46,91 +46,118 @@ define(['config', 'logger', 'underscore', 'gameEvents', 'pixi', 'noise', 'gameAp
                 var mainPlayer = gameApp.get('mainPlayer');
                 if (mainPlayer) {
 
-                        // get current state
-                        var row,
-                            nTiles = {},
-                            nRows = {},
-                            pGrid = gameApp.get('mainPlayer').gamePosition.grid,
-                            px = pGrid.x,
-                            py = pGrid.y,
-                            screen = gameApp.get('screen');
+                    // get current state
+                    var row,
+                        nTiles = {},
+                        nRows = {},
+                        pGrid = gameApp.get('mainPlayer').gamePosition.grid,
+                        px = pGrid.x,
+                        py = pGrid.y,
+                        screen = gameApp.get('screen');
 
-                        // count tiles needed
-                        var nTilesWidth = Math.round(screen.width / 2 / tileSize / scale),
-                            nTilesHeight = Math.round(screen.height / 2 / tileSize / scale);
+                    // count tiles needed
+                    var nTilesWidth = Math.round(screen.width / 2 / tileSize / scale),
+                        nTilesHeight = Math.round(screen.height / 2 / tileSize / scale);
 
-                        // center offset
-                        var tilesOffsetX = Math.round(screen.playerOffset.x / tileSize),
-                            tilesOffsetY = Math.round(screen.playerOffset.y / tileSize);
+                    // center offset
+                    var tilesOffsetX = Math.round(screen.playerOffset.x / tileSize),
+                        tilesOffsetY = Math.round(screen.playerOffset.y / tileSize);
 
-                        if(tilesOffsetX > nTilesWidth || tilesOffsetY > nTilesHeight){
-                            // skip render on extrem fast moves
-                            return;
-                        }
+                    if (tilesOffsetX > nTilesWidth || tilesOffsetY > nTilesHeight) {
+                        // skip render on extrem fast moves
+                        return;
+                    }
 
-                        // rectangle to fill with tiles
-                        var lx = (px - tilesOffsetX - nTilesWidth) - 1, lxx = lx * tileSize,
-                            rx = (px - tilesOffsetX + nTilesWidth) + 1, rxx = rx * tileSize,
-                            ly = (py - tilesOffsetY - nTilesHeight) - 1, lyy = ly * tileSize,
-                            ry = (py - tilesOffsetY + nTilesHeight) + 1, ryy = ry * tileSize;
+                    // rectangle to fill with tiles
+                    var lx = (px - tilesOffsetX - nTilesWidth) - 1, lxx = lx * tileSize,
+                        rx = (px - tilesOffsetX + nTilesWidth) + 1, rxx = rx * tileSize,
+                        ly = (py - tilesOffsetY - nTilesHeight) - 1, lyy = ly * tileSize,
+                        ry = (py - tilesOffsetY + nTilesHeight) + 1, ryy = ry * tileSize;
 
-                        if (self.children.length) {
+                    if (self.children.length) {
 
-                            // remove tiles out of view
-                            _.each(tiles, function (t) {
-                                try {
-                                    if (t.x < lxx || t.x > rxx || t.y < lyy || t.y > ryy) {
-                                        t.destroy();
-                                    }
-                                } catch (e) {
-                                    throw(e);
+                        // remove tiles out of view
+                        _.each(tiles, function (t, k) {
+                            if (t && (t.x < lxx || t.x > rxx || t.y < lyy || t.y > ryy)) {
+                                t.destroy();
+                                tiles[k] = null;
+                            }
+                        });
+
+
+                        // cleanup empty rows
+                        minY = Infinity;
+                        maxY = -Infinity;
+                        var rowKeys = Object.keys(rows),
+                            row;
+                        for (var i = 0; i < rowKeys.length; i++) {
+                            row = rows[rowKeys[i]];
+                            var y = row._y;
+
+                            if (y < ly || y > ry) {
+                                self.removeChild(row);
+                                row.destroy();
+                                // on very fast moves all rows may be out of range
+                                if(!self.children.length){
+                                    break;
                                 }
-                            });
-
-
-                            // cleanup empty rows
-                            minY = Infinity;
-                            maxY = -Infinity;
-                            _.each(rows, function (row) {
-                                var y = row._y;
-                                if (y < ly || y > ry) {
-                                    self.removeChild(row);
-                                    row.destroy();
-                                    minY = self.getChildAt(0)._y;
-                                } else {
-                                    nRows[y] = row;
-                                    minY = Math.min(minY, y);
-                                    maxY = Math.max(maxY, y);
-                                }
-                            });
-                            // replace rows register
-                            rows = nRows;
-
-                        } else {
-                            // create initial row
-                            minY = maxY = ly;
-                            row = new pixi.Container();
-                            row._y = ly;
-                            rows[ly] = row;
-                            self.addChild(row);
-                        }
-
-                        // add new tiles come into view
-                        var id, tile;
-                        for (var x = lx; x <= rx; x++) {
-                            for (var y = ly; y <= ry; y++) {
-                                id = coord(x, y);
-                                if (!tiles[id]) {
-                                    tile = new GameTile(worldGenerator.tile(x, y));
-                                    nTiles[id] = tile;
-                                    addTile(x, y, tile);
-                                } else {
-                                    nTiles[id] = tiles[id];
-                                }
+                                minY = self.getChildAt(0)._y;
+                            } else {
+                                nRows[y] = row;
+                                minY = Math.min(minY, y);
+                                maxY = Math.max(maxY, y);
                             }
                         }
-                        // replace tiles register
-                        tiles = nTiles;
+
+                        /*
+                         _.each(rows, function (row) {
+                         var y = row._y;
+
+                         if (y < ly || y > ry) {
+                         self.removeChild(row);
+                         row.destroy();
+                         minY = self.getChildAt(0)._y;
+                         } else {
+                         nRows[y] = row;
+                         minY = Math.min(minY, y);
+                         maxY = Math.max(maxY, y);
+                         }
+
+                         });
+                         */
+
+                        // replace rows register
+                        rows = nRows;
+
+                    }
+
+                    if (!self.children.length) {
+                        // create initial row
+                        // there may be non exist yet
+                        // or all rows are deleted due to very fast moves
+                        minY = maxY = ly;
+                        row = new pixi.Container();
+                        row._y = ly;
+                        rows[ly] = row;
+                        self.addChild(row);
+                    }
+
+                    // add new tiles come into view
+                    var id, tile;
+                    for (var x = lx; x <= rx; x++) {
+                        for (var y = ly; y <= ry; y++) {
+                            id = coord(x, y);
+                            if (!tiles[id]) {
+                                tile = new GameTile(worldGenerator.tile(x, y));
+                                nTiles[id] = tile;
+                                addTile(x, y, tile);
+                            } else {
+                                nTiles[id] = tiles[id];
+                            }
+                        }
+                    }
+                    // replace tiles register
+                    tiles = nTiles;
 
 
                 }

@@ -18,7 +18,7 @@
 define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'gamePosition', 'gameEvents', 'tick'],
     function (config, Logger, Backbone, _, pixi, $, gamePosition, events, Tick) {
 
-        var instance,
+        var gameApp,
             logger = Logger.getLogger('gameApp');
         logger.setLevel(config.logger.gameApp || 0);
 
@@ -64,7 +64,7 @@ define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'gamePos
         events.server.connect(function(){
             logger.info('game-app fake login user on connect');
             setTimeout(function(){
-                instance.work(events.server.login, {user: 'user', pass: 'user'});
+                gameApp.work(events.server.login, {user: 'user', pass: 'user'});
                 //events.game.loginSuccess.trigger({user: "user"});
             }, 200);
         });
@@ -88,10 +88,10 @@ define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'gamePos
         }
 
         function getInstance() {
-            if (!instance) {
-                instance = new GameApp();
+            if (!gameApp) {
+                gameApp = new GameApp();
             }
-            return instance;
+            return gameApp;
         }
 
         return getInstance();

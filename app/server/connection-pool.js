@@ -15,7 +15,8 @@ function ConnectionPool(){
         lastStorageIndex = 0;
 
     // storage all 10 seconds
-    storageTicker.fps = 0.1;
+    storageTicker.fps = .015;
+    storageTicker.start();
 
     /**
      * storage next batch of users
@@ -23,13 +24,16 @@ function ConnectionPool(){
      */
     function storageTick(){
         var storeCount = Math.ceil(connectionPool.length / 2);
+        console.log('storage tick', storeCount);
         do{
             connectionPool[lastStorageIndex] && connectionPool[lastStorageIndex].onStorage();
-            if((lastStorageIndex++) > connectionPool.length){
+            lastStorageIndex++;
+            if(lastStorageIndex > connectionPool.length){
                 lastStorageIndex = 0;
                 db.optimizeUsers();
             }
-        }while((storeCount--) >= 0);
+            storeCount--;
+        }while(storeCount >= 0);
     }
 
 
@@ -48,9 +52,9 @@ function ConnectionPool(){
         }
 
         conn.on('disconnect', function(){
-            connection.onDisconnect();
-            connectionPool[index] = null;
-            freeConnectionPool.push(index);
+                connection.onDisconnect();
+                connectionPool[index] = null;
+                freeConnectionPool.push(index);
         });
     };
 

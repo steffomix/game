@@ -14,6 +14,7 @@
     "express": "^4.14.0",
     "javascript-state-machine": "^3.0.0-rc.1",
     "jquery": "^3.1.1",
+    "mongodb": "^2.2.22",
     "nedb": "^1.8.0",
     "orm": "^3.1.0",
     "pathfinding": "^0.4.18",

@@ -45,8 +45,8 @@ function PlayerPool() {
         return false;
     };
 
-    this.removePlayer = function (id) {
-        players[id] = null;
+    this.removePlayer = function (player) {
+        players[player.getName()] = null;
     };
 
     function allPlayers(fn) {

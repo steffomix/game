@@ -132,19 +132,20 @@ define(['config', 'logger', 'jquery', 'gamePosition', 'debugInfo', 'pixi', 'twee
 
 
             function onMouseMove(e) {
-                lastMouseMove.x = e.data.global.x;
-                lastMouseMove.y = e.data.global.y;
-                triggerMouseMove(mousePosition, e);
+                if(gameApp.get('mainPlayer')){
+                    lastMouseMove.x = e.data.global.x;
+                    lastMouseMove.y = e.data.global.y;
+                    triggerMouseMove(mousePosition, e);
 
-                var move = mousePosition.grid,
-                    lastMove = lastMouseGridMove.grid;
+                    var move = mousePosition.grid,
+                        lastMove = lastMouseGridMove.grid;
 
-                if(!move.eq(lastMove)){
-                    lastMove.x = move.x;
-                    lastMove.y = move.y;
-                    onMouseGridMove();
+                    if(!move.eq(lastMove)){
+                        lastMove.x = move.x;
+                        lastMove.y = move.y;
+                        onMouseGridMove();
+                    }
                 }
-
             }
 
             /**

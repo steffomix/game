@@ -3,13 +3,41 @@
  */
 
 var Nedb = require('nedb'),
+    mongoClient = require('mongodb').MongoClient,
+    isMongo = false,
     fs = require('fs'),
     crypto = require('crypto'),
     dbPlayers = new Nedb({filename: './storage/players.json', autoload: true}),
     homes = {},
     modelUser = require('./model/model-user');
 
-var ne = new Nedb();
+
+module.exports = {
+    initialize: initialize,
+    register: register,
+    login: login,
+    getPlayerHome: getPlayerHome,
+    getPlayer: getPlayer,
+    optimizeUsers: optimizeUsers,
+    get isMongo(){
+        return isMongo;
+    }
+};
+
+function initialize(cb){
+    mongoClient.connect('mongodb://localhost:27017/rotting_universe', function(err, db){
+
+        if(err){
+            console.error('Fallback to local Database NeDb due to Error', err);
+            dbPlayers = new Nedb({filename: './storage/players.json', autoload: true});
+        }else{
+            dbPlayers = db.collection('players');
+            //dbPlayers.insert({"name":"user","pwd":"04f8996da763b7a969b1028ee3007569eaf3a635486ddab211d512c85b9df8fb","x":-4,"y":7,"z":"0","w":"0"});
+            isMongo = true;
+        }
+        cb();
+    });
+}
 
 // create default user
 dbPlayers.find({name: 'user'}, function(err, users){
@@ -22,16 +50,9 @@ dbPlayers.find({name: 'user'}, function(err, users){
 });
 
 
-module.exports = {
-    register: register,
-    login: login,
-    getPlayerHome: getPlayerHome,
-    getPlayer: getPlayer,
-    optimizeUsers: optimizeUsers
-};
 
 function optimizeUsers(){
-    dbPlayers.persistence.compactDatafile();
+    dbPlayers.persistence && dbPlayers.persistence.compactDatafile();
 }
 
 
@@ -97,13 +118,17 @@ function getPlayerHome(id) {
  * @param cb
  */
 function find(db, query, cb){
-    db.find(query, function(err, rows){
+
+    isMongo ? db.find(query).toArray(fn) : db.find(query, fn);
+
+    function fn (err, rows){
         if(err){
             console.error('db find', err, query);
             return cb([]);
         }
         return cb(rows);
-    });
+    }
+
 }
 
 /**

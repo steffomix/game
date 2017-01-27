@@ -42,12 +42,13 @@ function  Tick(trigger){
             console.error('Tick failed: ', e);
             self.fps /= 2;
         }
-        var nt = Math.min(Math.max(Math.round(1000 / self.fps) - (getTime() - t), 0), 3000);
+        var nt = Math.round(1000 / self.fps) - (getTime() - t);
         self.load += ((100 * nt / (1000 / self.fps) - self.load) / self.volatility);
         setTimeout(tick, nt);
     }
 
     function getTime(){
+        return new Date().getTime();
         var time = process.hrtime();
         return time[0] * 1e9 + time[1];
     }

@@ -1,25 +1,36 @@
 var config = require('./config.js'),
     events = require('./server-events'),
-    pool = require('./connection-pool'),
-    players = require('./player-pool'),
+    connectionPool = require('./connection-pool'),
+    playerPool = require('./player-pool'),
     server = require('./server.js'),
     db = require('./db');
 
 process.stdin.resume();
 
 
+process.on('exit', function(){
+    // force playerPool to save
+    playerPool.onExit();
+    db.optimizeUsers();
+    var e = new Error();
+    e.message && console.log(e.message, e.stack);
+    process.exit(0);
+});
 
 process.on('SIGINT', function () {
     // forward to exit
     process.exit(0);
 });
-process.on('exit', function(){
-    // force players to save
-    players.onExit();
-    process.exit(0);
+
+process.on('uncaughtException', function(e){
+    console.error(e);
+    process.exit(1);
 });
 
-server.socket.on('connect', pool.addConnection);
+
+db.initialize(function(){
+    server.socket.on('connect', connectionPool.addConnection);
+});
 
 
 

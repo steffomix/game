@@ -8,13 +8,15 @@ module.exports = Connection;
 
 function Connection(connection) {
 
-    var player = false,
-        bruteLock = false,
-        // fake user
-        user = {
-            name: 'user',
-            pass: 'user'
-        };
+    /**
+     * @type {Player}
+     */
+    var player = false;
+
+    /**
+     * @type {boolean}
+     */
+    var bruteLock = false;
 
 
     /**
@@ -22,7 +24,7 @@ function Connection(connection) {
      * connection is already disconnected when this function is called
      */
     this.onDisconnect = function () {
-        playerPool.removePlayer(user.name);
+        player && playerPool.removePlayer(player);
     };
 
 
@@ -84,8 +86,9 @@ function Connection(connection) {
     connection.on('login', login);
 
     connection.on('logout', function () {
+        player.onStorage();
         playerPool.logoutPlayer(player);
-        player = false;
+        player = null;
     });
 
     connection.on('register', function (data) {
