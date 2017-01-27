@@ -17,12 +17,12 @@ define(['config', 'logger', 'gamePlayer', 'debugInfo', 'gameEvents', 'tween', 'g
                 playerGridMoved = events.mainPlayer.gridMoved,
                 lastGridMove = {x: 0, y: 0},
                 animate = new tween.Tween(this.gamePosition),
-                debug = new DebugInfo(this, 50, -100).debug;
+                debug = new DebugInfo(this, 50, 200).debug;
 
             //animate.easing(tween.Easing.Quintic.InOut);
 
             // make debug display public for abuse
-            //this.debug = debug;
+            this.debug = debug;
 
             // register mainPlayer to gameApp
             gameApp.set('mainPlayer', this);
@@ -59,12 +59,16 @@ define(['config', 'logger', 'gamePlayer', 'debugInfo', 'gameEvents', 'tween', 'g
                     gameApp.work(playerGridMoved, self.gamePosition.worker);
                 }
 
+
+
+                /*
                 debug({
                     time: Math.round(t),
                     load: Math.round(l),
                     screen: screen,
                     mousePos: mouse.position.tile
                 });
+                */
 
             });
 

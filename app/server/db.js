@@ -9,6 +9,8 @@ var Nedb = require('nedb'),
     homes = {},
     modelUser = require('./model/model-user');
 
+var ne = new Nedb();
+
 // create default user
 dbPlayers.find({name: 'user'}, function(err, users){
     if(!users.length){
@@ -24,9 +26,13 @@ module.exports = {
     register: register,
     login: login,
     getPlayerHome: getPlayerHome,
-    getPlayer: getPlayer
+    getPlayer: getPlayer,
+    optimizeUsers: optimizeUsers
 };
 
+function optimizeUsers(){
+    dbPlayers.persistence.compactDatafile();
+}
 
 
 /**

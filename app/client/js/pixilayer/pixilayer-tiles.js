@@ -22,8 +22,7 @@ define(['config', 'logger', 'gamePosition', 'pixi', 'gameEvents', 'gameApp', 'tw
             logger = Logger.getLogger('pixiTiles');
         logger.setLevel(config.logger.pixiTiles || 0);
 
-        var scale = config.game.tiles.scale,
-            tileSize = config.game.tiles.size,
+        var tileSize = config.game.tiles.size,
             chunkSize = config.game.chunks.size;
 
         function getInstance() {

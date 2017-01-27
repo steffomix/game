@@ -18,13 +18,14 @@
 define(['config', 'logger', 'tween'],
     function (config, Logger, tween) {
         logger = Logger.getLogger('tick');
-        logger.setLevel(config.logger.tick|| 0);
+        logger.setLevel(config.logger.tick || 0);
 
 
 
         function  GameTick(trigger){
             var self = this,
-                running = false;
+                running = false,
+                debug = config.deb;
 
             this.fps = 1;
             this.load = 50;
@@ -45,7 +46,7 @@ define(['config', 'logger', 'tween'],
                     running && trigger(t, 100 - self.load);
                 }catch(e){
                     logger.error('Tick failed: ', e);
-                    self.fps /= 2;
+                    // self.fps /= 2;
                 }
                 var nt = Math.min(Math.max(Math.round(1000 / self.fps) - (tween.now() - t), 0), 3000);
                 self.load += ((100 * nt / (1000 / self.fps) - self.load) / self.volatility);

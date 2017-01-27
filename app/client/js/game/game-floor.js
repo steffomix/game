@@ -45,7 +45,6 @@ define(['config', 'logger', 'underscore', 'gameEvents', 'pixi', 'noise', 'gameAp
             events.game.frameTick(function () {
                 var mainPlayer = gameApp.get('mainPlayer');
                 if (mainPlayer) {
-                    try {
 
                         // get current state
                         var row,
@@ -132,9 +131,7 @@ define(['config', 'logger', 'underscore', 'gameEvents', 'pixi', 'noise', 'gameAp
                         }
                         // replace tiles register
                         tiles = nTiles;
-                    } catch (e) {
-                        logger.error(e);
-                    }
+
 
                 }
 

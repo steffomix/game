@@ -26,6 +26,8 @@ define(['config', 'logger', 'pixi', 'gamePosition'],
             var sprite = new pixi.Sprite(pixi.Texture.fromImage('assets/tiles/' + tileDefinition.texture + '.png'));
             sprite.anchor.set(.5, .5);
             this.addChild(sprite);
+
+            // test y z-order
             //sprite.scale.set(1, 1.1);
 
             this.gamePosition = position.factory(this);

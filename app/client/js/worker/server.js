@@ -16,10 +16,11 @@
  */
 
 
-define('server', ['config', 'logger', 'workerApp', 'io', 'gameEvents'],
-    function (config, Logger, gameApp, io, events) {
+define('server', ['config', 'logger', 'message', 'workerApp', 'io', 'gameEvents'],
+    function (config, Logger, Message, gameApp, io, events) {
 
         var connection,
+            message,
             instance,
             logger = Logger.getLogger('server');
         logger.setLevel(config.logger.server || 0);
@@ -63,6 +64,7 @@ define('server', ['config', 'logger', 'workerApp', 'io', 'gameEvents'],
         function connect() {
             disconnect();
             connection = io();
+            message = new Message(connection);
             setupListener();
         }
 
@@ -70,6 +72,7 @@ define('server', ['config', 'logger', 'workerApp', 'io', 'gameEvents'],
             try {
                 connection.disconnect();
                 connection = null;
+                message = null;
             } catch (e) {
                 //logger.warn('Server disconnected by client.', e);
             }
@@ -77,10 +80,7 @@ define('server', ['config', 'logger', 'workerApp', 'io', 'gameEvents'],
 
         function send(cmd, data) {
             if (connection && connection.connected) {
-                connection.emit(cmd, {
-                    t: new Date().getTime(),
-                    d: data
-                });
+                message.create(data).emit(cmd);
             }
         }
 
@@ -100,25 +100,30 @@ define('server', ['config', 'logger', 'workerApp', 'io', 'gameEvents'],
                 //socket.send('interfaceConnect.disconnect');
             });
 
-            connection.on('register', function (data) {
-                logger.info('Server: onRegister', data);
-                gameApp.send(events.server.register);
-                //socket.send('interfaceLogin.register', data);
+            connection.on('register', function (msg) {
+                var data = message.parse(msg);
+                if(data){
+                    logger.info('Server: onRegister', data);
+                    gameApp.send(events.server.register);
+                }else{
+                    logger.warn('receives malfactured data')
+                }
             });
 
-            connection.on('login', function (data) {
+            connection.on('login', function (msg) {
+                var data = message.parse(msg);
                 logger.info('Server: onLogin', data);
                 gameApp.send(events.server.login, data);
-                //socket.send('interfaceLogin.login', data);
             });
 
-            connection.on('logout', function (data) {
+            connection.on('logout', function (msg) {
+                var data = message.parse(msg);
                 logger.info('Server: Logout by Server', data);
                 gameApp.send(events.server.logout);
-                //socket.send('interfaceLogin.logout', data || {});
             });
 
-            connection.on('broadcastMessage', function (data) {
+            connection.on('broadcastMessage', function (msg) {
+                var data = message.parse(msg);
                 var cmd = data.cmd;
                 logger.info('Server: broadcastMessage', data);
 
@@ -132,17 +137,16 @@ define('server', ['config', 'logger', 'workerApp', 'io', 'gameEvents'],
                  */
             });
 
-            connection.on('chatMessage', function (data) {
+            connection.on('chatMessage', function (msg) {
+                var data = message.parse(msg);
                 logger.info('Server: chatMessage', data);
                 gameApp(events.server.chatMessage, data);
-                //socket.send('interfaceChat.chatMessage', data);
             });
 
-            connection.on('mainPlayerMove', function(data){
-                var t = data.t,
-                    pos = data.d;
-                gameApp.send(events.mainPlayer.walk, pos);
-                logger.info('server mainPlayerMove', pos);
+            connection.on('mainPlayerMove', function(msg){
+                var data = message.parse(msg);
+                gameApp.send(events.mainPlayer.walk, data);
+                logger.info('server mainPlayerMove', msg);
 
             })
 

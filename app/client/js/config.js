@@ -94,6 +94,7 @@
 
         // worker:
         ['server', 'worker/server', 0],
+        ['message', 'worker/message', 0],
         ['workerMainPlayer', 'worker/worker-main-player', 0],
 
         // game

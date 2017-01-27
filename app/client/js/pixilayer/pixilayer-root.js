@@ -33,7 +33,6 @@ define(['config', 'logger', 'jquery', 'gamePosition', 'debugInfo', 'pixi', 'twee
         logger.setLevel(config.logger.pixiRoot || 0);
 
 
-
         /**
          *
          * @param self {{x, y}}
@@ -53,6 +52,9 @@ define(['config', 'logger', 'jquery', 'gamePosition', 'debugInfo', 'pixi', 'twee
                 },
                 set y(y) {
                     self.y += (y - self.y) / smooth;
+                },
+                set smooth(s){
+                    smooth = s;
                 },
                 /**
                  * @param pos {{x, y}}
@@ -184,14 +186,32 @@ define(['config', 'logger', 'jquery', 'gamePosition', 'debugInfo', 'pixi', 'twee
             // move container to center of mainPlayer
             events.game.frameTick(function () {
 
-                var mainPlayer = gameApp.get('mainPlayer');
+                var mainPlayer = gameApp.get('mainPlayer'),
+                    screen = gameApp.get('screen');
                 if(mainPlayer){
-
-                    // hitBox.x = self.x *-1;
-                    // hitBox.y = self.y *-1;
 
                     moveTo.x = mainPlayer.x * -1 + tileSize * scale;
                     moveTo.y = mainPlayer.y * -1 + tileSize * scale;
+
+                    //moveSpeed = 10 + 100 / ((Math.abs(screen.playerOffset.x) + Math.abs(screen.playerOffset.y)) / tileSize)
+                    // skip smooth scroll on extrem fast moves or teleports
+                    if(Math.abs(screen.playerOffset.x) > screen.width || Math.abs(screen.playerOffset.y) > screen.height){
+                        // gamePosition.x = moveTo.x * -1;
+                        // gamePosition.y = moveTo.y * -1;
+                        // return;
+                    }
+
+                    mainPlayer.debug({
+                        root: {
+                            x: gamePosition.x,
+                            y: gamePosition.y
+                        },
+                        player: {
+                            x: mainPlayer.x,
+                            y: mainPlayer.y
+                        }
+                    })
+
                     var diff = gamePosition.diff(moveTo, .2, .2);
                     moveAcc.move(diff);
 

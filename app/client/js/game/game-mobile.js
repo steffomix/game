@@ -21,9 +21,6 @@ define(['config', 'logger', 'debugInfo', 'pixi', 'gameLocation', 'gamePosition']
         var logger = Logger.getLogger('gameMobile');
         logger.setLevel(config.logger.gameMobile || 0);
 
-        var tileSize = config.game.tiles.size,
-            scale = config.game.tiles.scale;
-
         function Mobile(mobile) {
             pixi.Container.call(this);
             var texture = pixi.Texture.fromImage('assets/avatars/' + (mobile.avatar || 'devil.png')),

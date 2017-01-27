@@ -8,7 +8,7 @@ var Player = require('./player'),
 
 module.exports = new PlayerPool();
 
-function PlayerPool(){
+function PlayerPool() {
 
     var players = {},
         playerKeys = [],
@@ -18,12 +18,16 @@ function PlayerPool(){
     playerTicker.fps = 10;
     playerTicker.start();
 
-    this.onExit = function(){
-            console.log('exit player-pool');
-        allPlayers(function(player){
+    this.onExit = function () {
+        console.log('exit player-pool');
+        allPlayers(function (player) {
             player.onExit();
         })
-    }
+    };
+
+    this.logoutPlayer = function (player) {
+        players[player.getName()] = null;
+    };
 
     /**
      *
@@ -31,8 +35,8 @@ function PlayerPool(){
      * @param connection
      * @returns {Player}
      */
-    this.addPlayer = function(user, connection){
-        if(!players[user.name]){
+    this.addPlayer = function (user, connection) {
+        if (!players[user.name]) {
             var player = new Player(user, connection);
             players[user.name] = player;
             playerKeys = Object.keys(players);
@@ -41,26 +45,25 @@ function PlayerPool(){
         return false;
     };
 
-    this.removePlayer = function(id){
+    this.removePlayer = function (id) {
         players[id] = null;
     };
 
-    function allPlayers(fn){
+    function allPlayers(fn) {
         var player;
-        for(var i = 0; i < playerKeys.length; i++){
+        for (var i = 0; i < playerKeys.length; i++) {
             player = players[playerKeys[i]];
-            if(player){
+            if (player) {
                 fn(player);
             }
         }
     }
 
-    function playerTick(){
-        allPlayers(function(player){
+    function playerTick() {
+        allPlayers(function (player) {
             player.tick();
         });
     }
-
 
 
 }

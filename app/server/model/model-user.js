@@ -25,7 +25,7 @@ module.exports = function(user, db){
 
     return {
         onExit: function(){
-            console.log('exit user');
+            // does not work in most cases
             update(user, db);
         },
         update: function(){

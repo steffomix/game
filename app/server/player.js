@@ -2,7 +2,8 @@
  * Created by stefan on 22.01.17.
  */
 
-var db = require('./db');
+var db = require('./db'),
+    Message = require('./message');
 
 module.exports = Player;
 
@@ -32,6 +33,11 @@ function Player(user, connection){
 
     this.onExit = function(){
         user.onExit();
+    };
+
+    this.onStorage = function(){
+        // update database
+        user.update();
     };
 
     this.tick = function(){
@@ -131,8 +137,6 @@ function Player(user, connection){
         if(speed > 0){
             user.x = x;
             user.y = y;
-            // update database
-            user.update();
             // notify client
             return emitPlayerMove(speed);
         }
@@ -148,7 +152,7 @@ function Player(user, connection){
             z: user.z,
             speed: speed
         };
-        emit('mainPlayerMove', step);
+        new Message(connection).create(step).emit('mainPlayerMove');
         return step;
     }
 
