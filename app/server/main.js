@@ -11,7 +11,7 @@ process.stdin.resume();
 process.on('exit', function(){
     // force playerPool to save
     playerPool.onExit();
-    db.optimizeUsers();
+    db.optimizePlayersCollection();
     var e = new Error();
     e.message && console.log(e.message, e.stack);
     process.exit(0);

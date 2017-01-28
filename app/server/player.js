@@ -7,9 +7,13 @@ var db = require('./db'),
 
 module.exports = Player;
 
+/**
+ *
+ * @param user model/model-user.js factory
+ * @param connection {Socket}
+ * @constructor
+ */
 function Player(user, connection){
-
-    var self = this;
 
     // received actions waiting for processing
     var actions = {
@@ -23,6 +27,7 @@ function Player(user, connection){
     // holds timeout id or false
     var moving = false;
 
+    this.connection = connection;
     /**
      * player init
      * set client player to last position
@@ -42,11 +47,18 @@ function Player(user, connection){
 
     this.tick = function(){
         moving == false && nextMove();
+        return user.gameState();
     };
 
     this.getName = function(){
         return user.name;
     };
+
+    this.emitGameState = function(){
+
+    };
+
+    // this.gameState = user.gameState;
 
     connection.on('playerMove', function(data){
         console.log('Player: onPlayerMove', data);

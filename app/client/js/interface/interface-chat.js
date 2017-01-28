@@ -61,6 +61,14 @@ define(['config', 'logger', 'backbone', 'underscore', 'jquery', 'interfaceApp', 
                     self.addMessage(name + ': ' + msg);
                 });
 
+                events.game.playerEnterGame(function(player){
+                    self.addMessage(self.translate('chat.playerEnterGame', {name: player.name}));
+                });
+
+                events.game.playerLeftGame(function(name){
+                    self.addMessage(self.translate('chat.playerLeftGame', {name: name}));
+                });
+
             },
             addMessage: function(msg){
                 var node = this.$(this.el_msg);

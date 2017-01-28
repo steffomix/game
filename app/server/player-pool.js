@@ -3,7 +3,8 @@
  */
 
 var Player = require('./player'),
-    Tick = require('./tick');
+    Tick = require('./tick'),
+    Message = require('./message');
 
 
 module.exports = new PlayerPool();
@@ -30,14 +31,17 @@ function PlayerPool() {
     };
 
     /**
-     *
      * @param user
      * @param connection
      * @returns {Player}
      */
     this.addPlayer = function (user, connection) {
         if (!players[user.name]) {
-            var player = new Player(user, connection);
+            var player = new Player(user, connection),
+                msg = new Message().create(user.enterGameState()).getMsg();
+            allPlayers(function(player){
+                player.connection.emit('playerEnterGame', msg);
+            });
             players[user.name] = player;
             playerKeys = Object.keys(players);
             return player;
@@ -45,8 +49,13 @@ function PlayerPool() {
         return false;
     };
 
+
     this.removePlayer = function (player) {
         players[player.getName()] = null;
+        var message = new Message().create(player.name).getMsg();
+        allPlayers(function(player){
+            player.connection.emit('playerLeftGame', message);
+        });
     };
 
     function allPlayers(fn) {
@@ -60,9 +69,16 @@ function PlayerPool() {
     }
 
     function playerTick() {
+        var states = [];
+
         allPlayers(function (player) {
-            player.tick();
+            states.push(player.tick());
         });
+
+        var msg = new Message().create(states).getMsg();
+        allPlayers(function(player){
+            player.connection.emit('gameState', msg);
+        })
     }
 
 

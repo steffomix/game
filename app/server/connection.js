@@ -1,6 +1,5 @@
 var playerPool = require('./player-pool'),
-    db = require('./db'),
-    User = require('./model/model-user'),
+    modelUser = require('./model/model-user'),
     Message = require('./message');
 
 module.exports = Connection;
@@ -24,7 +23,15 @@ function Connection(connection) {
      * connection is already disconnected when this function is called
      */
     this.onDisconnect = function () {
-        player && playerPool.removePlayer(player);
+        if(player) {
+            player.onStorage();
+            playerPool.removePlayer(player);
+        }
+        return player;
+    };
+
+    this.getPlayer = function(){
+        return player;
     };
 
 
@@ -40,9 +47,9 @@ function Connection(connection) {
         }
 
         try {
-            if (!bruteLock && !player && data.user && data.pass) {
+            if (!bruteLock && !player && data.user && data.pwd) {
                 // check login
-                db.login(data.user, data.pass, function (user) {
+                modelUser.login(data.user, data.pwd, function (user) {
                     if (user) {
                         // try to add player to game
                         player = playerPool.addPlayer(user, connection);
@@ -76,7 +83,7 @@ function Connection(connection) {
             }, 3000);
 
         } catch (e) {
-            console.error('Connection.onLogin', data);
+            console.error('Connection.onLogin', e, data);
         }
     }
 
@@ -92,22 +99,21 @@ function Connection(connection) {
     });
 
     connection.on('register', function (data) {
-        if (!data.d) {
-            return;
-        }
+        var data = new Message().parse(data);
         try {
-            var usr = data.d.usr,
-                pwd = data.d.pwd;
-            if (usr && pwd) {
-                model = User({name: usr, pwd: pwd});
-                model.create(function (user) {
-                    if (user) {
-                        login({d: model, t: new Date().getTime()});
-
+            var name = data.name,
+                pwd = data.pwd;
+            if (name && pwd) {
+                modelUser.register(name, pwd, function(user){
+                    var msg;
+                    if(user){
+                        msg = {success: true};
+                    }else{
+                        msg = {success: false, msg: 'Name already in Use'};
                     }
-                })
+                    new Message(connection).create(msg).emit('register');
+                });
             }
-
         } catch (e) {
             console.error()
         }

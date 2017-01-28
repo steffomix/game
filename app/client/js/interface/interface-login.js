@@ -73,9 +73,9 @@ define(['config', 'logger', 'jquery', 'underscore', 'backbone', 'interfaceApp', 
                         self.show();
                     });
 
-                    events.game.loginSuccess(function(user){
-                        $(self.el_msg).html(self.translate('login.login success'));
-                        self.hide();
+                    events.game.loginSuccess(this, function(user){
+                        $(this.el_msg).html(this.translate('login.login success'));
+                        this.hide();
                         events.global.windowResize.trigger();
                     });
 
@@ -86,25 +86,25 @@ define(['config', 'logger', 'jquery', 'underscore', 'backbone', 'interfaceApp', 
                                     logger.info('Login success');
                                     events.game.loginSuccess.trigger(login.user);
                                 } else {
-                                    $(self.el_msg).html(login.msg || this.translate('login.login failed'));
+                                    $(this.el_msg).html(login.msg || this.translate('login.login failed'));
                                 }
                             } catch (e) {
                                 logger.error(e, login);
                             }
                         }else{
                             events.interface.hideAll.trigger();
-                            self.show();
+                            this.show();
                         }
                     });
-                    events.server.register(function(trial){
+                    events.server.register(this, function(trial){
                         if (trial.success) {
-                                if ($(self.el_reg).is(':checked')) {
-                                    $(self.el_reg).click();
-                                    self.switchRegister();
+                                if ($(this.el_reg).is(':checked')) {
+                                    $(this.el_reg).click();
+                                    this.switchRegister();
                                 }
-                                $(self.el_msg).html(this.translate('login.register success'));
+                                $(this.el_msg).html(this.translate('login.register success'));
                             } else {
-                                $(self.el_msg).html(trial.msg || this.translate('login.register failed'));
+                                $(this.el_msg).html(trial.msg || this.translate('login.register failed'));
                             }
                     });
 
@@ -123,10 +123,10 @@ define(['config', 'logger', 'jquery', 'underscore', 'backbone', 'interfaceApp', 
                 ,
                 register: function () {
                     this.resetMessage();
-                    var user = $(this.el_user).val(),
+                    var name = $(this.el_user).val(),
                         pwd = $(this.el_pwd).val();
-                    if (this.checkPasswords() && user && pwd) {
-                        gameApp.work(events.server.register, {user: user, pwd: pwd});
+                    if (this.checkPasswords() && name && pwd) {
+                        gameApp.work(events.server.register, {name: name, pwd: pwd});
                     }
                 }
                 ,

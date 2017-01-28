@@ -48,8 +48,7 @@ define(['eventFactory'], function (eventFactory) {
                 chatMessage: e,
                 broadcastMessage: e,
                 onUpdateFloor: e,
-                onUpdateTile: e,
-                playerLocations: e
+                onUpdateTile: e
             },
             game: {
                 initialize: e,
@@ -63,7 +62,13 @@ define(['eventFactory'], function (eventFactory) {
                 mouseUp: e,
                 mouseMove: e,
                 mouseGridMove: e,
-                screenGridMove: e
+                screenGridMove: e,
+                // contains player and mobile positions of current floor
+                gameState: e,
+                // contains name only
+                playerLeftGame: e,
+                // contains all data to create new player in game
+                playerEnterGame: e
             },
             gameWorker: {
                 ready: e

@@ -104,7 +104,7 @@ define('server', ['config', 'logger', 'message', 'workerApp', 'io', 'gameEvents'
                 var data = message.parse(msg);
                 if(data){
                     logger.info('Server: onRegister', data);
-                    gameApp.send(events.server.register);
+                    gameApp.send(events.server.register, data);
                 }else{
                     logger.warn('receives malfactured data')
                 }
@@ -120,6 +120,21 @@ define('server', ['config', 'logger', 'message', 'workerApp', 'io', 'gameEvents'
                 var data = message.parse(msg);
                 logger.info('Server: Logout by Server', data);
                 gameApp.send(events.server.logout);
+            });
+
+            connection.on('gameState', function(msg){
+                var data = message.parse(msg);
+                //logger.info('gameState', data);
+            });
+
+            connection.on('playerLeftGame', function(msg){
+                var name = message.parse(msg);
+                gameApp.send(events.game.playerLeftGame, name);
+            });
+
+            connection.on('playerEnterGame', function(msg){
+                var player = message.parse(msg);
+                gameApp.send(events.game.playerEnterGame, player);
             });
 
             connection.on('broadcastMessage', function (msg) {
@@ -148,7 +163,7 @@ define('server', ['config', 'logger', 'message', 'workerApp', 'io', 'gameEvents'
                 gameApp.send(events.mainPlayer.walk, data);
                 logger.info('server mainPlayerMove', msg);
 
-            })
+            });
 
 
         }

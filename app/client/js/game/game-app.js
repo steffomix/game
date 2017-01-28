@@ -64,7 +64,7 @@ define(['config', 'logger', 'backbone', 'underscore', 'pixi', 'jquery', 'gamePos
         events.server.connect(function(){
             logger.info('game-app fake login user on connect');
             setTimeout(function(){
-                gameApp.work(events.server.login, {user: 'user', pass: 'user'});
+                gameApp.work(events.server.login, {user: 'user', pwd: 'user'});
                 //events.game.loginSuccess.trigger({user: "user"});
             }, 200);
         });
