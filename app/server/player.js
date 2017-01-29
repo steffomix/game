@@ -16,10 +16,13 @@ module.exports = Player;
 function Player(user, connection){
 
     // received actions waiting for processing
-    var actions = {
+    var self = this,
+        actions = {
         // player path
         moveQueue: []
     };
+
+    var currentFloor;
 
     // allow max 10 actions/sec
     var lastAction = 0;
@@ -33,7 +36,12 @@ function Player(user, connection){
      * set client player to last position
      */
     this.initialize = function(){
+        user.floor.addPlayer(this)
         emitPlayerMove(0);
+    };
+
+    this.setFloor = function(floor){
+        currentFloor = floor;
     };
 
     this.onExit = function(){
@@ -139,11 +147,11 @@ function Player(user, connection){
         // change floor?
         if(z != user.z) {
             // change floor
-            return changeFloor({x: x, y: y, z: z});
+            return changeFloor(x, y, z);
         }
 
         // position walkable?
-        var speed = getTileSpeed(x, y, z);
+        var speed = getTileSpeed(x, y);
 
         // normal walk
         if(speed > 0){
@@ -157,6 +165,14 @@ function Player(user, connection){
         return false;
     }
 
+    function getTileSpeed(x, y){
+        if(currentFloor){
+            var tile = currentFloor.getTile(x, y);
+
+            return tile.s;
+        }
+    }
+
     function emitPlayerMove(speed){
         var step = {
             x: user.x,
@@ -168,11 +184,7 @@ function Player(user, connection){
         return step;
     }
 
-    function getTileSpeed(x, y, z){
-        return 100;
-    }
-
-    function changeFloor(z){
+    function changeFloor(x, y, z){
         console.info('change floor to', z);
         return true; // if player is moving now
     }

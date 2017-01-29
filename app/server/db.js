@@ -52,13 +52,18 @@ function optimizePlayersCollection() {
  * internal module function
  * @param db
  * @param query {{}}
- * @param fields {{}}
+ * @param fields {[]}
  * @param cb {function}
  */
 function find(db, query, fields, cb) {
-
+    var queryFields = {}
+    if(fields.length){
+        for(var i = 0; i < fields.length; i++){
+            queryFields[fields[i]] = 1;
+        }
+    }
     // NeDb has no cursor
-    isMongo ? db.find(query, fields).toArray(fn) : db.find(query, fields, fn);
+    isMongo ? db.find(query, queryFields).toArray(fn) : db.find(query, queryFields, fn);
 
     function fn(err, rows) {
         if (err) {
